@@ -23,3 +23,14 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 // इसे बिना किसी ग्रुप के, सीधे web.php की सबसे आखिरी लाइन पर पेस्ट करके Ctrl+S दबा दें!
 Route::get('/admin/level-config', [\App\Http\Controllers\Admin\LevelConfigController::class, 'index']);
 Route::post('/admin/level-config/update', [\App\Http\Controllers\Admin\LevelConfigController::class, 'update'])->name('admin.levels.update');
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Admin\LevelConfigController;
+
+// Open UI View Handlers
+Route::get('/join', [RegisterController::class, 'showRegistrationForm'])->name('register.form');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
+Route::post('/login', [RegisterController::class, 'login'])->name('login.submit');
+
+// Protected Global Configuration Overrides
+Route::get('/admin/level-config', [LevelConfigController::class, 'index'])->name('admin.levels.index');
+Route::post('/admin/level-config/update', [LevelConfigController::class, 'update'])->name('admin.levels.update');

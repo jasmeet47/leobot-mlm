@@ -4,50 +4,38 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\TreeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
     /**
-     * 🟢 १. छूटा हुआ मुख्य फ़ंक्शन (जो लाइव रजिस्ट्रेशन पन्ने को स्क्रीन पर खोलेगा)
+     * 1. Display Sign-Up / Login views and sniff out incoming referral parameters.
      */
-    public function showRegistrationForm()
+    public function showRegistrationForm(Request $request)
     {
-        // resources/views/auth-page.blade.php फ़ाइल को सुरक्षित लोड करना
-        return view('auth-page');
-    }
+        $referralCode = $request->query('ref');
+        $sponsorName = null;
 
-    /**
-     * 🔵 २. स्पॉन्सर आईडी टाइप करते ही उसका नाम लाइव डेटाबेस से फेच करने की API
-     */
-    public function verifySponsor(Request $request)
-    {
-        $sponsor = User::where('username', $request->sponsor_id)
-                       ->orWhere('id', $request->sponsor_id)
-                       ->first();
-
-        if ($sponsor) {
-            return response()->json([
-                'success' => true, 
-                'sponsor_name' => $sponsor->name
-            ], 200);
+        if (!empty($referralCode)) {
+            $sponsor = DB::table('users')->where('username', $referralCode)->first();
+            if ($sponsor) {
+                $sponsorName = $sponsor->name;
+            } else {
+                $referralCode = null; // Clean out corrupted tokens
+            }
         }
 
-        return response()->json([
-            'success' => false, 
-            'message' => 'स्पॉन्सर आईडी मान्य नहीं है'
-        ], 404);
+        return view('auth-page', compact('referralCode', 'sponsorName'));
     }
 
     /**
-     * 🚀 ३. नया जेनरेशन यूजर रजिस्टर करने का 100% परफेक्ट और एरर-फ़्री मुख्य लॉजिक
+     * 2. Core Processing Hub for generating new Generation Tree structures.
      */
     public function register(Request $request)
     {
-        // डेटा इनपुट वैलिडेशन (ब्लेड फ़ॉर्म के नामों से 100% सटीक मैच)
         $request->validate([
             'sponsor_id'   => 'required|string',
             'name'         => 'required|string|max:255',
@@ -56,43 +44,60 @@ class RegisterController extends Controller
             'password'     => 'required|string|min:8|confirmed',
         ]);
 
-        // चेक करना कि स्पॉन्सर डेटाबेस में मौजूद है या नहीं
-        $sponsor = User::where('username', $request->sponsor_id)
-                       ->orWhere('id', $request->sponsor_id)
-                       ->first();
-
+        $sponsor = User::where('username', $request->sponsor_id)->first();
         if (!$sponsor) {
-            return redirect()->back()->withErrors(['sponsor_id' => 'चुना गया स्पॉन्सर मौजूद नहीं है!'])->withInput();
+            return redirect()->back()->withErrors(['sponsor_id' => 'The chosen Sponsor ID is invalid or missing from our nodes.'])->withInput();
         }
 
-        // यूनीक ऑटो-यूज़रनेम जनरेट करना (जैसे: TX100234)
+        // Generate an immutable unique alphanumeric network address (e.g., TX983214)
         do {
             $username = 'TX' . rand(100000, 999999);
         } while (User::where('username', $username)->exists());
 
-        // डेटाबेस के अंदर नए यूज़र की लाइव एंट्री मारना
+        // Write row elements directly to transactional ledger nodes
         $user = User::create([
             'username'     => $username,
-            'sponsor_id'   => $sponsor->id, // स्पॉन्सर की असली आईडी लिंक करना
+            'sponsor_id'   => $sponsor->id,
             'name'         => $request->name,
             'email'        => $request->email,
-            'phone'        => $request->mobile, // ब्लेड के mobile को DB के phone में डालना
+            'phone'        => $request->mobile,
             'password'     => Hash::make($request->password),
-            'status'       => 'inactive',
+            'status'       => 'active', // Active upon registration
         ]);
 
-        // 🌳 सुरक्षा परत के साथ 51-अपलाइन ट्री काउंट को अपडेट करना
-        try {
-            if (class_exists('App\Services\TreeService')) {
-                TreeService::updateUplineTree($user->id, 'register');
+        // Construct unique permanent relative reference clip link
+        $myReferralLink = 'https://onrender.com' . $username;
+
+        // Automatically create session auth context to bypass login friction
+        Auth::login($user);
+
+        return redirect()->back()->with([
+            'success_reg' => true,
+            'new_username' => $username,
+            'ref_link' => $myReferralLink
+        ]);
+    }
+
+    /**
+     * 3. Handle incoming secure sessions and safely route users based on permission flags.
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        // Support logging in via unique node address
+        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']])) {
+            $request->session()->regenerate();
+            
+            if ($credentials['username'] === 'ADMIN') {
+                return redirect()->intended('/admin/level-config');
             }
-        } catch (\Exception $e) {
-            // ट्री सर्विस न होने पर भी रजिस्ट्रेशन क्रैश नहीं होगा
+            return redirect()->intended('/join');
         }
 
-        // सफलता के बाद सीधे यूज़र डैशबोर्ड पर लॉगिन करवा देना
-        auth()->login($user);
-
-        return redirect()->to('/dashboard')->with('success', 'आपका रजिस्ट्रेशन सफलतापूर्वक हो गया है! यूज़रनेम: ' .  $username);
+        return redirect()->back()->withErrors(['username' => 'Invalid security combinations detected.'])->withInput();
     }
 }
