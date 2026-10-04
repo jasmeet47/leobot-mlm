@@ -66,7 +66,7 @@ class RegisterController extends Controller
         ]);
 
         // Construct unique permanent relative reference clip link
-        $myReferralLink = 'https://onrender.com' . $username;
+        $myReferralLink = 'https://leobot-mlm-1.onrender.com/join/?ref=ADMIN' . $username;
 
         // Automatically create session auth context to bypass login friction
         Auth::login($user);
