@@ -26,7 +26,8 @@
     <!-- 🟢 भाग A: लॉगिन फॉर्म (सीधे आपके लोकल रूट पर प्रोसेस होगा) -->
     <div class="wrapper">
         <h2>🔐 यूज़र लॉगिन (Login)</h2>
-        <form method="POST" action="{{ url('/login') }}">
+        <form method="POST" action="{{ secure_url('/login') }}">
+
             @csrf
             <div class="form-group">
                 <label>यूज़रनेम (Username)</label>
@@ -43,7 +44,8 @@
     <!-- 🔵 भाग B: नया रजिस्ट्रेशन फॉर्म (पूरी तरह बाहर खुला हुआ, नो बटन अड़ंगा) -->
     <div class="wrapper">
         <h2>📝 नया रजिस्ट्रेशन फॉर्म (Signup)</h2>
-        <form method="POST" action="{{ url('/register') }}">
+        <form method="POST" action="{{ secure_url('/register') }}">
+
             @csrf
             
             <div class="form-group">
