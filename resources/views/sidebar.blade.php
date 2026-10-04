@@ -32,7 +32,7 @@
         <li class="nav-item mb-2">
             <!-- 🌟 हमारा नया 51-लेवल मैट्रिक्स मैनेजर लिंक -->
             <a href="https://onrender.com" style="display: flex; align-items: center; gap: 12px; padding: 12px; color: #38bdf8; background: rgba(56, 189, 240, 0.1); border: 1px solid rgba(56, 189, 240, 0.2); text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(56, 189, 240, 0.1);">
-                <span style="font-size: 16px;">📈</span> 51-Level Matrix Manager
+                <span style="font-size: 16px;">📈</span> 51-Level Generation Manager
             </a>
         </li>
 
