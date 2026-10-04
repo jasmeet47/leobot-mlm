@@ -20,3 +20,6 @@ Route::get('/join', function () {
 Route::get('/join', [RegisterController::class, 'showRegistrationForm'])->name('register.form');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 
+// इसे बिना किसी ग्रुप के, सीधे web.php की सबसे आखिरी लाइन पर पेस्ट करके Ctrl+S दबा दें!
+Route::get('/admin/level-config', [\App\Http\Controllers\Admin\LevelConfigController::class, 'index']);
+Route::post('/admin/level-config/update', [\App\Http\Controllers\Admin\LevelConfigController::class, 'update'])->name('admin.levels.update');
