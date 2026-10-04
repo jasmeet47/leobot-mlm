@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\DashboardController;
+use App\Http\Controllers\Auth\RegisterController;
 
 // डिफ़ॉल्ट वेलकम पेज (जो अभी आपको दिख रहा है)
 Route::get('/', function () {
@@ -16,3 +16,7 @@ Route::post('/activate-user', [ActivationController::class, 'activate']); // <--
 Route::get('/join', function () {
     return view('auth-page');
 });
+// 🟢 51-लेवल जेनरेशन साइनअप और रजिस्ट्रेशन के असली रास्ते
+Route::get('/join', [RegisterController::class, 'showRegistrationForm'])->name('register.form');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
+
