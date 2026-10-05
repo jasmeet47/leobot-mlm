@@ -5,99 +5,340 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    /**
-     * 1. Display Sign-Up / Login views and sniff out incoming referral parameters.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW LOGIN / REGISTER PAGE
+    |--------------------------------------------------------------------------
+    */
+
     public function showRegistrationForm(Request $request)
     {
+        /*
+        | Get referral code
+        |
+        | Example:
+        | /join?ref=TX123456
+        */
+
         $referralCode = $request->query('ref');
+
         $sponsorName = null;
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK SPONSOR
+        |--------------------------------------------------------------------------
+        */
+
         if (!empty($referralCode)) {
-            $sponsor = DB::table('users')->where('username', $referralCode)->first();
+
+            $sponsor = DB::table('users')
+                ->where('username', $referralCode)
+                ->first();
+
+
             if ($sponsor) {
+
                 $sponsorName = $sponsor->name;
+
             } else {
-                $referralCode = null; // Clean out corrupted tokens
+
+                /*
+                | Invalid referral code
+                */
+
+                $referralCode = null;
             }
         }
 
-        return view('auth-page', compact('referralCode', 'sponsorName'));
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD AUTH PAGE
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'auth-page',
+            compact(
+                'referralCode',
+                'sponsorName'
+            )
+        );
     }
 
-    /**
-     * 2. Core Processing Hub for generating new Generation Tree structures.
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | REGISTER USER
+    |--------------------------------------------------------------------------
+    */
+
     public function register(Request $request)
     {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
         $request->validate([
-            'sponsor_id'   => 'required|string',
-            'name'         => 'required|string|max:255',
-            'email'        => 'required|string|email|max:255|unique:users',
-            'mobile'       => 'required|string|max:20',
-            'password'     => 'required|string|min:8|confirmed',
+
+            'sponsor_id' => [
+                'required',
+                'string',
+            ],
+
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users,email',
+            ],
+
+            'mobile' => [
+                'required',
+                'string',
+                'max:20',
+            ],
+
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
+
         ]);
 
-        $sponsor = User::where('username', $request->sponsor_id)->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND SPONSOR
+        |--------------------------------------------------------------------------
+        */
+
+        $sponsor = User::where(
+            'username',
+            $request->sponsor_id
+        )->first();
+
+
         if (!$sponsor) {
-            return redirect()->back()->withErrors(['sponsor_id' => 'The chosen Sponsor ID is invalid or missing from our nodes.'])->withInput();
+
+            return back()
+                ->withErrors([
+                    'sponsor_id' =>
+                        'Invalid Sponsor ID. Please enter a valid Sponsor ID.'
+                ])
+                ->withInput();
         }
 
-        // Generate an immutable unique alphanumeric network address (e.g., TX983214)
-        do {
-            $username = 'TX' . rand(100000, 999999);
-        } while (User::where('username', $username)->exists());
 
-        // Write row elements directly to transactional ledger nodes
+        /*
+        |--------------------------------------------------------------------------
+        | GENERATE USERNAME
+        |--------------------------------------------------------------------------
+        |
+        | Example:
+        | TX123456
+        |
+        */
+
+        do {
+
+            $username = 'TX' . random_int(
+                100000,
+                999999
+            );
+
+        } while (
+            User::where(
+                'username',
+                $username
+            )->exists()
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE USER
+        |--------------------------------------------------------------------------
+        */
+
         $user = User::create([
-            'username'     => $username,
-            'sponsor_id'   => $sponsor->id,
-            'name'         => $request->name,
-            'email'        => $request->email,
-            'phone'        => $request->mobile,
-            'password'     => Hash::make($request->password),
-            'status'       => 'active', // Active upon registration
+
+            'username' => $username,
+
+            'sponsor_id' => $sponsor->id,
+
+            'name' => $request->name,
+
+            'email' => $request->email,
+
+            'phone' => $request->mobile,
+
+            'password' => Hash::make(
+                $request->password
+            ),
+
+            'status' => 'active',
+
         ]);
 
-        // Construct unique permanent relative reference clip link
-        $myReferralLink = 'https://leobot-mlm-1.onrender.com/join/?ref=ADMIN' . $username;
 
-        // Automatically create session auth context to bypass login friction
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE REFERRAL LINK
+        |--------------------------------------------------------------------------
+        */
+
+        $myReferralLink = url(
+            '/join?ref=' . $username
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUTO LOGIN
+        |--------------------------------------------------------------------------
+        */
+
         Auth::login($user);
 
-        return redirect()->back()->with([
+        $request->session()->regenerate();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN
+        |--------------------------------------------------------------------------
+        */
+
+        return back()->with([
+
             'success_reg' => true,
+
             'new_username' => $username,
-            'ref_link' => $myReferralLink
+
+            'ref_link' => $myReferralLink,
+
         ]);
     }
 
-    /**
-     * 3. Handle incoming secure sessions and safely route users based on permission flags.
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGIN
+    |--------------------------------------------------------------------------
+    */
+
     public function login(Request $request)
     {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
         $credentials = $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
+
+            'username' => [
+                'required',
+                'string',
+            ],
+
+            'password' => [
+                'required',
+                'string',
+            ],
+
         ]);
 
-        // Support logging in via unique node address
-        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']])) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN ATTEMPT
+        |--------------------------------------------------------------------------
+        */
+
+        $loginSuccess = Auth::attempt([
+
+            'username' => $credentials['username'],
+
+            'password' => $credentials['password'],
+
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN SUCCESS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($loginSuccess) {
+
             $request->session()->regenerate();
-            
-            if ($credentials['username'] === 'ADMIN') {
-                return redirect()->intended('/admin/level-config');
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADMIN
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                strtoupper(
+                    $credentials['username']
+                ) === 'ADMIN'
+            ) {
+
+                return redirect()->intended(
+                    '/admin/level-config'
+                );
             }
-            return redirect()->intended('/join');
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | NORMAL USER
+            |--------------------------------------------------------------------------
+            */
+
+            return redirect()->intended(
+                '/join'
+            );
         }
 
-        return redirect()->back()->withErrors(['username' => 'Invalid security combinations detected.'])->withInput();
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN FAILED
+        |--------------------------------------------------------------------------
+        */
+
+        return back()
+            ->withErrors([
+                'username' =>
+                    'Invalid username or password.'
+            ])
+            ->withInput(
+                $request->only('username')
+            );
     }
 }

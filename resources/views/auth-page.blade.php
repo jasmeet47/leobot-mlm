@@ -1,129 +1,667 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leobot Software Hub - Access & Enrollment</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>LEOBOT MLM</title>
+
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #090d16; color: #fff; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .wrapper { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 25px; }
-        h2 { color: #38bdf8; margin-bottom: 20px; text-align: center; font-size: 22px; border-bottom: 1px dashed rgba(56, 189, 240, 0.3); padding-bottom: 10px; }
-        .form-group { margin-bottom: 16px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 6px; color: #94a3b8; font-size: 13px; }
-        .form-group input { width: 100%; padding: 12px 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 14px; }
-        .form-group input:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 240, 0.2); }
-        .action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #38bdf8, #4f46e5); border: none; border-radius: 8px; color: #fff; font-weight: 700; cursor: pointer; font-size: 15px; margin-top: 10px; }
-        .success-box { background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        .link-footer { display: flex; justify-content: space-between; margin-top: 15px; font-size: 13px; }
-        .link-footer a { color: #38bdf8; text-decoration: none; font-weight: 600; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f172a,
+                    #1e293b
+                );
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 20px;
+
+        }
+
+
+        .container {
+
+            width: 100%;
+
+            max-width: 1000px;
+
+            background: white;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 20px 60px
+                rgba(0,0,0,0.30);
+
+        }
+
+
+        .header {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                );
+
+            color: white;
+
+            text-align: center;
+
+            padding: 35px 20px;
+
+        }
+
+
+        .header h1 {
+
+            font-size: 38px;
+
+            font-weight: 800;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .header p {
+
+            font-size: 16px;
+
+            opacity: 0.9;
+
+        }
+
+
+        .forms {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+        }
+
+
+        .box {
+
+            padding: 35px;
+
+        }
+
+
+        .box + .box {
+
+            border-left:
+                1px solid #e5e7eb;
+
+        }
+
+
+        .box h2 {
+
+            font-size: 25px;
+
+            margin-bottom: 25px;
+
+            color: #111827;
+
+        }
+
+
+        .form-group {
+
+            margin-bottom: 17px;
+
+        }
+
+
+        label {
+
+            display: block;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            margin-bottom: 7px;
+
+            color: #374151;
+
+        }
+
+
+        input {
+
+            width: 100%;
+
+            padding: 13px 14px;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 9px;
+
+            font-size: 15px;
+
+            outline: none;
+
+        }
+
+
+        input:focus {
+
+            border-color:
+                #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37,99,235,0.12);
+
+        }
+
+
+        button {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 9px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                );
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+        }
+
+
+        button:hover {
+
+            opacity: 0.92;
+
+        }
+
+
+        .sponsor {
+
+            background: #f0fdf4;
+
+            border:
+                1px solid #bbf7d0;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            margin-bottom: 18px;
+
+            color: #166534;
+
+            font-size: 14px;
+
+        }
+
+
+        .success {
+
+            background: #ecfdf5;
+
+            border:
+                1px solid #6ee7b7;
+
+            color: #065f46;
+
+            padding: 15px;
+
+            margin: 20px;
+
+            border-radius: 10px;
+
+        }
+
+
+        .error {
+
+            background: #fef2f2;
+
+            border:
+                1px solid #fecaca;
+
+            color: #991b1b;
+
+            padding: 15px;
+
+            margin: 20px;
+
+            border-radius: 10px;
+
+        }
+
+
+        .ref-link {
+
+            display: block;
+
+            background: white;
+
+            padding: 10px;
+
+            margin-top: 10px;
+
+            border-radius: 6px;
+
+            word-break: break-all;
+
+            color: #2563eb;
+
+        }
+
+
+        .footer {
+
+            text-align: center;
+
+            padding: 20px;
+
+            background: #f8fafc;
+
+            color: #64748b;
+
+            font-size: 13px;
+
+        }
+
+
+        @media (max-width: 750px) {
+
+            .forms {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+            .box + .box {
+
+                border-left: none;
+
+                border-top:
+                    1px solid #e5e7eb;
+
+            }
+
+            .header h1 {
+
+                font-size: 30px;
+
+            }
+
+        }
+
     </style>
+
 </head>
+
+
 <body>
 
-    <h1 style="color: #38bdf8; margin-bottom: 5px; font-size: 36px;">LEOBOT CORE</h1>
-    <p style="color: #64748b; margin-bottom: 35px; font-size: 14px; font-weight: 600; letter-spacing: 1px;">⚡ 51-LEVEL EXPONENTIAL GENERATION PLATFORM ⚡</p>
 
-    <!-- SUCCESS REGISTRATION DRAWER AND LINK CLIPBOARD OUTFLOW -->
-    @if(session('success_reg'))
-    <div class="wrapper" style="border: 2px solid #10b981; background: rgba(15, 23, 42, 0.9);">
-        <div class="success-box">
-            <h4 style="color: #10b981; margin-bottom: 5px;">🎉 Node Generation Complete!</h4>
-            <p style="font-size: 13px;">Allocated Username: <strong>{{ session('new_username') }}</strong></p>
-        </div>
-        <div class="form-group">
-            <label style="color: #10b981; font-weight: bold;">📋 Permanent Marketing Referral Link:</label>
-            <input type="text" id="raw_ref_link" value="{{ session('ref_link') }}" readonly style="border-color: #10b981; color: #10b981; font-weight: bold; background: #0f172a;">
-        </div>
-        <button onclick="triggerClipboardCopy()" class="action-btn" style="background: linear-gradient(135deg, #10b981, #059669);">Copy Link to Clipboard</button>
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>LEOBOT MLM</h1>
+
+        <p>
+            Secure Login & Registration
+        </p>
+
     </div>
+
+
+    <!-- SUCCESS MESSAGE -->
+
+    @if(session('success_reg'))
+
+        <div class="success">
+
+            <strong>
+                Registration Successful!
+            </strong>
+
+            <br><br>
+
+            Your Username:
+
+            <strong>
+                {{ session('new_username') }}
+            </strong>
+
+            <br><br>
+
+            Your Referral Link:
+
+            <a
+                class="ref-link"
+                href="{{ session('ref_link') }}"
+            >
+                {{ session('ref_link') }}
+            </a>
+
+        </div>
+
     @endif
 
-    <!-- LOGIN CONTAINER -->
-    <div class="wrapper">
-        <h2>🔒 Security Verification Login</h2>
-        <form method="POST" action="{{ secure_url('/login') }}">
-            @csrf
-            <div class="form-group">
-                <label>Network Account Username</label>
-                <input type="text" name="username" placeholder="Enter ADMIN or account string" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" placeholder="Enter security passphrase" required>
-            </div>
-            <button type="submit" class="action-btn">Authenticate & Access 🚀</button>
-            <div class="link-footer">
-                <a href="https://onrender.com">🛡️ Direct System Panel</a>
-            </div>
-        </form>
+
+    <!-- ERRORS -->
+
+    @if($errors->any())
+
+        <div class="error">
+
+            <strong>
+                Please fix the following:
+            </strong>
+
+            <ul style="margin-top:10px; margin-left:20px;">
+
+                @foreach($errors->all() as $error)
+
+                    <li>
+                        {{ $error }}
+                    </li>
+
+                @endforeach
+
+            </ul>
+
+        </div>
+
+    @endif
+
+
+    <!-- FORMS -->
+
+    <div class="forms">
+
+
+        <!-- LOGIN -->
+
+        <div class="box">
+
+            <h2>
+                Login
+            </h2>
+
+
+            <form
+                method="POST"
+                action="{{ route('login.submit') }}"
+            >
+
+                @csrf
+
+
+                <div class="form-group">
+
+                    <label>
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        name="username"
+                        placeholder="Enter Username"
+                        value="{{ old('username') }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Enter Password"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit">
+
+                    Login
+
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- REGISTER -->
+
+        <div class="box">
+
+            <h2>
+                Create Account
+            </h2>
+
+
+            @if($referralCode)
+
+                <div class="sponsor">
+
+                    Sponsor ID:
+
+                    <strong>
+                        {{ $referralCode }}
+                    </strong>
+
+                    @if($sponsorName)
+
+                        <br>
+
+                        Sponsor:
+
+                        <strong>
+                            {{ $sponsorName }}
+                        </strong>
+
+                    @endif
+
+                </div>
+
+            @endif
+
+
+            <form
+                method="POST"
+                action="{{ route('register.submit') }}"
+            >
+
+                @csrf
+
+
+                <div class="form-group">
+
+                    <label>
+                        Sponsor ID
+                    </label>
+
+                    <input
+                        type="text"
+                        name="sponsor_id"
+                        placeholder="Enter Sponsor ID"
+                        value="{{ old('sponsor_id', $referralCode) }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Full Name
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        placeholder="Full Name"
+                        value="{{ old('name') }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Email Address"
+                        value="{{ old('email') }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Mobile
+                    </label>
+
+                    <input
+                        type="text"
+                        name="mobile"
+                        placeholder="Mobile Number"
+                        value="{{ old('mobile') }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Minimum 8 characters"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Confirm Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="password_confirmation"
+                        placeholder="Confirm Password"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit">
+
+                    Create Account
+
+                </button>
+
+            </form>
+
+        </div>
+
     </div>
 
-    <!-- REGISTRATION CONTAINER -->
-    <div class="wrapper">
-        <h2>📝 Node Matrix Registration</h2>
-        <form method="POST" action="{{ secure_url('/register') }}">
-            @csrf
-            <div class="form-group">
-                <label>Parent Sponsor Node Identifier</label>
-                <input type="text" name="sponsor_id" id="reg_sponsor_id" value="{{ \$referralCode ?? request()->get('ref') }}" placeholder="Sponsor ID" required>
-            </div>
-            <div class="form-group">
-                <label>Verified Parent Name</label>
-                <input type="text" id="sponsor_name" value="{{ \$sponsorName ?? '' }}" readonly style="background: #1e293b; color: #94a3b8;">
-            </div>
-            <div class="form-group">
-                <label>Full Legal Name</label>
-                
-            </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" name="email" placeholder="Enter unique mail routing address" required>
-            </div>
-            <div class="form-group">
-                <label>Mobile Communications Line</label>
-                <input type="text" name="mobile" placeholder="10-digit international terminal number" required>
-            </div>
-            <div class="form-group">
-                <label>Password Selection</label>
-                <input type="password" name="password" placeholder="Min 8 alphanumeric components" required>
-            </div>
-            <div class="form-group">
-                <label>Confirm Password Alignment</label>
-                <input type="password" name="password_confirmation" placeholder="Re-enter verification sequence" required>
-            </div>
-            <button type="submit" class="action-btn">Finalize Generation Node 🎉</button>
-        </form>
+
+    <div class="footer">
+
+        © {{ date('Y') }} LEOBOT MLM
+
     </div>
 
-    <script>
-    function triggerClipboardCopy() {
-        var copyText = document.getElementById("raw_ref_link");
-        if (copyText) {
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value);
-            alert("✨ Link secured into clipboard buffer memory:\n" + copyText.value);
-        }
-    }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById('reg_sponsor_id')?.addEventListener('blur', function() {
-            let sponsorId = this.value;
-            if(sponsorId) {
-                fetch(`/api/get-sponsor-name/${sponsorId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const target = document.getElementById('sponsor_name');
-                        if(target) target.value = data.name || 'Unknown Node Block Address';
-                    })
-                    .catch(() => {
-                        const target = document.getElementById('sponsor_name');
-                        if(target) target.value = 'Failed network connection';
-                    });
-            }
-        });
-    });
-    </script>
+</div>
+
+
 </body>
+
 </html>
