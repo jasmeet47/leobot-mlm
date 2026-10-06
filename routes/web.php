@@ -41,15 +41,7 @@ Route::get('/check-dashboard', [DashboardController::class, 'getCounters'])
 */
 
 Route::get('/debug-db', function () {
-
     try {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Users table columns
-        |--------------------------------------------------------------------------
-        */
-
         $usersColumns = DB::select("
             SELECT
                 column_name,
@@ -61,12 +53,6 @@ Route::get('/debug-db', function () {
               AND table_name = 'users'
             ORDER BY ordinal_position
         ");
-
-        /*
-        |--------------------------------------------------------------------------
-        | Member Teams table columns
-        |--------------------------------------------------------------------------
-        */
 
         $memberTeamsColumns = DB::select("
             SELECT
@@ -88,7 +74,6 @@ Route::get('/debug-db', function () {
         ], 200, [], JSON_UNESCAPED_UNICODE);
 
     } catch (\Throwable $e) {
-
         return response()->json([
             'success' => false,
             'error_type' => get_class($e),
@@ -96,9 +81,7 @@ Route::get('/debug-db', function () {
             'error_file' => $e->getFile(),
             'error_line' => $e->getLine(),
         ], 500, [], JSON_UNESCAPED_UNICODE);
-
     }
-
 });
 
 /*
@@ -153,10 +136,16 @@ Route::get('/admin/level-config', [
 Route::post('/admin/level-config/update', [
     LevelConfigController::class,
     'update'
-    /*
+])->name('admin.levels.update');
+
+/*
 |--------------------------------------------------------------------------
 | Temporary Migration Debug
 |--------------------------------------------------------------------------
+|
+| Used only to check which migrations have already run on Render.
+| DELETE this route after testing.
+|
 */
 
 Route::get('/debug-migrations', function () {
