@@ -45,22 +45,30 @@ Route::get('/check-dashboard', [DashboardController::class, 'getCounters'])
 
 Route::get('/debug-db', function () {
 
-    return response()->json([
-        'success' => true,
+    try {
 
-        'users_columns' => DB::select(
-            'SHOW COLUMNS FROM users'
-        ),
+        $usersColumns = DB::select('SHOW COLUMNS FROM users');
 
-        'member_teams_columns' => DB::select(
-            'SHOW COLUMNS FROM member_teams'
-        ),
-    ], 200, [], JSON_UNESCAPED_UNICODE);
+        $memberTeamsColumns = DB::select('SHOW COLUMNS FROM member_teams');
+
+        return response()->json([
+            'success' => true,
+            'users_columns' => $usersColumns,
+            'member_teams_columns' => $memberTeamsColumns,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'error_type' => get_class($e),
+            'error_message' => $e->getMessage(),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+        ], 500, [], JSON_UNESCAPED_UNICODE);
+    }
 
 });
-
-
-/*
 |--------------------------------------------------------------------------
 | Registration
 |--------------------------------------------------------------------------
