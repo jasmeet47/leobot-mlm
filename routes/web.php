@@ -8,7 +8,6 @@ use App\Http\Controllers\Auth\ActivationController;
 use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Admin\LevelConfigController;
 
-
 /*
 |--------------------------------------------------------------------------
 | Homepage
@@ -18,7 +17,6 @@ use App\Http\Controllers\Admin\LevelConfigController;
 Route::get('/', function () {
     return view('welcome');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -32,13 +30,12 @@ Route::get('/', function () {
 Route::get('/check-dashboard', [DashboardController::class, 'getCounters'])
     ->name('dashboard.counters');
 
-
 /*
 |--------------------------------------------------------------------------
 | Temporary Database Debug
 |--------------------------------------------------------------------------
 |
-| Used only to verify database columns on the live server.
+| Used only to verify database columns on the live PostgreSQL server.
 | DELETE this route after testing.
 |
 */
@@ -47,12 +44,45 @@ Route::get('/debug-db', function () {
 
     try {
 
-        $usersColumns = DB::select('SHOW COLUMNS FROM users');
+        /*
+        |--------------------------------------------------------------------------
+        | Users table columns
+        |--------------------------------------------------------------------------
+        */
 
-        $memberTeamsColumns = DB::select('SHOW COLUMNS FROM member_teams');
+        $usersColumns = DB::select("
+            SELECT
+                column_name,
+                data_type,
+                is_nullable,
+                column_default
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'users'
+            ORDER BY ordinal_position
+        ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Member Teams table columns
+        |--------------------------------------------------------------------------
+        */
+
+        $memberTeamsColumns = DB::select("
+            SELECT
+                column_name,
+                data_type,
+                is_nullable,
+                column_default
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'member_teams'
+            ORDER BY ordinal_position
+        ");
 
         return response()->json([
             'success' => true,
+            'database_connection' => DB::connection()->getDriverName(),
             'users_columns' => $usersColumns,
             'member_teams_columns' => $memberTeamsColumns,
         ], 200, [], JSON_UNESCAPED_UNICODE);
@@ -71,7 +101,6 @@ Route::get('/debug-db', function () {
 
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Registration
@@ -83,12 +112,10 @@ Route::get('/join', [
     'showRegistrationForm'
 ])->name('register.form');
 
-
 Route::post('/register', [
     RegisterController::class,
     'register'
 ])->name('register.submit');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -101,7 +128,6 @@ Route::post('/login', [
     'login'
 ])->name('login.submit');
 
-
 /*
 |--------------------------------------------------------------------------
 | User Activation
@@ -113,7 +139,6 @@ Route::post('/activate-user', [
     'activate'
 ])->name('activate.user');
 
-
 /*
 |--------------------------------------------------------------------------
 | Admin - 51 Level Configuration
@@ -124,7 +149,6 @@ Route::get('/admin/level-config', [
     LevelConfigController::class,
     'index'
 ])->name('admin.levels.index');
-
 
 Route::post('/admin/level-config/update', [
     LevelConfigController::class,
