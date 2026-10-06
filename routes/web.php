@@ -153,4 +153,36 @@ Route::get('/admin/level-config', [
 Route::post('/admin/level-config/update', [
     LevelConfigController::class,
     'update'
-])->name('admin.levels.update');
+    /*
+|--------------------------------------------------------------------------
+| Temporary Migration Debug
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/debug-migrations', function () {
+
+    try {
+
+        $migrations = DB::table('migrations')
+            ->orderBy('batch')
+            ->orderBy('migration')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'migrations' => $migrations,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'error_type' => get_class($e),
+            'error_message' => $e->getMessage(),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+        ], 500, [], JSON_UNESCAPED_UNICODE);
+
+    }
+
+});
