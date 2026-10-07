@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
 
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ActivationController;
@@ -28,113 +27,6 @@ Route::get('/check-dashboard', [
     DashboardController::class,
     'getCounters'
 ])->name('dashboard.counters');
-
-/*
-|--------------------------------------------------------------------------
-| Temporary Database Debug
-|--------------------------------------------------------------------------
-|
-| Used only to verify database columns on the live PostgreSQL server.
-| DELETE these debug routes after testing.
-|
-*/
-
-Route::get('/debug-db', function () {
-
-    try {
-
-        $usersColumns = DB::select("
-            SELECT
-                column_name,
-                data_type,
-                is_nullable,
-                column_default
-            FROM information_schema.columns
-            WHERE table_schema = 'public'
-              AND table_name = 'users'
-            ORDER BY ordinal_position
-        ");
-
-        $memberTeamsColumns = DB::select("
-            SELECT
-                column_name,
-                data_type,
-                is_nullable,
-                column_default
-            FROM information_schema.columns
-            WHERE table_schema = 'public'
-              AND table_name = 'member_teams'
-            ORDER BY ordinal_position
-        ");
-
-        return response()->json([
-            'success' => true,
-            'database_connection' => DB::connection()->getDriverName(),
-            'users_columns' => $usersColumns,
-            'member_teams_columns' => $memberTeamsColumns,
-        ], 200, [], JSON_UNESCAPED_UNICODE);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'success' => false,
-            'error_type' => get_class($e),
-            'error_message' => $e->getMessage(),
-            'error_file' => $e->getFile(),
-            'error_line' => $e->getLine(),
-        ], 500, [], JSON_UNESCAPED_UNICODE);
-    }
-});
-
-/*
-|--------------------------------------------------------------------------
-| Temporary Users Debug
-|--------------------------------------------------------------------------
-|
-| Shows the permanent sponsor relationship:
-|
-| sponsor_user_id
-|
-| This is the important field for the secure referral tree.
-|
-*/
-
-Route::get('/debug-users', function () {
-
-    try {
-
-        $count = DB::table('users')->count();
-
-        $users = DB::table('users')
-            ->select(
-                'id',
-                'username',
-                'name',
-                'email',
-                'sponsor_id',
-                'sponsor_user_id'
-            )
-            ->orderBy('id')
-            ->limit(50)
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'users_count' => $count,
-            'users' => $users,
-        ], 200, [], JSON_UNESCAPED_UNICODE);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'success' => false,
-            'error_type' => get_class($e),
-            'error_message' => $e->getMessage(),
-            'error_file' => $e->getFile(),
-            'error_line' => $e->getLine(),
-        ], 500, [], JSON_UNESCAPED_UNICODE);
-    }
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -189,39 +81,3 @@ Route::post('/admin/level-config/update', [
     LevelConfigController::class,
     'update'
 ])->name('admin.levels.update');
-
-/*
-|--------------------------------------------------------------------------
-| Temporary Migration Debug
-|--------------------------------------------------------------------------
-|
-| Used only to check which migrations have already run on Render.
-| DELETE this route after testing.
-|
-*/
-
-Route::get('/debug-migrations', function () {
-
-    try {
-
-        $migrations = DB::table('migrations')
-            ->orderBy('batch')
-            ->orderBy('migration')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'migrations' => $migrations,
-        ], 200, [], JSON_UNESCAPED_UNICODE);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'success' => false,
-            'error_type' => get_class($e),
-            'error_message' => $e->getMessage(),
-            'error_file' => $e->getFile(),
-            'error_line' => $e->getLine(),
-        ], 500, [], JSON_UNESCAPED_UNICODE);
-    }
-});
