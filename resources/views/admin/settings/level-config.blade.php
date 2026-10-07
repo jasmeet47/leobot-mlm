@@ -119,7 +119,7 @@
                                 value="{{ $setting ? $setting->commission_percentage : 0 }}"
                                 min="0"
                                 max="100"
-                                step="0.0001"
+                                step="0.000000001"
                             >
                         </td>
 
