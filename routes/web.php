@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Auth\ActivationController;
 use App\Http\Controllers\Auth\DashboardController;
-use App\Http\Controllers\Admin\LevelConfigController;
+use App\Http\Controllers\Auth\RegisterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +26,7 @@ Route::get('/', function () {
 
 Route::get('/check-dashboard', [
     DashboardController::class,
-    'getCounters'
+    'getCounters',
 ])->name('dashboard.counters');
 
 /*
@@ -37,12 +37,12 @@ Route::get('/check-dashboard', [
 
 Route::get('/join', [
     RegisterController::class,
-    'showRegistrationForm'
+    'showRegistrationForm',
 ])->name('register.form');
 
 Route::post('/register', [
     RegisterController::class,
-    'register'
+    'register',
 ])->name('register.submit');
 
 /*
@@ -53,7 +53,7 @@ Route::post('/register', [
 
 Route::post('/login', [
     RegisterController::class,
-    'login'
+    'login',
 ])->name('login.submit');
 
 /*
@@ -64,12 +64,12 @@ Route::post('/login', [
 
 Route::post('/activate-user', [
     ActivationController::class,
-    'activate'
+    'activate',
 ])->name('activate.user');
 
 /*
 |--------------------------------------------------------------------------
-| Admin - 51 Level Configuration
+| Admin Routes
 |--------------------------------------------------------------------------
 */
 
@@ -77,12 +77,12 @@ Route::middleware('admin')->group(function () {
 
     Route::get('/admin/level-config', [
         LevelConfigController::class,
-        'index'
+        'index',
     ])->name('admin.levels.index');
 
     Route::post('/admin/level-config/update', [
         LevelConfigController::class,
-        'update'
+        'update',
     ])->name('admin.levels.update');
 
     /*
@@ -92,19 +92,22 @@ Route::middleware('admin')->group(function () {
     */
 
     Route::get('/admin/debug-users-schema', function () {
+
+        $columns = DB::table('information_schema.columns')
+            ->select([
+                'column_name',
+                'data_type',
+                'is_nullable',
+                'column_default',
+            ])
+            ->where('table_schema', 'public')
+            ->where('table_name', 'users')
+            ->orderBy('ordinal_position')
+            ->get();
+
         return response()->json([
             'success' => true,
-            'columns' => DB::select("
-                SELECT
-                    column_name,
-                    data_type,
-                    is_nullable,
-                    column_default
-                FROM information_schema.columns
-                WHERE table_schema = 'public'
-                  AND table_name = 'users'
-                ORDER BY ordinal_position
-            ),
+            'columns' => $columns,
         ]);
     });
 });
