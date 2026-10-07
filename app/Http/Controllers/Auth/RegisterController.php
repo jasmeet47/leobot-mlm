@@ -184,7 +184,7 @@ class RegisterController extends Controller
 
             'username' => $username,
 
-            'sponsor_id' => $sponsor->id,
+            'sponsor_id' => $sponsor->username,
 
             'name' => $request->name,
 
