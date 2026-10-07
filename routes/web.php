@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\LevelConfigController;
@@ -84,30 +83,4 @@ Route::middleware('admin')->group(function () {
         LevelConfigController::class,
         'update',
     ])->name('admin.levels.update');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Temporary Production DB Schema Check
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get('/admin/debug-users-schema', function () {
-
-        $columns = DB::table('information_schema.columns')
-            ->select([
-                'column_name',
-                'data_type',
-                'is_nullable',
-                'column_default',
-            ])
-            ->where('table_schema', 'public')
-            ->where('table_name', 'users')
-            ->orderBy('ordinal_position')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'columns' => $columns,
-        ]);
-    });
 });
