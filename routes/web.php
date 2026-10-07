@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -83,4 +84,28 @@ Route::middleware('admin')->group(function () {
         LevelConfigController::class,
         'update',
     ])->name('admin.levels.update');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Temporary BCMath Test - Admin Only
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('admin')->get('/admin/test-bcmath', function () {
+
+    if (!extension_loaded('bcmath')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'BCMath extension is not installed.',
+        ], 500);
+    }
+
+    return response()->json([
+        'success' => true,
+        'bcmath_installed' => true,
+        'addition' => bcadd('100.25', '50.75', 8),
+        'subtraction' => bcsub('100.25', '50.75', 8),
+        'comparison' => bccomp('100.25', '50.75', 8),
+    ]);
 });
