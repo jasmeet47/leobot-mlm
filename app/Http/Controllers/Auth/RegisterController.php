@@ -17,7 +17,11 @@ class RegisterController extends Controller
         $sponsorName = null;
 
         if (!empty($referralCode)) {
-            $sponsor = User::where('username', $referralCode)->first();
+
+            $sponsor = User::where(
+                'username',
+                $referralCode
+            )->first();
 
             if ($sponsor) {
                 $sponsorName = $sponsor->name;
@@ -34,17 +38,19 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'sponsor_id' => [
                 'required',
                 'string',
                 'max:255',
             ],
+
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
+
             'email' => [
                 'required',
                 'string',
@@ -52,11 +58,13 @@ class RegisterController extends Controller
                 'max:255',
                 'unique:users,email',
             ],
+
             'mobile' => [
                 'required',
                 'string',
                 'max:20',
             ],
+
             'password' => [
                 'required',
                 'string',
@@ -65,21 +73,53 @@ class RegisterController extends Controller
             ],
         ]);
 
-        $user = DB::transaction(function () use ($request) {
+        /*
+         * Find the sponsor before starting the transaction.
+         *
+         * This gives the user a normal validation error
+         * instead of a 500 server error when the sponsor is invalid.
+         */
+        $sponsor = User::where(
+            'username',
+            $validated['sponsor_id']
+        )->first();
+
+        if (!$sponsor) {
+
+            return back()
+                ->withErrors([
+                    'sponsor_id' =>
+                        'Invalid Sponsor ID. Please enter a valid Sponsor ID.',
+                ])
+                ->withInput();
+        }
+
+        /*
+         * Create the member inside a database transaction.
+         *
+         * If anything fails, the complete registration is rolled back.
+         */
+        $user = DB::transaction(function () use (
+            $validated,
+            $sponsor
+        ) {
 
             /*
-             * Lock the sponsor row while registration is being created.
+             * Lock the sponsor row while creating the member.
              *
-             * This prevents race conditions when multiple users
-             * register under the same sponsor at the same time.
+             * This helps prevent race conditions when multiple
+             * registrations happen under the same sponsor.
              */
-            $sponsor = User::where('username', $request->sponsor_id)
+            $lockedSponsor = User::where(
+                'id',
+                $sponsor->id
+            )
                 ->lockForUpdate()
                 ->first();
 
-            if (!$sponsor) {
+            if (!$lockedSponsor) {
                 throw new \RuntimeException(
-                    'INVALID_SPONSOR'
+                    'Sponsor account could not be locked.'
                 );
             }
 
@@ -87,31 +127,47 @@ class RegisterController extends Controller
              * Generate a unique member username.
              */
             do {
-                $username = 'TX' . random_int(100000, 999999);
+
+                $username =
+                    'TX' . random_int(100000, 999999);
+
             } while (
-                User::where('username', $username)->exists()
+                User::where(
+                    'username',
+                    $username
+                )->exists()
             );
 
             /*
              * Create the member.
              *
-             * sponsor_user_id is the permanent database relationship.
+             * sponsor_user_id is the permanent secure
+             * database relationship.
+             *
              * sponsor_id is retained for backward compatibility.
              */
             return User::create([
                 'username' => $username,
 
-                'sponsor_id' => $sponsor->username,
+                'sponsor_id' =>
+                    $lockedSponsor->username,
 
-                'sponsor_user_id' => $sponsor->id,
+                'sponsor_user_id' =>
+                    $lockedSponsor->id,
 
-                'name' => $request->name,
+                'name' =>
+                    $validated['name'],
 
-                'email' => $request->email,
+                'email' =>
+                    $validated['email'],
 
-                'phone' => $request->mobile,
+                'phone' =>
+                    $validated['mobile'],
 
-                'password' => Hash::make($request->password),
+                'password' =>
+                    Hash::make(
+                        $validated['password']
+                    ),
 
                 'security_pin' => null,
 
@@ -119,10 +175,16 @@ class RegisterController extends Controller
             ]);
         });
 
+        /*
+         * Generate the member's referral link.
+         */
         $myReferralLink = url(
             '/join?ref=' . $user->username
         );
 
+        /*
+         * Automatically log the newly registered member in.
+         */
         Auth::login($user);
 
         $request->session()->regenerate();
@@ -130,9 +192,11 @@ class RegisterController extends Controller
         return back()->with([
             'success_reg' => true,
 
-            'new_username' => $user->username,
+            'new_username' =>
+                $user->username,
 
-            'ref_link' => $myReferralLink,
+            'ref_link' =>
+                $myReferralLink,
         ]);
     }
 
@@ -151,8 +215,11 @@ class RegisterController extends Controller
         ]);
 
         $loginSuccess = Auth::attempt([
-            'username' => $credentials['username'],
-            'password' => $credentials['password'],
+            'username' =>
+                $credentials['username'],
+
+            'password' =>
+                $credentials['password'],
         ]);
 
         if ($loginSuccess) {
@@ -175,7 +242,7 @@ class RegisterController extends Controller
         return back()
             ->withErrors([
                 'username' =>
-                    'Invalid username or password.'
+                    'Invalid username or password.',
             ])
             ->withInput(
                 $request->only('username')
