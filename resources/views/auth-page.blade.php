@@ -12,7 +12,6 @@
 
     <title>LEOBOT MLM</title>
 
-
     <style>
 
         * {
@@ -22,7 +21,6 @@
         }
 
         body {
-
             font-family:
                 Arial,
                 Helvetica,
@@ -44,14 +42,10 @@
             align-items: center;
 
             padding: 20px;
-
         }
 
-
         .container {
-
             width: 100%;
-
             max-width: 1000px;
 
             background: white;
@@ -63,12 +57,9 @@
             box-shadow:
                 0 20px 60px
                 rgba(0,0,0,0.30);
-
         }
 
-
         .header {
-
             background:
                 linear-gradient(
                     135deg,
@@ -81,90 +72,51 @@
             text-align: center;
 
             padding: 35px 20px;
-
         }
-
 
         .header h1 {
-
             font-size: 38px;
-
             font-weight: 800;
-
             margin-bottom: 8px;
-
         }
-
 
         .header p {
-
             font-size: 16px;
-
             opacity: 0.9;
-
         }
-
 
         .forms {
-
             display: grid;
-
-            grid-template-columns:
-                1fr 1fr;
-
+            grid-template-columns: 1fr 1fr;
         }
-
 
         .box {
-
             padding: 35px;
-
         }
-
 
         .box + .box {
-
-            border-left:
-                1px solid #e5e7eb;
-
+            border-left: 1px solid #e5e7eb;
         }
-
 
         .box h2 {
-
             font-size: 25px;
-
             margin-bottom: 25px;
-
             color: #111827;
-
         }
-
 
         .form-group {
-
             margin-bottom: 17px;
-
         }
-
 
         label {
-
             display: block;
-
             font-size: 14px;
-
             font-weight: 600;
-
             margin-bottom: 7px;
-
             color: #374151;
-
         }
 
-
         input {
-
             width: 100%;
 
             padding: 13px 14px;
@@ -177,24 +129,17 @@
             font-size: 15px;
 
             outline: none;
-
         }
 
-
         input:focus {
-
-            border-color:
-                #2563eb;
+            border-color: #2563eb;
 
             box-shadow:
                 0 0 0 3px
                 rgba(37,99,235,0.12);
-
         }
 
-
         button {
-
             width: 100%;
 
             padding: 14px;
@@ -217,19 +162,24 @@
             font-weight: 700;
 
             cursor: pointer;
-
         }
-
 
         button:hover {
-
             opacity: 0.92;
-
         }
 
+        .copy-button {
+            margin-top: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #059669,
+                    #047857
+                );
+        }
 
         .sponsor {
-
             background: #f0fdf4;
 
             border:
@@ -244,12 +194,9 @@
             color: #166534;
 
             font-size: 14px;
-
         }
 
-
         .success {
-
             background: #ecfdf5;
 
             border:
@@ -262,12 +209,9 @@
             margin: 20px;
 
             border-radius: 10px;
-
         }
 
-
         .error {
-
             background: #fef2f2;
 
             border:
@@ -280,12 +224,9 @@
             margin: 20px;
 
             border-radius: 10px;
-
         }
 
-
         .ref-link {
-
             display: block;
 
             background: white;
@@ -300,11 +241,22 @@
 
             color: #2563eb;
 
+            border: 1px solid #dbeafe;
         }
 
+        .copy-message {
+            margin-top: 8px;
+
+            color: #166534;
+
+            font-weight: 600;
+
+            text-align: center;
+
+            display: none;
+        }
 
         .footer {
-
             text-align: center;
 
             padding: 20px;
@@ -314,46 +266,33 @@
             color: #64748b;
 
             font-size: 13px;
-
         }
-
 
         @media (max-width: 750px) {
 
             .forms {
-
-                grid-template-columns:
-                    1fr;
-
+                grid-template-columns: 1fr;
             }
 
             .box + .box {
-
                 border-left: none;
 
                 border-top:
                     1px solid #e5e7eb;
-
             }
 
             .header h1 {
-
                 font-size: 30px;
-
             }
-
         }
 
     </style>
 
 </head>
 
-
 <body>
 
-
 <div class="container">
-
 
     <!-- HEADER -->
 
@@ -390,12 +329,27 @@
 
             Your Referral Link:
 
-            <a
+            <div
+                id="referralLink"
                 class="ref-link"
-                href="{{ session('ref_link') }}"
             >
                 {{ session('ref_link') }}
-            </a>
+            </div>
+
+            <button
+                type="button"
+                class="copy-button"
+                onclick="copyReferralLink()"
+            >
+                Copy Referral Link
+            </button>
+
+            <div
+                id="copyMessage"
+                class="copy-message"
+            >
+                Referral link copied!
+            </div>
 
         </div>
 
@@ -412,7 +366,12 @@
                 Please fix the following:
             </strong>
 
-            <ul style="margin-top:10px; margin-left:20px;">
+            <ul
+                style="
+                    margin-top:10px;
+                    margin-left:20px;
+                "
+            >
 
                 @foreach($errors->all() as $error)
 
@@ -442,14 +401,12 @@
                 Login
             </h2>
 
-
             <form
                 method="POST"
                 action="{{ route('login.submit') }}"
             >
 
                 @csrf
-
 
                 <div class="form-group">
 
@@ -661,6 +618,52 @@
 
 </div>
 
+
+<script>
+
+    function copyReferralLink() {
+
+        const referralLink =
+            document.getElementById('referralLink').innerText.trim();
+
+        const copyMessage =
+            document.getElementById('copyMessage');
+
+        navigator.clipboard.writeText(referralLink)
+            .then(function () {
+
+                copyMessage.style.display = 'block';
+
+                setTimeout(function () {
+                    copyMessage.style.display = 'none';
+                }, 3000);
+
+            })
+            .catch(function () {
+
+                const textArea =
+                    document.createElement('textarea');
+
+                textArea.value = referralLink;
+
+                document.body.appendChild(textArea);
+
+                textArea.select();
+
+                document.execCommand('copy');
+
+                document.body.removeChild(textArea);
+
+                copyMessage.style.display = 'block';
+
+                setTimeout(function () {
+                    copyMessage.style.display = 'none';
+                }, 3000);
+
+            });
+    }
+
+</script>
 
 </body>
 
