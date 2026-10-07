@@ -22,13 +22,12 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | Dashboard
 |--------------------------------------------------------------------------
-|
-| Temporary live API for testing dashboard counters.
-|
 */
 
-Route::get('/check-dashboard', [DashboardController::class, 'getCounters'])
-    ->name('dashboard.counters');
+Route::get('/check-dashboard', [
+    DashboardController::class,
+    'getCounters'
+])->name('dashboard.counters');
 
 /*
 |--------------------------------------------------------------------------
@@ -36,12 +35,14 @@ Route::get('/check-dashboard', [DashboardController::class, 'getCounters'])
 |--------------------------------------------------------------------------
 |
 | Used only to verify database columns on the live PostgreSQL server.
-| DELETE this route after testing.
+| DELETE these debug routes after testing.
 |
 */
 
 Route::get('/debug-db', function () {
+
     try {
+
         $usersColumns = DB::select("
             SELECT
                 column_name,
@@ -74,6 +75,57 @@ Route::get('/debug-db', function () {
         ], 200, [], JSON_UNESCAPED_UNICODE);
 
     } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'error_type' => get_class($e),
+            'error_message' => $e->getMessage(),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+        ], 500, [], JSON_UNESCAPED_UNICODE);
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Temporary Users Debug
+|--------------------------------------------------------------------------
+|
+| Shows the permanent sponsor relationship:
+|
+| sponsor_user_id
+|
+| This is the important field for the secure referral tree.
+|
+*/
+
+Route::get('/debug-users', function () {
+
+    try {
+
+        $count = DB::table('users')->count();
+
+        $users = DB::table('users')
+            ->select(
+                'id',
+                'username',
+                'name',
+                'email',
+                'sponsor_id',
+                'sponsor_user_id'
+            )
+            ->orderBy('id')
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'users_count' => $count,
+            'users' => $users,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Throwable $e) {
+
         return response()->json([
             'success' => false,
             'error_type' => get_class($e),
@@ -171,42 +223,5 @@ Route::get('/debug-migrations', function () {
             'error_file' => $e->getFile(),
             'error_line' => $e->getLine(),
         ], 500, [], JSON_UNESCAPED_UNICODE);
-
-    }
-
-});
-/*
-|--------------------------------------------------------------------------
-| Temporary Users Count Debug
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/debug-users', function () {
-    try {
-
-        $count = DB::table('users')->count();
-
-        $users = DB::table('users')
-            ->select('id', 'username', 'name', 'email', 'sponsor_id')
-            ->orderBy('id')
-            ->limit(10)
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'users_count' => $count,
-            'users' => $users,
-        ], 200, [], JSON_UNESCAPED_UNICODE);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'success' => false,
-            'error_type' => get_class($e),
-            'error_message' => $e->getMessage(),
-            'error_file' => $e->getFile(),
-            'error_line' => $e->getLine(),
-        ], 500, [], JSON_UNESCAPED_UNICODE);
-
     }
 });
