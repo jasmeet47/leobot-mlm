@@ -72,12 +72,15 @@ Route::post('/activate-user', [
 |--------------------------------------------------------------------------
 */
 
-Route::get('/admin/level-config', [
-    LevelConfigController::class,
-    'index'
-])->name('admin.levels.index');
+Route::middleware('admin')->group(function () {
 
-Route::post('/admin/level-config/update', [
-    LevelConfigController::class,
-    'update'
-])->name('admin.levels.update');
+    Route::get('/admin/level-config', [
+        LevelConfigController::class,
+        'index'
+    ])->name('admin.levels.index');
+
+    Route::post('/admin/level-config/update', [
+        LevelConfigController::class,
+        'update'
+    ])->name('admin.levels.update');
+});
