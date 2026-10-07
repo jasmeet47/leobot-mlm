@@ -11,97 +11,40 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | SHOW LOGIN / REGISTER PAGE
-    |--------------------------------------------------------------------------
-    */
-
     public function showRegistrationForm(Request $request)
     {
-        /*
-        | Get referral code
-        |
-        | Example:
-        | /join?ref=TX123456
-        */
-
         $referralCode = $request->query('ref');
-
         $sponsorName = null;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK SPONSOR
-        |--------------------------------------------------------------------------
-        */
-
         if (!empty($referralCode)) {
-
-            $sponsor = DB::table('users')
-                ->where('username', $referralCode)
-                ->first();
-
+            $sponsor = User::where('username', $referralCode)->first();
 
             if ($sponsor) {
-
                 $sponsorName = $sponsor->name;
-
             } else {
-
-                /*
-                | Invalid referral code
-                */
-
                 $referralCode = null;
             }
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD AUTH PAGE
-        |--------------------------------------------------------------------------
-        */
-
-        return view(
-            'auth-page',
-            compact(
-                'referralCode',
-                'sponsorName'
-            )
-        );
+        return view('auth-page', compact(
+            'referralCode',
+            'sponsorName'
+        ));
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REGISTER USER
-    |--------------------------------------------------------------------------
-    */
 
     public function register(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
         $request->validate([
-
             'sponsor_id' => [
                 'required',
                 'string',
+                'max:255',
             ],
-
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
-
             'email' => [
                 'required',
                 'string',
@@ -109,154 +52,93 @@ class RegisterController extends Controller
                 'max:255',
                 'unique:users,email',
             ],
-
             'mobile' => [
                 'required',
                 'string',
                 'max:20',
             ],
-
             'password' => [
                 'required',
                 'string',
                 'min:8',
                 'confirmed',
             ],
-
         ]);
 
+        $user = DB::transaction(function () use ($request) {
 
-        /*
-        |--------------------------------------------------------------------------
-        | FIND SPONSOR
-        |--------------------------------------------------------------------------
-        */
+            /*
+             * Lock the sponsor row while registration is being created.
+             *
+             * This prevents race conditions when multiple users
+             * register under the same sponsor at the same time.
+             */
+            $sponsor = User::where('username', $request->sponsor_id)
+                ->lockForUpdate()
+                ->first();
 
-        $sponsor = User::where(
-            'username',
-            $request->sponsor_id
-        )->first();
+            if (!$sponsor) {
+                throw new \RuntimeException(
+                    'INVALID_SPONSOR'
+                );
+            }
 
-
-        if (!$sponsor) {
-
-            return back()
-                ->withErrors([
-                    'sponsor_id' =>
-                        'Invalid Sponsor ID. Please enter a valid Sponsor ID.'
-                ])
-                ->withInput();
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GENERATE USERNAME
-        |--------------------------------------------------------------------------
-        |
-        | Example:
-        | TX123456
-        |
-        */
-
-        do {
-
-            $username = 'TX' . random_int(
-                100000,
-                999999
+            /*
+             * Generate a unique member username.
+             */
+            do {
+                $username = 'TX' . random_int(100000, 999999);
+            } while (
+                User::where('username', $username)->exists()
             );
 
-        } while (
-            User::where(
-                'username',
-                $username
-            )->exists()
-        );
+            /*
+             * Create the member.
+             *
+             * sponsor_user_id is the permanent database relationship.
+             * sponsor_id is retained for backward compatibility.
+             */
+            return User::create([
+                'username' => $username,
 
+                'sponsor_id' => $sponsor->username,
 
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE USER
-        |--------------------------------------------------------------------------
-        */
+                'sponsor_user_id' => $sponsor->id,
 
-        $user = User::create([
+                'name' => $request->name,
 
-            'username' => $username,
+                'email' => $request->email,
 
-            'sponsor_id' => $sponsor->username,
+                'phone' => $request->mobile,
 
-            'name' => $request->name,
+                'password' => Hash::make($request->password),
 
-            'email' => $request->email,
+                'security_pin' => null,
 
-            'phone' => $request->mobile,
-
-            'password' => Hash::make(
-                $request->password
-            ),
-
-            'status' => 'active',
-
-        ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE REFERRAL LINK
-        |--------------------------------------------------------------------------
-        */
+                'status' => 'active',
+            ]);
+        });
 
         $myReferralLink = url(
-            '/join?ref=' . $username
+            '/join?ref=' . $user->username
         );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | AUTO LOGIN
-        |--------------------------------------------------------------------------
-        */
 
         Auth::login($user);
 
         $request->session()->regenerate();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | RETURN
-        |--------------------------------------------------------------------------
-        */
-
         return back()->with([
-
             'success_reg' => true,
 
-            'new_username' => $username,
+            'new_username' => $user->username,
 
             'ref_link' => $myReferralLink,
-
         ]);
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOGIN
-    |--------------------------------------------------------------------------
-    */
-
     public function login(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
         $credentials = $request->validate([
-
             'username' => [
                 'required',
                 'string',
@@ -266,71 +148,29 @@ class RegisterController extends Controller
                 'required',
                 'string',
             ],
-
         ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIN ATTEMPT
-        |--------------------------------------------------------------------------
-        */
 
         $loginSuccess = Auth::attempt([
-
             'username' => $credentials['username'],
-
             'password' => $credentials['password'],
-
         ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIN SUCCESS
-        |--------------------------------------------------------------------------
-        */
 
         if ($loginSuccess) {
 
             $request->session()->regenerate();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ADMIN
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 strtoupper(
                     $credentials['username']
                 ) === 'ADMIN'
             ) {
-
                 return redirect()->intended(
                     '/admin/level-config'
                 );
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | NORMAL USER
-            |--------------------------------------------------------------------------
-            */
-
-            return redirect()->intended(
-                '/join'
-            );
+            return redirect()->intended('/join');
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIN FAILED
-        |--------------------------------------------------------------------------
-        */
 
         return back()
             ->withErrors([
