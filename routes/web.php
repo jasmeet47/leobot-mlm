@@ -175,3 +175,38 @@ Route::get('/debug-migrations', function () {
     }
 
 });
+/*
+|--------------------------------------------------------------------------
+| Temporary Users Count Debug
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/debug-users', function () {
+    try {
+
+        $count = DB::table('users')->count();
+
+        $users = DB::table('users')
+            ->select('id', 'username', 'name', 'email', 'sponsor_id')
+            ->orderBy('id')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'users_count' => $count,
+            'users' => $users,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'error_type' => get_class($e),
+            'error_message' => $e->getMessage(),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+        ], 500, [], JSON_UNESCAPED_UNICODE);
+
+    }
+});
