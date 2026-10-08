@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +8,12 @@ use RuntimeException;
 
 class LevelConfigController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Show 51-Level Commission Settings
+    |--------------------------------------------------------------------------
+    */
+
     public function index()
     {
         $levels = DB::table('level_settings')
@@ -22,9 +26,14 @@ class LevelConfigController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Update 51-Level Commission Settings
+    |--------------------------------------------------------------------------
+    */
+
     public function update(Request $request)
     {
-        // Only an authenticated admin may update settings.
         $admin = $request->user();
 
         abort_unless(
@@ -48,7 +57,6 @@ class LevelConfigController extends Controller
             ]);
         }
 
-        // Reject unknown or invalid level numbers.
         foreach (array_keys($commission) as $level) {
             if (
                 !ctype_digit((string) $level) ||
@@ -79,7 +87,9 @@ class LevelConfigController extends Controller
         $preparedSettings = [];
         $totalScaled = 0;
 
-        // Validate all 51 levels before saving anything.
+        /*
+         * Validate all 51 levels.
+         */
         for ($i = 1; $i <= 51; $i++) {
             $isActive = isset($activeLevels[$i]);
 
@@ -157,13 +167,17 @@ class LevelConfigController extends Controller
 
             $preparedSettings[$i] = [
                 'level_number' => $i,
+
                 'commission_percentage' =>
                     $wholePart . '.' . $fractionPart,
+
                 'is_active' => $isActive,
             ];
         }
 
-        // Total must be 100%, allowing tiny rounding differences.
+        /*
+         * Total Commission Validation.
+         */
         $targetScaled = 100_000_000_000;
         $toleranceScaled = 1_000;
 
@@ -192,10 +206,7 @@ class LevelConfigController extends Controller
         }
 
         /*
-         * SECURITY:
-         * Lock existing settings before reading and updating.
-         *
-         * Update and audit record must succeed together.
+         * Atomic Settings Update and Audit Logging.
          */
         DB::transaction(function () use (
             $request,
@@ -254,7 +265,6 @@ class LevelConfigController extends Controller
                 $newSettings[] = $setting;
             }
 
-            // Save audit history in the same transaction.
             DB::table('level_setting_audits')->insert([
                 'admin_user_id' => $admin->id,
 
@@ -290,5 +300,45 @@ class LevelConfigController extends Controller
                 'success',
                 '51-level commission settings updated and audit recorded successfully!'
             );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Audit History
+    |--------------------------------------------------------------------------
+    | Protected by the admin middleware in routes/web.php.
+    | Read-only: does not change any commission settings.
+    */
+
+    public function history(Request $request)
+    {
+        $admin = $request->user();
+
+        abort_unless(
+            $admin &&
+            strtoupper((string) $admin->username) === 'ADMIN' &&
+            $admin->status === 'active',
+            403,
+            'Unauthorized.'
+        );
+
+        $audits = DB::table('level_setting_audits')
+            ->select(
+                'id',
+                'admin_user_id',
+                'admin_username',
+                'old_settings',
+                'new_settings',
+                'ip_address',
+                'user_agent',
+                'created_at'
+            )
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return view(
+            'admin.settings.level-history',
+            compact('audits')
+        );
     }
 }
