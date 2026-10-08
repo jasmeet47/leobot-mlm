@@ -5,15 +5,13 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\P2PTransferController;
 use App\Http\Controllers\Auth\DashboardController;
-use App\Http\Controllers\Auth\ActivationController;
 
 /*
 |--------------------------------------------------------------------------
 | Public API Routes
 |--------------------------------------------------------------------------
-| These routes do not require authentication.
+| Registration, login and sponsor verification.
 */
 
 Route::post('/verify-sponsor', [
@@ -35,20 +33,10 @@ Route::post('/login', [
 |--------------------------------------------------------------------------
 | Protected API Routes
 |--------------------------------------------------------------------------
-| Authentication is required for all routes below.
+| Authentication required.
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-
-    Route::post('/p2p-transfer', [
-        P2PTransferController::class,
-        'transfer',
-    ]);
-
-    Route::post('/activate-user', [
-        ActivationController::class,
-        'activate',
-    ]);
 
     Route::get('/dashboard-counters', [
         DashboardController::class,
@@ -56,3 +44,20 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
 });
+
+/*
+|--------------------------------------------------------------------------
+| Financial Operations Temporarily Disabled
+|--------------------------------------------------------------------------
+| POST /api/p2p-transfer
+| POST /api/activate-user
+|
+| These endpoints will be restored only after:
+| - Secure authenticated sender verification
+| - Hashed security PIN verification
+| - Atomic wallet transactions
+| - Financial ledger recording
+| - 51-level commission and capping validation
+| - Automated security tests
+|--------------------------------------------------------------------------
+*/

@@ -1,9 +1,9 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\LevelConfigController;
-use App\Http\Controllers\Auth\ActivationController;
 use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
 
@@ -16,17 +16,6 @@ use App\Http\Controllers\Auth\RegisterController;
 Route::get('/', function () {
     return view('welcome');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Dashboard
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/check-dashboard', [
-    DashboardController::class,
-    'getCounters',
-])->name('dashboard.counters');
 
 /*
 |--------------------------------------------------------------------------
@@ -57,14 +46,28 @@ Route::post('/login', [
 
 /*
 |--------------------------------------------------------------------------
-| User Activation
+| Protected Dashboard
 |--------------------------------------------------------------------------
 */
 
-Route::post('/activate-user', [
-    ActivationController::class,
-    'activate',
-])->name('activate.user');
+Route::middleware('auth')->group(function () {
+
+    Route::get('/check-dashboard', [
+        DashboardController::class,
+        'getCounters',
+    ])->name('dashboard.counters');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Activation Temporarily Disabled
+|--------------------------------------------------------------------------
+| The old activation controller is not safe for financial
+| transactions. Activation will be enabled only after
+| authentication, wallet ledger, tree logic and security
+| checks are completed.
+*/
 
 /*
 |--------------------------------------------------------------------------
@@ -83,4 +86,5 @@ Route::middleware('admin')->group(function () {
         LevelConfigController::class,
         'update',
     ])->name('admin.levels.update');
+
 });
