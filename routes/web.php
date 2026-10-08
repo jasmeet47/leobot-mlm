@@ -1,6 +1,8 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LevelConfigController;
+use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
 
@@ -68,33 +70,58 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 | Protected Admin Routes
 |--------------------------------------------------------------------------
+| Only authorized Admin can access these routes.
 */
 
 Route::middleware('admin')->group(function () {
 
     /*
-     * View 51-Level Commission Settings
-     */
+    |--------------------------------------------------------------------------
+    | 51-Level Commission Settings
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/admin/level-config', [
         LevelConfigController::class,
         'index',
     ])->name('admin.levels.index');
 
-    /*
-     * Update 51-Level Commission Settings
-     */
     Route::post('/admin/level-config/update', [
         LevelConfigController::class,
         'update',
     ])->name('admin.levels.update');
 
     /*
-     * View Admin Audit History
-     * Only authorized admins can access this route.
+     * 51-Level Audit History
      */
     Route::get('/admin/level-config/history', [
         LevelConfigController::class,
         'history',
     ])->name('admin.levels.history');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROI and Magic Income Settings
+    |--------------------------------------------------------------------------
+    | Settings management only.
+    | No income distribution is performed here.
+    */
+
+    Route::get('/admin/income-settings', [
+        IncomeSettingsController::class,
+        'index',
+    ])->name('admin.income.index');
+
+    /*
+     * Save ROI and Magic Income Settings.
+     * Protected by Admin middleware and CSRF.
+     * Rate-limited to reduce repeated submissions.
+     */
+    Route::post('/admin/income-settings/update', [
+        IncomeSettingsController::class,
+        'update',
+    ])
+        ->middleware('throttle:10,1')
+        ->name('admin.income.update');
 
 });
