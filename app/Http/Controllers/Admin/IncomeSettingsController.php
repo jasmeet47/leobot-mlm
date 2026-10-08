@@ -102,8 +102,9 @@ class IncomeSettingsController extends Controller
         ]);
 
         /*
-         * Validate percentage ranges precisely.
+         * Validate percentage ranges.
          */
+
         if (
             bccomp(
                 $validated['default_roi_percentage'],
@@ -132,6 +133,11 @@ class IncomeSettingsController extends Controller
 
         $admin = $request->user();
 
+        /*
+         * Update settings and save audit
+         * in the same database transaction.
+         */
+
         DB::transaction(function () use (
             $request,
             $validated,
@@ -154,8 +160,9 @@ class IncomeSettingsController extends Controller
             }
 
             /*
-             * Capture previous settings for audit.
+             * Previous settings.
              */
+
             $oldSettings = [
                 'roi' => [
                     'roi_enabled' =>
@@ -181,10 +188,10 @@ class IncomeSettingsController extends Controller
             ];
 
             /*
-             * Update Global ROI Settings.
-             *
-             * This does not distribute money.
+             * Save ROI settings.
+             * No payment is made here.
              */
+
             DB::table('roi_settings')
                 ->where('id', 1)
                 ->update([
@@ -202,11 +209,10 @@ class IncomeSettingsController extends Controller
                 ]);
 
             /*
-             * Update Magic Income Settings.
-             *
-             * Trading Profit Pool defaults to 3%
-             * but Admin can change the percentage.
+             * Save Magic Income settings.
+             * No payment is made here.
              */
+
             DB::table('magic_income_settings')
                 ->where('id', 1)
                 ->update([
@@ -224,8 +230,9 @@ class IncomeSettingsController extends Controller
                 ]);
 
             /*
-             * Capture new settings for audit.
+             * New settings.
              */
+
             $newSettings = [
                 'roi' => [
                     'roi_enabled' =>
@@ -251,11 +258,9 @@ class IncomeSettingsController extends Controller
             ];
 
             /*
-             * Permanent Admin Audit History.
-             *
-             * The audit table will be created
-             * in the next migration step.
+             * Save Admin Audit History.
              */
+
             DB::table('income_setting_audits')->insert([
                 'admin_user_id' => $admin->id,
 
@@ -289,5 +294,37 @@ class IncomeSettingsController extends Controller
                 'success',
                 'ROI and Magic Income settings updated successfully!'
             );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | View Admin Income Settings Audit History
+    |--------------------------------------------------------------------------
+    | Read-only.
+    | Only authorized Admin can view this history.
+    */
+
+    public function history(Request $request)
+    {
+        $this->checkAdmin($request);
+
+        $audits = DB::table('income_setting_audits')
+            ->select(
+                'id',
+                'admin_user_id',
+                'admin_username',
+                'old_settings',
+                'new_settings',
+                'ip_address',
+                'user_agent',
+                'created_at'
+            )
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return view(
+            'admin.settings.income-history',
+            compact('audits')
+        );
     }
 }

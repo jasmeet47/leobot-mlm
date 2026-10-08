@@ -70,7 +70,6 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 | Protected Admin Routes
 |--------------------------------------------------------------------------
-| Only authorized Admin can access these routes.
 */
 
 Route::middleware('admin')->group(function () {
@@ -103,8 +102,6 @@ Route::middleware('admin')->group(function () {
     |--------------------------------------------------------------------------
     | ROI and Magic Income Settings
     |--------------------------------------------------------------------------
-    | Settings management only.
-    | No income distribution is performed here.
     */
 
     Route::get('/admin/income-settings', [
@@ -114,8 +111,7 @@ Route::middleware('admin')->group(function () {
 
     /*
      * Save ROI and Magic Income Settings.
-     * Protected by Admin middleware and CSRF.
-     * Rate-limited to reduce repeated submissions.
+     * Admin protected + CSRF protected + rate limited.
      */
     Route::post('/admin/income-settings/update', [
         IncomeSettingsController::class,
@@ -123,5 +119,18 @@ Route::middleware('admin')->group(function () {
     ])
         ->middleware('throttle:10,1')
         ->name('admin.income.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROI and Magic Income Audit History
+    |--------------------------------------------------------------------------
+    | Read-only.
+    | Only authorized Admin can access this page.
+    */
+
+    Route::get('/admin/income-settings/history', [
+        IncomeSettingsController::class,
+        'history',
+    ])->name('admin.income.history');
 
 });

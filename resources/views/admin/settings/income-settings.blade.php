@@ -104,6 +104,32 @@
             line-height: 1.6;
         }
 
+        .top-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .top-links a {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .back-link {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .history-link {
+            background: #0f766e;
+            color: white;
+        }
+
         button {
             width: 100%;
             padding: 15px;
@@ -119,13 +145,6 @@
         button:hover {
             background: #1e40af;
         }
-
-        .back {
-            display: inline-block;
-            margin-bottom: 20px;
-            text-decoration: none;
-            color: #2563eb;
-        }
     </style>
 </head>
 
@@ -133,9 +152,21 @@
 
 <div class="container">
 
-    <a class="back" href="{{ route('admin.levels.index') }}">
-        &larr; Back to 51-Level Settings
-    </a>
+    <!-- ADMIN NAVIGATION -->
+
+    <div class="top-links">
+
+        <a class="back-link"
+           href="{{ route('admin.levels.index') }}">
+            &larr; 51-Level Settings
+        </a>
+
+        <a class="history-link"
+           href="{{ route('admin.income.history') }}">
+            View Audit History
+        </a>
+
+    </div>
 
     <h1>LeoBot Income Settings</h1>
 
@@ -216,7 +247,8 @@
                 <p class="help">
                     ROI starts OFF by default.
                     Turning it ON will not start payouts
-                    until the distribution system is implemented.
+                    until the new distribution system
+                    is implemented.
                 </p>
 
             </div>
@@ -396,8 +428,9 @@
                     Example: Trading Profit 1,000 USDT
                     at 5% creates a 50 USDT Magic Pool.
 
-                    Manual funding and direct Magic
-                    Pool entries will be added separately.
+                    Trading Profit manual entry and
+                    Direct Magic Pool funding will
+                    be implemented separately.
                 </p>
 
             </div>
@@ -409,6 +442,8 @@
         </button>
 
     </form>
+
+    <!-- PACKAGE-WISE SETTINGS -->
 
     <div class="card" style="margin-top: 20px;">
 
@@ -424,6 +459,29 @@
             Their Admin management screen
             will be created separately.
         </p>
+
+    </div>
+
+    <!-- AUDIT HISTORY INFORMATION -->
+
+    <div class="card">
+
+        <h2>3. Admin Audit History</h2>
+
+        <p class="help">
+            View who changed ROI and Magic Income
+            settings, when they changed them,
+            and the previous and new values.
+        </p>
+
+        <a class="history-link"
+           href="{{ route('admin.income.history') }}"
+           style="display: inline-block;
+                  padding: 12px 18px;
+                  border-radius: 8px;
+                  text-decoration: none;">
+            View Audit History
+        </a>
 
     </div>
 
