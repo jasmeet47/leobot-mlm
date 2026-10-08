@@ -10,6 +10,10 @@ use RuntimeException;
 
 class WalletService
 {
+    private const SCALE = 8;
+
+    private const MAX_BALANCE = '999999999999.99999999';
+
     private const ALLOWED_WALLETS = [
         'available_balance',
         'activation_balance',
@@ -62,28 +66,58 @@ class WalletService
         string $direction,
         array $details
     ): void {
-        if (!in_array($walletType, self::ALLOWED_WALLETS, true)) {
-            throw new InvalidArgumentException('Invalid wallet type.');
+        if ($userId <= 0) {
+            throw new InvalidArgumentException(
+                'Invalid user ID.'
+            );
         }
 
-        if ($entryType === '' || $transactionKey === '') {
+        if (!in_array($walletType, self::ALLOWED_WALLETS, true)) {
+            throw new InvalidArgumentException(
+                'Invalid wallet type.'
+            );
+        }
+
+        if (
+            trim($entryType) === '' ||
+            trim($transactionKey) === ''
+        ) {
             throw new InvalidArgumentException(
                 'Entry type and transaction key are required.'
             );
         }
 
-        if (strlen($transactionKey) > 255) {
+        if (
+            strlen($entryType) > 255 ||
+            strlen($transactionKey) > 255
+        ) {
             throw new InvalidArgumentException(
-                'Transaction key is too long.'
+                'Entry type or transaction key is too long.'
             );
         }
 
-        if (!preg_match('/^\d+(\.\d{1,8})?$/', $amount)) {
-            throw new InvalidArgumentException('Invalid amount format.');
+        if (!preg_match('/^\d+(\.\d{1,8})?$/D', $amount)) {
+            throw new InvalidArgumentException(
+                'Invalid amount format.'
+            );
         }
 
-        if (bccomp($amount, '0', 8) <= 0) {
-            throw new InvalidArgumentException('Amount must be positive.');
+        if (bccomp($amount, '0', self::SCALE) <= 0) {
+            throw new InvalidArgumentException(
+                'Amount must be positive.'
+            );
+        }
+
+        if (
+            bccomp(
+                $amount,
+                self::MAX_BALANCE,
+                self::SCALE
+            ) > 0
+        ) {
+            throw new InvalidArgumentException(
+                'Amount exceeds wallet limit.'
+            );
         }
 
         DB::transaction(function () use (
@@ -101,7 +135,7 @@ class WalletService
 
             $existing = DB::table('financial_ledger')
                 ->where('transaction_key', $transactionKey)
-                ->first();
+                ->exists();
 
             if ($existing) {
                 throw new RuntimeException(
@@ -111,16 +145,56 @@ class WalletService
 
             $before = (string) $user->{$walletType};
 
+            if (
+                !preg_match('/^\d+(\.\d{1,8})?$/D', $before) ||
+                bccomp($before, '0', self::SCALE) < 0 ||
+                bccomp(
+                    $before,
+                    self::MAX_BALANCE,
+                    self::SCALE
+                ) > 0
+            ) {
+                throw new RuntimeException(
+                    'Invalid existing wallet balance.'
+                );
+            }
+
             if ($direction === 'credit') {
-                $after = bcadd($before, $amount, 8);
+                $after = bcadd(
+                    $before,
+                    $amount,
+                    self::SCALE
+                );
+
+                if (
+                    bccomp(
+                        $after,
+                        self::MAX_BALANCE,
+                        self::SCALE
+                    ) > 0
+                ) {
+                    throw new RuntimeException(
+                        'Wallet balance limit exceeded.'
+                    );
+                }
             } else {
-                if (bccomp($before, $amount, 8) < 0) {
+                if (
+                    bccomp(
+                        $before,
+                        $amount,
+                        self::SCALE
+                    ) < 0
+                ) {
                     throw new RuntimeException(
                         'Insufficient wallet balance.'
                     );
                 }
 
-                $after = bcsub($before, $amount, 8);
+                $after = bcsub(
+                    $before,
+                    $amount,
+                    self::SCALE
+                );
             }
 
             $user->{$walletType} = $after;
