@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -5,6 +6,7 @@ use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SecurityPinController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,16 +47,49 @@ Route::post('/login', [
 
 /*
 |--------------------------------------------------------------------------
-| Protected Dashboard
+| Protected Member Routes
 |--------------------------------------------------------------------------
+|
+| Only authenticated users can access these routes.
+|
 */
 
 Route::middleware('auth')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Protected Dashboard
+    |--------------------------------------------------------------------------
+    */
 
     Route::get('/check-dashboard', [
         DashboardController::class,
         'getCounters',
     ])->name('dashboard.counters');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security PIN Page
+    |--------------------------------------------------------------------------
+    |
+    | GET: Show Security PIN form.
+    | POST: Verify account password and save hashed PIN.
+    |
+    | Both routes require authentication.
+    | POST route has CSRF protection through web middleware.
+    |
+    */
+
+    Route::get('/security-pin', function () {
+        return view('security-pin');
+    })->name('security-pin.form');
+
+    Route::post('/security-pin', [
+        SecurityPinController::class,
+        'update',
+    ])
+        ->middleware('throttle:10,1')
+        ->name('security-pin.update');
 
 });
 
@@ -62,8 +97,10 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 | Financial Operations Temporarily Disabled
 |--------------------------------------------------------------------------
+|
 | Activation and P2P transfers remain disabled until
 | wallet, ledger and commission security tests are complete.
+|
 */
 
 /*
@@ -91,8 +128,11 @@ Route::middleware('admin')->group(function () {
     ])->name('admin.levels.update');
 
     /*
-     * 51-Level Audit History
-     */
+    |--------------------------------------------------------------------------
+    | 51-Level Audit History
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/admin/level-config/history', [
         LevelConfigController::class,
         'history',
@@ -110,9 +150,16 @@ Route::middleware('admin')->group(function () {
     ])->name('admin.income.index');
 
     /*
-     * Save ROI and Magic Income Settings.
-     * Admin protected + CSRF protected + rate limited.
-     */
+    |--------------------------------------------------------------------------
+    | Save ROI and Magic Income Settings
+    |--------------------------------------------------------------------------
+    |
+    | Admin protected.
+    | CSRF protected.
+    | Rate limited.
+    |
+    */
+
     Route::post('/admin/income-settings/update', [
         IncomeSettingsController::class,
         'update',
@@ -124,8 +171,6 @@ Route::middleware('admin')->group(function () {
     |--------------------------------------------------------------------------
     | ROI and Magic Income Audit History
     |--------------------------------------------------------------------------
-    | Read-only.
-    | Only authorized Admin can access this page.
     */
 
     Route::get('/admin/income-settings/history', [

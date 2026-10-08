@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Middleware\AdminOnly;
@@ -14,12 +15,32 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Redirect Guests to Login Page
+        |--------------------------------------------------------------------------
+        |
+        | LeoBot uses /join for member login and registration.
+        | Guests accessing protected web pages are sent there.
+        |
+        */
+
+        $middleware->redirectGuestsTo('/join');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Custom Middleware Aliases
+        |--------------------------------------------------------------------------
+        */
+
         $middleware->alias([
             'admin' => AdminOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+            fn (Request $request) =>
+                $request->is('api/*') || $request->expectsJson(),
         );
     })->create();
