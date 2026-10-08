@@ -17,7 +17,6 @@ class RegisterController extends Controller
         $sponsorName = null;
 
         if (!empty($referralCode)) {
-
             $sponsor = User::where(
                 'username',
                 $referralCode
@@ -73,19 +72,12 @@ class RegisterController extends Controller
             ],
         ]);
 
-        /*
-         * Find the sponsor before starting the transaction.
-         *
-         * This gives the user a normal validation error
-         * instead of a 500 server error when the sponsor is invalid.
-         */
         $sponsor = User::where(
             'username',
             $validated['sponsor_id']
         )->first();
 
         if (!$sponsor) {
-
             return back()
                 ->withErrors([
                     'sponsor_id' =>
@@ -94,22 +86,10 @@ class RegisterController extends Controller
                 ->withInput();
         }
 
-        /*
-         * Create the member inside a database transaction.
-         *
-         * If anything fails, the complete registration is rolled back.
-         */
         $user = DB::transaction(function () use (
             $validated,
             $sponsor
         ) {
-
-            /*
-             * Lock the sponsor row while creating the member.
-             *
-             * This helps prevent race conditions when multiple
-             * registrations happen under the same sponsor.
-             */
             $lockedSponsor = User::where(
                 'id',
                 $sponsor->id
@@ -123,11 +103,7 @@ class RegisterController extends Controller
                 );
             }
 
-            /*
-             * Generate a unique member username.
-             */
             do {
-
                 $username =
                     'TX' . random_int(100000, 999999);
 
@@ -138,14 +114,6 @@ class RegisterController extends Controller
                 )->exists()
             );
 
-            /*
-             * Create the member.
-             *
-             * sponsor_user_id is the permanent secure
-             * database relationship.
-             *
-             * sponsor_id is retained for backward compatibility.
-             */
             return User::create([
                 'username' => $username,
 
@@ -171,20 +139,15 @@ class RegisterController extends Controller
 
                 'security_pin' => null,
 
-                'status' => 'active',
+                // Activation is required before becoming active.
+                'status' => 'inactive',
             ]);
         });
 
-        /*
-         * Generate the member's referral link.
-         */
         $myReferralLink = url(
             '/join?ref=' . $user->username
         );
 
-        /*
-         * Automatically log the newly registered member in.
-         */
         Auth::login($user);
 
         $request->session()->regenerate();
@@ -223,7 +186,6 @@ class RegisterController extends Controller
         ]);
 
         if ($loginSuccess) {
-
             $request->session()->regenerate();
 
             if (
