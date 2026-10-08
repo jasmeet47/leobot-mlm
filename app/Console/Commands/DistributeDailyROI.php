@@ -3,72 +3,32 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class DistributeDailyROI extends Command
 {
+    /**
+     * Keep the existing command name for compatibility.
+     */
     protected $signature = 'roi:distribute';
-    protected $description = 'सोमवार से शुक्रवार के बीच 0.2% डेली ROI ऑटोमैटिक बांटना';
 
-    public function handle()
+    protected $description =
+        'ROI distribution disabled until secure package-wise payout system is ready.';
+
+    /**
+     * Fail safely without modifying any financial data.
+     */
+    public function handle(): int
     {
-        $today = Carbon::now();
+        Log::warning(
+            'Legacy ROI distribution was blocked. No payouts executed.'
+        );
 
-        if ($today->isWeekend()) {
-            $this->info('आज वीकends है, ट्रेडिंग मार्केट बंद होने के कारण ROI नहीं बंटेगी।');
-            return 0;
-        }
+        $this->error(
+            'ROI distribution is disabled for security. '
+            . 'The new package-wise ROI system is not ready yet.'
+        );
 
-        $todayDate = $today->toDateString();
-
-        $users = User::where('status', 'active')
-                     ->where('total_investment', '>', 0)
-                     ->get();
-
-        if ($users->isEmpty()) {
-            $this->info('कोई भी एक्टिव इन्वेस्टेड यूजर नहीं मिला।');
-            return 0;
-        }
-
-        $count = 0;
-
-        foreach ($users as $user) {
-            $alreadyPaid = DB::table('roi_logs')
-                             ->where('user_id', $user->id)
-                             ->where('date', $todayDate)
-                             ->exists();
-
-            if ($alreadyPaid) {
-                continue;
-            }
-
-            $roiAmount = ($user->total_investment * 0.2) / 100;
-
-            DB::transaction(function () use ($user, $roiAmount, $todayDate) {
-                // ROI क्रेडिट होते ही ऊपर के 41 अपलाइनों को जेनरेशन इनकम बांटना
-\App\Services\TreeService::distributeGenerationIncome($user->id, $roiAmount, 'roi_level_income');
-
-                $user->increment('available_balance', $roiAmount);
-                $user->increment('lifetime_income', $roiAmount);
-                $user->increment('daily_income_total', $roiAmount);
-
-                DB::table('roi_logs')->insert([
-                    'user_id' => $user->id,
-                    'investment_amount' => $user->total_investment,
-                    'roi_amount' => $roiAmount,
-                    'percentage' => 0.20,
-                    'date' => $todayDate,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
-            });
-
-            $count++;
-        }
-
-        $this->info("सफलतापूर्वक {$count} यूज़र्स के वॉलेट में 0.2% Daily ROI क्रेडिट कर दी गई है।");
-        return 0;
+        return self::FAILURE;
     }
 }
