@@ -1,0 +1,114 @@
+#!/bin/sh
+
+# ==========================================
+# LeoBot Git Pre-Commit Safety Guard v2
+# ==========================================
+
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo ""
+echo "========================================"
+echo " LeoBot Pre-Commit Safety Guard"
+echo "========================================"
+
+# STEP 1: Check PowerShell availability.
+
+if ! command -v powershell.exe >/dev/null 2>&1; then
+    echo "ERROR: Windows PowerShell not found."
+    echo "Commit blocked."
+    exit 1
+fi
+
+# STEP 2: Verify the PHP header fixer exists.
+
+if [ ! -f "scripts/fix-php-headers.ps1" ]; then
+    echo "ERROR: PHP header fixer missing."
+    echo "Commit blocked."
+    exit 1
+fi
+
+# STEP 3: Check working PHP files first.
+
+echo ""
+echo "Checking PHP source files..."
+
+if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
+    -File "scripts/fix-php-headers.ps1" -Check
+then
+    echo ""
+    echo "PHP header problems detected."
+    echo "Attempting automatic repair..."
+
+    powershell.exe -NoProfile -ExecutionPolicy Bypass \
+        -File "scripts/fix-php-headers.ps1" || true
+
+    echo ""
+    echo "COMMIT BLOCKED."
+    echo "Review the repaired files."
+    echo "Run git add again before committing."
+    exit 1
+fi
+
+# STEP 4: Check the actual files staged in Git.
+# A clean working file does not guarantee
+# that the staged version is clean.
+
+echo ""
+echo "Checking staged PHP files..."
+
+staged_list="$(mktemp)"
+
+trap 'rm -f "$staged_list"' EXIT
+
+git -c core.quotePath=false diff \
+    --cached \
+    --name-only \
+    --diff-filter=ACMR \
+    -- '*.php' > "$staged_list"
+
+while IFS= read -r file
+do
+    # Skip empty names.
+    if [ -z "$file" ]; then
+        continue
+    fi
+
+    # Blade templates are not PHP source headers.
+    case "$file" in
+        *.blade.php)
+            continue
+            ;;
+    esac
+
+    # Read the first five bytes from Git's
+    # staged version, not the working file.
+    header="$(
+        git show ":$file" |
+        head -c 5 |
+        od -An -tx1 |
+        tr -d '[:space:]'
+    )"
+
+    if [ "$header" != "3c3f706870" ]; then
+        echo ""
+        echo "ERROR: Invalid staged PHP header:"
+        echo "$file"
+        echo ""
+        echo "COMMIT BLOCKED."
+        echo "Fix this file and run git add again."
+        exit 1
+    fi
+
+    echo "OK: $file"
+
+done < "$staged_list"
+
+echo ""
+echo "========================================"
+echo " LeoBot PHP Header Safety PASSED"
+echo "========================================"
+echo "Commit allowed."
+
+exit 0

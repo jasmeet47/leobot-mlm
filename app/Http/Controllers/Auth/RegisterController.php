@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Show Registration Form
+    |--------------------------------------------------------------------------
+    */
+
     public function showRegistrationForm(Request $request)
     {
         $referralCode = $request->query('ref');
@@ -34,6 +40,12 @@ class RegisterController extends Controller
             'sponsorName'
         ));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Member Registration
+    |--------------------------------------------------------------------------
+    */
 
     public function register(Request $request)
     {
@@ -163,6 +175,12 @@ class RegisterController extends Controller
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Secure Member Login
+    |--------------------------------------------------------------------------
+    */
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -186,11 +204,14 @@ class RegisterController extends Controller
         ]);
 
         if ($loginSuccess) {
+
+            // Protect against session fixation.
             $request->session()->regenerate();
 
+            // Preserve existing ADMIN redirect.
             if (
                 strtoupper(
-                    $credentials['username']
+                    $request->user()->username
                 ) === 'ADMIN'
             ) {
                 return redirect()->intended(
@@ -198,9 +219,23 @@ class RegisterController extends Controller
                 );
             }
 
-            return redirect()->intended('/join');
+            /*
+             * FIX:
+             * Send successfully logged-in members
+             * to a protected member page.
+             *
+             * Do not redirect them back to /join.
+             */
+            return redirect()->intended(
+                route('security-pin.form')
+            );
         }
 
+        /*
+         * Incorrect login:
+         * Return an error without exposing
+         * account passwords.
+         */
         return back()
             ->withErrors([
                 'username' =>
