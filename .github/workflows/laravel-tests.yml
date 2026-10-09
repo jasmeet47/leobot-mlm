@@ -1,0 +1,61 @@
+
+name: LeoBot Laravel Security Tests
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  laravel-tests:
+    name: PHP 8.3 - Laravel Tests
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      DB_URL: ""
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: log
+
+    steps:
+      # Download project from GitHub.
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Install PHP and extensions required by Laravel.
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, dom, fileinfo, pdo_sqlite, sqlite3, bcmath, curl, xml, zip, intl, gd
+          tools: composer:v2
+          coverage: none
+
+      # Install development dependencies including PHPUnit.
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # Generate a temporary encryption key for this test run.
+      # Do not use the live Render APP_KEY.
+      - name: Generate Testing APP_KEY
+        run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+
+      # Verify application PHP syntax and headers.
+      - name: Check PHP Header Safety
+        run: php artisan test --filter=PhpHeaderSafetyTest
+
+      # Run the complete Laravel test suite.
+      - name: Run All Laravel Tests
+        run: php artisan test
