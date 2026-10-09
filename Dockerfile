@@ -23,7 +23,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
 
 # Set Laravel public directory
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
@@ -40,5 +40,9 @@ RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 80
 
-# Run migrations, seed database, and start Apache
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
+# Connect Render's runtime secret file to Laravel.
+# Never copy the secret file into the Docker image.
+# Keep the secret outside Laravel's public directory.
+#
+# Then run migrations, seed database, and start Apache.
+CMD ["sh", "-c", "if [ -f /etc/secrets/.env ]; then ln -sfn /etc/secrets/.env /var/www/html/.env; fi; php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
