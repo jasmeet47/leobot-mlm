@@ -30,11 +30,11 @@ jobs:
       MAIL_MAILER: log
 
     steps:
-      # Download project from GitHub.
+      # Download LeoBot project from GitHub.
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      # Install PHP and extensions required by Laravel.
+      # Install PHP 8.3 and Laravel extensions.
       - name: Setup PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
@@ -43,19 +43,19 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      # Install development dependencies including PHPUnit.
+      # Install Laravel and PHPUnit dependencies.
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # Generate a temporary encryption key for this test run.
-      # Do not use the live Render APP_KEY.
+      # Create a temporary test-only encryption key.
+      # Never use the production Render APP_KEY.
       - name: Generate Testing APP_KEY
         run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
 
-      # Verify application PHP syntax and headers.
+      # Prevent PHP output before session/redirect headers.
       - name: Check PHP Header Safety
         run: php artisan test --filter=PhpHeaderSafetyTest
 
-      # Run the complete Laravel test suite.
+      # Run all Laravel automated tests.
       - name: Run All Laravel Tests
         run: php artisan test
