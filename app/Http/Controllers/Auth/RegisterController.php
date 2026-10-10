@@ -210,7 +210,10 @@ class RegisterController extends Controller
                 return redirect()->intended('/admin/level-config');
             }
 
-            return redirect()->intended(route('security-pin.form'));
+            // Explicit destination: a pre-saved intended URL cannot bypass PIN setup.
+            return \App\Http\Middleware\EnsureMemberPin::hasConfiguredPin($request->user())
+                ? redirect()->route('member.dashboard')
+                : redirect()->route('security-pin.form');
         }
 
         return back()->withErrors([

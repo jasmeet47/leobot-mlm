@@ -133,7 +133,12 @@ class SecurityPinController extends Controller
          */
         RateLimiter::clear($rateLimitKey);
 
-        return back()->with(
+        // Preserve the existing Admin flow; members proceed to their dashboard.
+        if (strtoupper((string) $user->username) === 'ADMIN') {
+            return back()->with('success', 'Security PIN saved successfully.');
+        }
+
+        return redirect()->route('member.dashboard')->with(
             'success',
             'Security PIN saved successfully.'
         );

@@ -94,7 +94,7 @@ class SecurityPinControllerTest extends TestCase
                 $this->validData()
             );
 
-        $response->assertRedirect('/join');
+        $response->assertRedirect(route('member.dashboard'));
 
         $response->assertSessionHas(
             'success',

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\DashboardController;
+use App\Http\Middleware\EnsureMemberPin;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard-counters', [
         DashboardController::class,
         'getCounters',
-    ]);
+    ])->middleware(EnsureMemberPin::class);
 
 });
 

@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Auth\DashboardController;
+use App\Http\Controllers\Member\MemberDashboardController;
+use App\Http\Middleware\EnsureMemberPin;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SecurityPinController;
 
@@ -64,7 +68,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/check-dashboard', [
         DashboardController::class,
         'getCounters',
-    ])->name('dashboard.counters');
+    ])->middleware(EnsureMemberPin::class)->name('dashboard.counters');
+
+    // Member-only read-only dashboard; security PIN must already be set.
+    Route::get('/member/dashboard', [
+        MemberDashboardController::class,
+        'index',
+    ])->middleware(EnsureMemberPin::class)->name('member.dashboard');
+
+    // End the session safely (POST + CSRF; not a GET logout link).
+    Route::post('/logout', function (Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('register.form');
+    })->name('logout');
 
     /*
     |--------------------------------------------------------------------------
