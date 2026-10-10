@@ -103,7 +103,7 @@ class RegisterController extends Controller
                         ]);
                     }
 
-                    return User::create([
+                    $newMember = User::create([
                         'username' => $candidate,
                         'sponsor_id' => $sponsor->username,
                         'sponsor_user_id' => $sponsor->getKey(),
@@ -114,6 +114,8 @@ class RegisterController extends Controller
                         'security_pin' => null,
                         'status' => 'inactive',
                     ]);
+                    \App\Services\TeamCounterService::synchronize((int) $newMember->id);
+                    return $newMember;
                 }, 3);
 
                 break;

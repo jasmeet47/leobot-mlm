@@ -270,6 +270,7 @@ class ActivationService
             /*
              * No commission or income payout here.
              */
+            \App\Services\TeamCounterService::synchronize($userId);
             return (int) $packageId;
         }, 3);
     }
