@@ -30,3 +30,6 @@ Thumbs.db
 # Backup files
 *.backup
 *.bak
+
+# Local development notes
+README_*.txt
