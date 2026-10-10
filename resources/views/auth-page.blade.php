@@ -463,7 +463,7 @@
 
             @if($referralCode)
 
-                <div class="sponsor">
+                <div class="sponsor" id="leobotReferralBanner">
 
                     Sponsor ID:
 
@@ -663,6 +663,91 @@
             });
     }
 
+
+    // LEOBOT_SPONSOR_VERIFY_V1: read-only lookup; server validates again on registration.
+    (function () {
+        'use strict';
+        const input = document.querySelector('input[name="sponsor_id"]');
+        if (!input || !input.closest('form')) return;
+        // LEOBOT_REFERRAL_BANNER_SYNC_V1
+        const banner = document.getElementById('leobotReferralBanner');
+        const originalCode = banner ? banner.querySelector('strong').textContent.trim() : '';
+
+        const feedback = document.createElement('div');
+        feedback.id = 'leobotSponsorVerificationMessage';
+        feedback.setAttribute('role', 'status');
+        feedback.setAttribute('aria-live', 'polite');
+        feedback.style.cssText = 'margin-top:7px;font-size:13px;min-height:17px;';
+        input.insertAdjacentElement('afterend', feedback);
+
+        let timer = null;
+        let pending = null;
+        let requestNumber = 0;
+
+        function display(message, kind) {
+            feedback.textContent = message;
+            feedback.style.color = kind === 'valid' ? '#15803d'
+                : kind === 'invalid' ? '#b91c1c' : '#64748b';
+        }
+
+        async function verify(value, number) {
+            const controller = new AbortController();
+            pending = controller;
+            try {
+                const response = await fetch('/api/verify-sponsor', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ sponsor_id: value }),
+                    signal: controller.signal
+                });
+                if (number !== requestNumber || input.value.trim() !== value) return;
+
+                if (response.status === 429) {
+                    display('Too many checks. Please wait and try again.', 'invalid');
+                    return;
+                }
+                if (!response.ok) {
+                    display('Sponsor verification is unavailable. Please try again.', 'invalid');
+                    return;
+                }
+
+                const data = await response.json();
+                if (number !== requestNumber || input.value.trim() !== value) return;
+                if (data.valid === true && typeof data.sponsor_name === 'string') {
+                    display('Verified Sponsor: ' + data.sponsor_name, 'valid');
+                } else {
+                    display('Sponsor ID not found.', 'invalid');
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError' && number === requestNumber) {
+                    display('Sponsor verification is unavailable. Please try again.', 'invalid');
+                }
+            } finally {
+                if (pending === controller) pending = null;
+            }
+        }
+
+        function scheduleCheck() {
+            const number = ++requestNumber;
+            clearTimeout(timer);
+            if (pending) pending.abort();
+            const value = input.value.trim();
+            if (banner) banner.style.display = value === originalCode ? '' : 'none';
+            if (!value) {
+                display('', '');
+                return;
+            }
+            display('Checking Sponsor ID...', 'pending');
+            timer = setTimeout(function () { verify(value, number); }, 550);
+        }
+
+        input.addEventListener('input', scheduleCheck);
+        if (input.value.trim()) scheduleCheck();
+    }());
 </script>
 
 </body>
