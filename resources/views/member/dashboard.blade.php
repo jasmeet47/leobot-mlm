@@ -64,6 +64,20 @@
         </div>
     </section>
 
+    <section aria-label="Member referral link">
+        <h2>Your Referral Link</h2>
+        <div class="card">
+            <label class="label" for="member-referral-link">Share your personal registration link</label>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; align-items:center">
+                <input id="member-referral-link" type="text" readonly
+                       value="{{ url('/join?ref=' . $member->username) }}"
+                       style="flex:1 1 280px; width:100%; min-width:0; padding:10px; border:1px solid #334155; border-radius:9px; background:#090d16; color:#e2e8f0; font:inherit"
+                       aria-label="Your referral URL">
+                <button id="copy-referral-button" type="button" class="action">Copy Referral Link</button>
+            </div>
+            <p id="referral-copy-status" class="muted" role="status" aria-live="polite" style="margin:10px 0 0"></p>
+        </div>
+    </section>
     <section aria-label="Team summary">
         <h2>Your Team Overview</h2>
         <div class="grid">
@@ -94,5 +108,26 @@
     </section>
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
 </main>
+<script>
+(function () {
+    const button = document.getElementById('copy-referral-button');
+    const input = document.getElementById('member-referral-link');
+    const status = document.getElementById('referral-copy-status');
+    if (!button || !input || !status) return;
+    button.addEventListener('click', async function () {
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                throw new Error('Clipboard API unavailable');
+            }
+            await navigator.clipboard.writeText(input.value);
+            status.textContent = 'Referral link copied.';
+        } catch (error) {
+            input.focus();
+            input.select();
+            status.textContent = 'Link selected. Press Ctrl+C to copy.';
+        }
+    });
+})();
+</script>
 </body>
 </html>
