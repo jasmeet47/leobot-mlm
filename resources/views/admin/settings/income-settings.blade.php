@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,7 +74,7 @@
             color: #64748b;
             font-size: 13px;
             margin-top: 6px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .success {
@@ -145,6 +144,16 @@
         button:hover {
             background: #1e40af;
         }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
     </style>
 </head>
 
@@ -171,8 +180,11 @@
     <h1>LeoBot Income Settings</h1>
 
     <p class="subtitle">
-        Admin Control Panel - ROI and Magic Income
+        Admin Control Panel - ROI, Magic Income,
+        51-Level Generation and Investment Distribution
     </p>
+
+    <!-- SUCCESS MESSAGE -->
 
     @if(session('success'))
         <div class="success">
@@ -180,8 +192,11 @@
         </div>
     @endif
 
+    <!-- VALIDATION ERRORS -->
+
     @if($errors->any())
         <div class="error">
+
             <strong>Please correct these errors:</strong>
 
             <ul>
@@ -189,24 +204,37 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
+
         </div>
     @endif
 
+    <!-- SAFETY WARNING -->
+
     <div class="warning">
         <strong>Important:</strong>
-        These settings do not distribute money.
-        ROI and Magic Income payout systems will remain
-        disabled until secure distribution logic,
-        financial ledger checks and payout approval
-        are implemented.
+
+        These settings only control configuration.
+
+        ROI, Magic Income, 51-Level Generation and Investment
+        Distribution payouts are locked OFF by this screen until their
+        engines, ledger checks, qualification rules and funding
+        controls are fully implemented and tested.
+
+        ROI, Magic, Generation and Investment Distribution are locked OFF by this screen.
+
+        Saving these settings does not distribute money.
     </div>
+
+    <!-- MAIN SETTINGS FORM -->
 
     <form method="POST"
           action="{{ route('admin.income.update') }}">
 
         @csrf
 
-        <!-- GLOBAL ROI SETTINGS -->
+        <!-- ===================================== -->
+        <!-- 1. ROI SETTINGS -->
+        <!-- ===================================== -->
 
         <div class="card">
 
@@ -218,37 +246,17 @@
                     ROI System
                 </label>
 
-                <select name="roi_enabled"
-                        id="roi_enabled"
-                        required>
-
-                    <option value="0"
-                        @selected(
-                            (string) old(
-                                'roi_enabled',
-                                (int) $roiSettings->roi_enabled
-                            ) === '0'
-                        )>
-                        OFF
-                    </option>
-
-                    <option value="1"
-                        @selected(
-                            (string) old(
-                                'roi_enabled',
-                                (int) $roiSettings->roi_enabled
-                            ) === '1'
-                        )>
-                        ON
-                    </option>
-
-                </select>
+                <input type="hidden" name="roi_enabled" value="0">
+                <p class="help">
+                    ROI payout switch: <strong>LOCKED OFF</strong>.
+                    Current database value:
+                    <strong>{{ $safetySwitchStates['roi'] ? 'ON (save to disable)' : 'OFF' }}</strong>.
+                    Saving this form sets this switch OFF.
+                </p>
 
                 <p class="help">
                     ROI starts OFF by default.
-                    Turning it ON will not start payouts
-                    until the new distribution system
-                    is implemented.
+                    A separate payout engine is required.
                 </p>
 
             </div>
@@ -316,6 +324,7 @@
 
                 <p class="help">
                     Example: Enter 0.20 for 0.20%.
+
                     Package-specific ROI percentages
                     will be configured separately.
                 </p>
@@ -324,7 +333,9 @@
 
         </div>
 
-        <!-- MAGIC INCOME SETTINGS -->
+        <!-- ===================================== -->
+        <!-- 2. MAGIC INCOME SETTINGS -->
+        <!-- ===================================== -->
 
         <div class="card">
 
@@ -336,31 +347,18 @@
                     Magic Income System
                 </label>
 
-                <select name="magic_enabled"
-                        id="magic_enabled"
-                        required>
+                <input type="hidden" name="magic_enabled" value="0">
+                <p class="help">
+                    Magic payout switch: <strong>LOCKED OFF</strong>.
+                    Current database value:
+                    <strong>{{ $safetySwitchStates['magic'] ? 'ON (save to disable)' : 'OFF' }}</strong>.
+                    Saving this form sets this switch OFF.
+                </p>
 
-                    <option value="0"
-                        @selected(
-                            (string) old(
-                                'magic_enabled',
-                                (int) $magicSettings->magic_enabled
-                            ) === '0'
-                        )>
-                        OFF
-                    </option>
-
-                    <option value="1"
-                        @selected(
-                            (string) old(
-                                'magic_enabled',
-                                (int) $magicSettings->magic_enabled
-                            ) === '1'
-                        )>
-                        ON
-                    </option>
-
-                </select>
+                <p class="help">
+                    Magic Income starts OFF until
+                    the payout system is fully tested.
+                </p>
 
             </div>
 
@@ -386,12 +384,9 @@
                 <p class="help">
                     Default: 50 USDT.
 
-                    A member must have at least one ACTIVE
-                    Activation Package strictly greater
-                    than this amount.
-
-                    Example: 50 USDT is not eligible,
-                    but 60 USDT is eligible.
+                    A member must have at least one
+                    ACTIVE activation package strictly
+                    greater than this threshold.
 
                     Multiple smaller packages
                     cannot be combined.
@@ -402,7 +397,8 @@
             <div class="field">
 
                 <label for="trading_profit_pool_percent">
-                    Magic Pool Percentage of Trading Profit (%)
+                    Magic Pool Percentage
+                    of Trading Profit (%)
                 </label>
 
                 <input
@@ -422,20 +418,183 @@
                 <p class="help">
                     Default: 3%.
 
-                    Admin can change it to 2%, 5%,
-                    10% or another valid percentage.
+                    Admin can change this to 2%, 5%,
+                    7%, 10% or another valid percentage.
 
                     Example: Trading Profit 1,000 USDT
                     at 5% creates a 50 USDT Magic Pool.
-
-                    Trading Profit manual entry and
-                    Direct Magic Pool funding will
-                    be implemented separately.
                 </p>
 
             </div>
 
         </div>
+
+        <!-- ===================================== -->
+        <!-- 3. 51-LEVEL GENERATION POOL -->
+        <!-- ===================================== -->
+
+        <div class="card">
+
+            <h2>3. 51-Level Generation Pool Settings</h2>
+
+            <div class="field">
+
+                <label for="generation_enabled">
+                    Generation Income System
+                </label>
+
+                <input type="hidden" name="generation_enabled" value="0">
+                <p class="help">
+                    Generation payout switch: <strong>LOCKED OFF</strong>.
+                    Current database value:
+                    <strong>{{ $safetySwitchStates['generation'] ? 'ON (save to disable)' : 'OFF' }}</strong>.
+                    Saving this form sets this switch OFF.
+                </p>
+
+                <p class="help">
+                    Default: OFF.
+
+                    Keep OFF until the new 51-Level
+                    Commission Engine is implemented
+                    and has passed all safety tests.
+                </p>
+
+            </div>
+
+            <div class="field">
+
+                <label for="generation_pool_percent">
+                    Generation Pool Percentage
+                    of Trading Profit (%)
+                </label>
+
+                <input
+                    type="number"
+                    name="generation_pool_percent"
+                    id="generation_pool_percent"
+                    min="0"
+                    max="100"
+                    step="0.000000001"
+                    required
+                    value="{{ old(
+                        'generation_pool_percent',
+                        $generationSettings->trading_profit_pool_percent
+                    ) }}"
+                >
+
+                <p class="help">
+                    Default: 30%.
+
+                    Admin can change this to 15%, 25%,
+                    35% or another valid percentage.
+
+                    Example: Trading Profit 1,000 USDT
+                    at 30% creates a 300 USDT
+                    Generation Pool.
+
+                    The Generation Pool will be
+                    distributed according to the
+                    configured 51-Level rates.
+
+                    Unqualified commissions will be
+                    allocated to a separate Held Pool.
+                </p>
+
+            </div>
+
+            <div class="warning">
+                <strong>Pool Safety Rule:</strong>
+
+                SELF Share + Generation Pool + Magic Pool
+                must equal exactly 100% of the same Trading Profit.
+
+                The server validates this rule
+                before saving settings.
+            </div>
+
+        </div>
+
+        <!-- VERIFIED TRADING PROFIT SELF SHARE -->
+        <div class="card">
+            <h2>SELF Trading Profit Share — Default 67%</h2>
+            <div class="field">
+                <label for="self_profit_percent">SELF Profit Percentage (%)</label>
+                <input type="number"
+                       name="self_profit_percent"
+                       id="self_profit_percent"
+                       min="0" max="100" step="0.000000001" required
+                       value="{{ old('self_profit_percent', $profitSharingSettings->self_profit_percent) }}">
+                <p class="help">
+                    The verified profit owner gets a separately reserved SELF share.
+                    SELF + 51-Level Generation + Magic percentages must total exactly 100%.
+                    This form changes settings only: no wallet payout is made.
+                </p>
+                <p class="help">
+                    Unified company-profit funding:
+                    <strong>{{ $safetySwitchStates['combined'] ? 'ENABLED (review required)' : 'OFF — testing only' }}</strong>.
+                    This screen does NOT enable it.
+                </p>
+            </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- 4. INVESTMENT DISTRIBUTION -->
+        <!-- ===================================== -->
+
+        <div class="card">
+
+            <h2>4. Investment Distribution Settings</h2>
+
+            <div class="field">
+                <label>Investment Distribution Status</label>
+                <p class="help">
+                    Current database status:
+                    <strong>{{ $safetySwitchStates['investment'] ? 'ON (review required)' : 'OFF' }}</strong>.
+                    Automatic distribution is not implemented yet.
+                    Saving this form will keep Investment Distribution OFF.
+                </p>
+                <input type="hidden"
+                       name="investment_distribution_enabled"
+                       value="0">
+            </div>
+
+            <div class="field">
+                <label for="investment_distribution_percent">
+                    Investment Distribution Budget (%)
+                </label>
+
+                <input type="number"
+                       name="investment_distribution_percent"
+                       id="investment_distribution_percent"
+                       min="0"
+                       max="100"
+                       step="0.000000001"
+                       required
+                       value="{{ old(
+                           'investment_distribution_percent',
+                           $investmentSettings->distribution_percent
+                       ) }}">
+
+                <p class="help">
+                    Default: 5%. Admin can choose 2%, 5%, 10% or
+                    another valid percentage between 0 and 100.
+                    This percentage determines the commission budget
+                    from the investment amount, not a deduction from
+                    the member's recorded principal.
+                </p>
+            </div>
+
+            <div class="warning">
+                <strong>Funding safety:</strong>
+                This is a configuration setting only. It does not
+                credit wallets or create commissions. Real distributions
+                need verified company funds, member qualification,
+                a Held/Unallocated Pool and auditable transactions.
+            </div>
+
+        </div>
+
+        <!-- SAVE BUTTON -->
 
         <button type="submit">
             Save Income Settings
@@ -443,11 +602,13 @@
 
     </form>
 
-    <!-- PACKAGE-WISE SETTINGS -->
+    <!-- ===================================== -->
+    <!-- PACKAGE-WISE SETTINGS INFORMATION -->
+    <!-- ===================================== -->
 
     <div class="card" style="margin-top: 20px;">
 
-        <strong>Package-wise Controls</strong>
+        <h2>Package-wise Controls</h2>
 
         <p class="help">
             Each Activation Package has separate
@@ -462,24 +623,30 @@
 
     </div>
 
-    <!-- AUDIT HISTORY INFORMATION -->
+    <!-- ===================================== -->
+    <!-- AUDIT HISTORY -->
+    <!-- ===================================== -->
 
     <div class="card">
 
-        <h2>3. Admin Audit History</h2>
+        <h2>5. Admin Audit History</h2>
 
         <p class="help">
-            View who changed ROI and Magic Income
-            settings, when they changed them,
-            and the previous and new values.
+            View who changed ROI, Magic, SELF Income,
+            51-Level Generation Pool and Investment Distribution settings.
+
+            The history contains previous values,
+            new values and the update time.
         </p>
 
         <a class="history-link"
            href="{{ route('admin.income.history') }}"
-           style="display: inline-block;
-                  padding: 12px 18px;
-                  border-radius: 8px;
-                  text-decoration: none;">
+           style="
+               display: inline-block;
+               padding: 12px 18px;
+               border-radius: 8px;
+               text-decoration: none;
+           ">
             View Audit History
         </a>
 
