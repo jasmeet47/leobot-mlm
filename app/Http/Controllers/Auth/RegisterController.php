@@ -4,245 +4,217 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
+/**
+ * Public member registration, sponsor lookup and existing web member login.
+ * No activation, financial transfer, commission or wallet credit takes place here.
+ */
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Show Registration Form
-    |--------------------------------------------------------------------------
-    */
+    private const MAX_USERNAME_TRIES = 12;
 
     public function showRegistrationForm(Request $request)
     {
         $referralCode = $request->query('ref');
         $sponsorName = null;
 
-        if (!empty($referralCode)) {
-            $sponsor = User::where(
-                'username',
-                $referralCode
-            )->first();
-
+        if (is_string($referralCode) && $referralCode !== '') {
+            $sponsor = User::where('username', $referralCode)->first();
             if ($sponsor) {
                 $sponsorName = $sponsor->name;
             } else {
                 $referralCode = null;
             }
+        } else {
+            $referralCode = null;
         }
 
-        return view('auth-page', compact(
-            'referralCode',
-            'sponsorName'
-        ));
+        return view('auth-page', compact('referralCode', 'sponsorName'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Member Registration
-    |--------------------------------------------------------------------------
-    */
-
-    public function register(Request $request)
+    /**
+     * POST /api/verify-sponsor
+     * Accepts sponsor_id and exposes only the sponsor's public name/username.
+     */
+    public function verifySponsor(Request $request)
     {
-        $validated = $request->validate([
-            'sponsor_id' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+        self::limitPublicRequest($request, 'verify-sponsor', 30);
 
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                'unique:users,email',
-            ],
-
-            'mobile' => [
-                'required',
-                'string',
-                'max:20',
-            ],
-
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
+        $data = $request->validate([
+            'sponsor_id' => ['required', 'string', 'max:255'],
         ]);
 
-        $sponsor = User::where(
-            'username',
-            $validated['sponsor_id']
-        )->first();
+        $sponsor = User::query()->where('username', $data['sponsor_id'])
+            ->first(['username', 'name']);
 
         if (!$sponsor) {
-            return back()
-                ->withErrors([
-                    'sponsor_id' =>
-                        'Invalid Sponsor ID. Please enter a valid Sponsor ID.',
-                ])
-                ->withInput();
+            return response()->json([
+                'valid' => false,
+                'message' => 'Sponsor ID not found.',
+            ]);
         }
 
-        $user = DB::transaction(function () use (
-            $validated,
-            $sponsor
-        ) {
-            $lockedSponsor = User::where(
-                'id',
-                $sponsor->id
-            )
-                ->lockForUpdate()
-                ->first();
+        return response()->json([
+            'valid' => true,
+            'sponsor_id' => $sponsor->username,
+            'sponsor_name' => $sponsor->name,
+        ]);
+    }
 
-            if (!$lockedSponsor) {
-                throw new \RuntimeException(
-                    'Sponsor account could not be locked.'
-                );
+    /**
+     * POST /register: ordinary web form (session login + existing success flash).
+     * POST /api/register: stateless JSON, NO web session and NO access token.
+     */
+    public function register(Request $request)
+    {
+        self::limitPublicRequest($request, 'register', 10);
+
+        $validated = $request->validate([
+            'sponsor_id' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'mobile' => ['required', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = null;
+
+        // Each retry uses a NEW transaction: a PostgreSQL unique-constraint
+        // violation aborts its transaction and cannot be recovered within it.
+        for ($attempt = 0; $attempt < self::MAX_USERNAME_TRIES; $attempt++) {
+            $candidate = 'TX' . random_int(100000, 999999);
+
+            try {
+                $user = DB::transaction(function () use ($validated, $candidate) {
+                    $sponsor = User::where('username', $validated['sponsor_id'])
+                        ->lockForUpdate()->first();
+
+                    if (!$sponsor) {
+                        throw ValidationException::withMessages([
+                            'sponsor_id' => 'Invalid Sponsor ID. Please enter a valid Sponsor ID.',
+                        ]);
+                    }
+
+                    return User::create([
+                        'username' => $candidate,
+                        'sponsor_id' => $sponsor->username,
+                        'sponsor_user_id' => $sponsor->getKey(),
+                        'name' => $validated['name'],
+                        'email' => $validated['email'],
+                        'phone' => $validated['mobile'],
+                        'password' => Hash::make($validated['password']),
+                        'security_pin' => null,
+                        'status' => 'inactive',
+                    ]);
+                }, 3);
+
+                break;
+            } catch (QueryException $exception) {
+                if (!self::isUsernameCollision($exception)) {
+                    throw $exception;
+                }
             }
+        }
 
-            do {
-                $username =
-                    'TX' . random_int(100000, 999999);
+        if (!$user) {
+            throw new RuntimeException('Could not allocate a unique member username. Please retry.');
+        }
 
-            } while (
-                User::where(
-                    'username',
-                    $username
-                )->exists()
-            );
+        $referralLink = url('/join?ref=' . $user->username);
 
-            return User::create([
-                'username' => $username,
-
-                'sponsor_id' =>
-                    $lockedSponsor->username,
-
-                'sponsor_user_id' =>
-                    $lockedSponsor->id,
-
-                'name' =>
-                    $validated['name'],
-
-                'email' =>
-                    $validated['email'],
-
-                'phone' =>
-                    $validated['mobile'],
-
-                'password' =>
-                    Hash::make(
-                        $validated['password']
-                    ),
-
-                'security_pin' => null,
-
-                // Activation is required before becoming active.
-                'status' => 'inactive',
-            ]);
-        });
-
-        $myReferralLink = url(
-            '/join?ref=' . $user->username
-        );
+        if ($request->is('api/*')) {
+            // API registrations must not call Auth::login() or session()->regenerate().
+            // Activation remains required; no bearer token is issued by registration.
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration successful. Activation is required.',
+                'user' => [
+                    'username' => $user->username,
+                    'name' => $user->name,
+                    'status' => $user->status,
+                    'sponsor_id' => $user->sponsor_id,
+                ],
+                'ref_link' => $referralLink,
+            ], 201);
+        }
 
         Auth::login($user);
-
         $request->session()->regenerate();
 
         return back()->with([
             'success_reg' => true,
-
-            'new_username' =>
-                $user->username,
-
-            'ref_link' =>
-                $myReferralLink,
+            'new_username' => $user->username,
+            'ref_link' => $referralLink,
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Secure Member Login
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Only retry the users.username constraint. A duplicate email, foreign
+     * key error or any other DB exception must NEVER be silently retried.
+     */
+    private static function isUsernameCollision(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? '');
+        $driverCode = (string) ($exception->errorInfo[1] ?? '');
+        $message = strtolower($exception->getMessage());
 
+        $isUniqueViolation = $sqlState === '23505'      // PostgreSQL
+            || ($sqlState === '23000' && $driverCode === '1062') // MySQL
+            || ($sqlState === '23000' && $driverCode === '19'); // SQLite
+
+        return $isUniqueViolation
+            && (str_contains($message, 'users_username_unique')
+                || str_contains($message, 'users.username'));
+    }
+
+    /**
+     * Same per-IP guard for both the web and API endpoints. The limit counts
+     * failed attempts as well as successful attempts, preventing easy abuse.
+     */
+    private static function limitPublicRequest(Request $request, string $action, int $limit): void
+    {
+        $key = 'leobot:' . $action . ':' . hash('sha256', $request->ip() ?? 'unknown');
+
+        if (RateLimiter::tooManyAttempts($key, $limit)) {
+            abort(429, 'Too many requests. Please try again later.');
+        }
+
+        RateLimiter::hit($key, 60);
+    }
+
+    // Existing web login behavior retained.
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'username' => [
-                'required',
-                'string',
-            ],
-
-            'password' => [
-                'required',
-                'string',
-            ],
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
         $loginSuccess = Auth::attempt([
-            'username' =>
-                $credentials['username'],
-
-            'password' =>
-                $credentials['password'],
+            'username' => $credentials['username'],
+            'password' => $credentials['password'],
         ]);
 
         if ($loginSuccess) {
-
-            // Protect against session fixation.
             $request->session()->regenerate();
 
-            // Preserve existing ADMIN redirect.
-            if (
-                strtoupper(
-                    $request->user()->username
-                ) === 'ADMIN'
-            ) {
-                return redirect()->intended(
-                    '/admin/level-config'
-                );
+            if (strtoupper((string) $request->user()->username) === 'ADMIN') {
+                return redirect()->intended('/admin/level-config');
             }
 
-            /*
-             * FIX:
-             * Send successfully logged-in members
-             * to a protected member page.
-             *
-             * Do not redirect them back to /join.
-             */
-            return redirect()->intended(
-                route('security-pin.form')
-            );
+            return redirect()->intended(route('security-pin.form'));
         }
 
-        /*
-         * Incorrect login:
-         * Return an error without exposing
-         * account passwords.
-         */
-        return back()
-            ->withErrors([
-                'username' =>
-                    'Invalid username or password.',
-            ])
-            ->withInput(
-                $request->only('username')
-            );
+        return back()->withErrors([
+            'username' => 'Invalid username or password.',
+        ])->withInput($request->only('username'));
     }
 }
