@@ -31,6 +31,38 @@ class Legacy41LevelRemovedTest extends TestCase
         $this->postJson('/api/p2p-transfer', [])->assertNotFound();
     }
 
+    public function test_legacy_roi_command_class_is_absent(): void
+    {
+        $this->assertFalse(
+            class_exists('App\\Console\\Commands\\DistributeDailyROI')
+        );
+    }
+
+    public function test_legacy_roi_command_is_not_registered(): void
+    {
+        $this->assertNotContains(
+            'roi:distribute',
+            array_keys(\Illuminate\Support\Facades\Artisan::all())
+        );
+    }
+
+    public function test_legacy_commission_seeder_is_absent(): void
+    {
+        $this->assertFalse(
+            class_exists('Database\\Seeders\\CommissionSettingsSeeder')
+        );
+    }
+
+    public function test_current_51_level_services_remain_available(): void
+    {
+        $this->assertTrue(
+            class_exists(\App\Services\CommissionService::class)
+        );
+
+        $this->assertTrue(
+            class_exists(\App\Services\TeamCounterService::class)
+        );
+    }
     public function test_current_activation_service_remains_available(): void
     {
         $this->assertTrue(class_exists(ActivationService::class));
