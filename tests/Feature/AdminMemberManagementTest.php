@@ -198,4 +198,57 @@ class AdminMemberManagementTest extends TestCase
             ->assertDontSee('security_pin')
             ->assertDontSee('TestPassword123!');
     }
+
+    public function test_member_list_pagination(): void
+    {
+        $admin = $this->createUser('admin');
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->createUser(
+                'member',
+                'active',
+                sprintf('PAGEUSER%03d', $i)
+            );
+        }
+
+        $this->actingAs($admin)
+            ->get('/admin/members')
+            ->assertOk()
+            ->assertSee('PAGEUSER025')
+            ->assertDontSee('PAGEUSER005');
+
+        $this->actingAs($admin)
+            ->get('/admin/members?page=2')
+            ->assertOk()
+            ->assertSee('PAGEUSER005')
+            ->assertDontSee('PAGEUSER025');
+    }
+
+    public function test_search_percent_is_literal(): void
+    {
+        $admin = $this->createUser('admin');
+
+        $this->createUser('member', 'active', 'PERCENT%USER');
+        $this->createUser('member', 'active', 'PERCENTXUSER');
+
+        $this->actingAs($admin)
+            ->get('/admin/members?search=' . urlencode('PERCENT%'))
+            ->assertOk()
+            ->assertSee('PERCENT%USER')
+            ->assertDontSee('PERCENTXUSER');
+    }
+
+    public function test_search_underscore_is_literal(): void
+    {
+        $admin = $this->createUser('admin');
+
+        $this->createUser('member', 'active', 'UNDER_SCORE');
+        $this->createUser('member', 'active', 'UNDERXSCORE');
+
+        $this->actingAs($admin)
+            ->get('/admin/members?search=' . urlencode('UNDER_'))
+            ->assertOk()
+            ->assertSee('UNDER_SCORE')
+            ->assertDontSee('UNDERXSCORE');
+    }
 }
