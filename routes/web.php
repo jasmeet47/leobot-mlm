@@ -165,6 +165,11 @@ Route::middleware('admin')->group(function () {
         'index',
     ])->name('admin.members.index');
 
+    Route::get('/admin/members/{member}', [
+        MemberManagementController::class,
+        'show',
+    ])->whereNumber('member')->name('admin.members.show');
+
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');

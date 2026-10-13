@@ -105,4 +105,97 @@ class AdminMemberManagementTest extends TestCase
             ->assertDontSee('TestPassword123!')
             ->assertDontSee('security_pin');
     }
+
+    public function test_guest_cannot_view_member_details(): void
+    {
+        $member = $this->createUser();
+
+        $this->get(route('admin.members.show', $member->id))
+            ->assertForbidden();
+    }
+
+    public function test_regular_member_cannot_view_member_details(): void
+    {
+        $member = $this->createUser();
+
+        $this->actingAs($this->createUser())
+            ->get(route('admin.members.show', $member->id))
+            ->assertForbidden();
+    }
+
+    public function test_inactive_admin_cannot_view_member_details(): void
+    {
+        $member = $this->createUser();
+
+        $this->actingAs($this->createUser('admin', 'inactive'))
+            ->get(route('admin.members.show', $member->id))
+            ->assertForbidden();
+    }
+
+    public function test_active_admin_can_view_member_details(): void
+    {
+        $admin = $this->createUser('admin');
+        $sponsor = $this->createUser('member', 'active', 'SPONSOR123');
+        $member = $this->createUser('member', 'active', 'DETAILMEMBER123');
+
+        DB::table('users')
+            ->where('id', $member->id)
+            ->update(['sponsor_user_id' => $sponsor->id]);
+
+        DB::table('users')->insert([
+            [
+                'username' => 'DIRECTREF001',
+                'name' => 'Direct Referral One',
+                'email' => 'direct001@example.test',
+                'phone' => '9000000001',
+                'password' => Hash::make('TestPassword123!'),
+                'status' => 'active',
+                'role' => 'member',
+                'sponsor_user_id' => $member->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'username' => 'DIRECTREF002',
+                'name' => 'Direct Referral Two',
+                'email' => 'direct002@example.test',
+                'phone' => '9000000002',
+                'password' => Hash::make('TestPassword123!'),
+                'status' => 'active',
+                'role' => 'member',
+                'sponsor_user_id' => $member->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.members.show', $member->id))
+            ->assertOk()
+            ->assertSee('Member Details')
+            ->assertSee('DETAILMEMBER123')
+            ->assertSee('SPONSOR123')
+            ->assertSee('Direct Referrals')
+            ->assertSee('2');
+    }
+
+    public function test_missing_member_details_returns_404(): void
+    {
+        $this->actingAs($this->createUser('admin'))
+            ->get('/admin/members/999999999')
+            ->assertNotFound();
+    }
+
+    public function test_member_details_do_not_expose_credentials(): void
+    {
+        $admin = $this->createUser('admin');
+        $member = $this->createUser();
+
+        $this->actingAs($admin)
+            ->get(route('admin.members.show', $member->id))
+            ->assertOk()
+            ->assertDontSee($member->password)
+            ->assertDontSee('security_pin')
+            ->assertDontSee('TestPassword123!');
+    }
 }

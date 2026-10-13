@@ -36,4 +36,24 @@ class MemberManagementController extends Controller
             'search' => $search,
         ]);
     }
+
+    public function show(User $member)
+    {
+        $member = User::query()
+            ->select([
+                'id',
+                'username',
+                'name',
+                'sponsor_user_id',
+                'status',
+                'created_at',
+            ])
+            ->with('sponsor:id,username')
+            ->withCount('referrals')
+            ->findOrFail($member->id);
+
+        return view('admin.members.show', [
+            'member' => $member,
+        ]);
+    }
 }

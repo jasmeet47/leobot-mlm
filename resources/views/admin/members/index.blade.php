@@ -51,6 +51,7 @@
                         <th>Sponsor</th>
                         <th>Status</th>
                         <th>Registered</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,10 +66,15 @@
                                 </span>
                             </td>
                             <td>{{ $member->created_at?->format('d M Y') ?? '—' }}</td>
+                            <td>
+                                <a href="{{ route('admin.members.show', $member->id) }}">
+                                    View Details
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">No members found.</td>
+                            <td colspan="6">No members found.</td>
                         </tr>
                     @endforelse
                 </tbody>
