@@ -10,6 +10,10 @@ class MemberManagementController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'search' => ['sometimes', 'nullable', 'string', 'max:100'],
+        ]);
+
         $search = trim((string) $request->query('search', ''));
 
         $members = User::query()

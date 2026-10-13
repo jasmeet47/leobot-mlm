@@ -251,4 +251,14 @@ class AdminMemberManagementTest extends TestCase
             ->assertSee('UNDER_SCORE')
             ->assertDontSee('UNDERXSCORE');
     }
+
+    public function test_search_rejects_more_than_100_characters(): void
+    {
+        $admin = $this->createUser('admin');
+
+        $this->actingAs($admin)
+            ->getJson('/admin/members?search=' . str_repeat('A', 101))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('search');
+    }
 }
