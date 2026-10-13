@@ -11,7 +11,7 @@ use RuntimeException;
 class IncomeSettingsController extends Controller
 {
     /**
-     * Only the active ADMIN account can manage income settings.
+     * Only active users with an admin or super_admin role can manage income settings.
      */
     private function checkAdmin(Request $request): void
     {
@@ -19,7 +19,7 @@ class IncomeSettingsController extends Controller
 
         abort_unless(
             $admin &&
-            strtoupper((string) $admin->username) === 'ADMIN' &&
+            in_array((string) $admin->role, ['admin', 'super_admin'], true) &&
             $admin->status === 'active',
             403,
             'Unauthorized.'

@@ -45,8 +45,8 @@ final class GenerationAllocationService
             }
 
             $actualAdmin = DB::table('users')->where('id', $admin->getKey())
-                ->lockForUpdate()->first(['id', 'username', 'status']);
-            if (!$actualAdmin || strtoupper((string) $actualAdmin->username) !== 'ADMIN'
+                ->lockForUpdate()->first(['id', 'role', 'status']);
+            if (!$actualAdmin || !in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true)
                 || (string) $actualAdmin->status !== 'active') {
                 throw new AuthorizationException('Active ADMIN approval required.');
             }

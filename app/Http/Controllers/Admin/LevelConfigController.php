@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +40,11 @@ class LevelConfigController extends Controller
 
         abort_unless(
             $admin &&
-            strtoupper((string) $admin->username) === 'ADMIN' &&
+            in_array(
+                (string) $admin->role,
+                ['admin', 'super_admin'],
+                true
+            ) &&
             $admin->status === 'active',
             403,
             'Unauthorized.'
@@ -316,7 +322,11 @@ class LevelConfigController extends Controller
 
         abort_unless(
             $admin &&
-            strtoupper((string) $admin->username) === 'ADMIN' &&
+            in_array(
+                (string) $admin->role,
+                ['admin', 'super_admin'],
+                true
+            ) &&
             $admin->status === 'active',
             403,
             'Unauthorized.'

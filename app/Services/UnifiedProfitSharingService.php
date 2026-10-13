@@ -63,8 +63,8 @@ final class UnifiedProfitSharingService
 
         return DB::transaction(function () use ($admin, $companyProfit, $profitReference, $normalized): int {
             $actualAdmin = DB::table('users')->where('id', $admin->getKey())
-                ->lockForUpdate()->first(['id', 'username', 'status']);
-            if (!$actualAdmin || strtoupper((string) $actualAdmin->username) !== 'ADMIN'
+                ->lockForUpdate()->first(['id', 'role', 'status']);
+            if (!$actualAdmin || !in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true)
                 || (string) $actualAdmin->status !== 'active') {
                 throw new AuthorizationException('Active ADMIN approval required.');
             }
@@ -90,6 +90,13 @@ final class UnifiedProfitSharingService
             foreach (['self_balance', 'magic_balance',
                 'total_self_funded', 'total_magic_funded'] as $field) {
                 $reserves->{$field} = self::storedMoney($reserves->{$field});
+            }
+
+            // Reject source references already reserved through standalone Magic funding.
+            // The company-wallet lock above serializes funding across services.
+            if (DB::table('magic_pool_fundings')
+                ->where('source_reference', $profitReference)->exists()) {
+                throw new RuntimeException('Profit reference already used in Magic Pool funding.');
             }
 
             // Check SAME underlying economic profit statement before reading live percentages.

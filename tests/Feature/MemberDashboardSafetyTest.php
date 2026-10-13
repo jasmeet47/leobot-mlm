@@ -14,17 +14,23 @@ class MemberDashboardSafetyTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function member(?string $pin = '123456', string $status = 'inactive'): User
-    {
+    private function member(
+        ?string $pin = '123456',
+        string $status = 'inactive'
+    ): User {
         $unique = Str::lower(Str::random(16));
+
         $id = DB::table('users')->insertGetId([
             'username' => 'TX' . strtoupper(substr($unique, 0, 10)),
             'name' => 'Dashboard Test ' . $unique,
             'email' => $unique . '@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
-            'security_pin' => $pin === null ? null : Hash::make($pin),
+            'security_pin' => $pin === null
+                ? null
+                : Hash::make($pin),
             'status' => $status,
+            'role' => 'member',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -34,13 +40,16 @@ class MemberDashboardSafetyTest extends TestCase
 
     public function test_guest_cannot_open_dashboard(): void
     {
-        $this->get('/member/dashboard')->assertRedirect('/join');
+        $this->get('/member/dashboard')
+            ->assertRedirect('/join');
     }
 
     public function test_member_without_pin_is_sent_to_pin_setup(): void
     {
         $member = $this->member(null);
-        $this->actingAs($member)->get('/member/dashboard')
+
+        $this->actingAs($member)
+            ->get('/member/dashboard')
             ->assertRedirect(route('security-pin.form'));
     }
 
@@ -48,10 +57,15 @@ class MemberDashboardSafetyTest extends TestCase
     {
         $member = $this->member();
         $other = $this->member();
-        DB::table('users')->where('id', $other->id)
-            ->update(['available_balance' => '98765.25000000']);
 
-        $this->actingAs($member)->get('/member/dashboard')
+        DB::table('users')
+            ->where('id', $other->id)
+            ->update([
+                'available_balance' => '98765.25000000',
+            ]);
+
+        $this->actingAs($member)
+            ->get('/member/dashboard')
             ->assertOk()
             ->assertViewIs('member.dashboard')
             ->assertSee($member->name)
@@ -65,42 +79,69 @@ class MemberDashboardSafetyTest extends TestCase
     public function test_legacy_plaintext_pin_is_not_accepted_for_dashboard(): void
     {
         $member = $this->member();
-        $member->forceFill(['security_pin' => '123456'])->save();
 
-        $this->actingAs($member)->get('/member/dashboard')
+        $member->forceFill([
+            'security_pin' => '123456',
+        ])->save();
+
+        $this->actingAs($member)
+            ->get('/member/dashboard')
             ->assertRedirect(route('security-pin.form'));
     }
 
     public function test_guest_cannot_access_dashboard_api(): void
     {
-        $this->getJson('/api/dashboard-counters')->assertUnauthorized();
+        $this->getJson('/api/dashboard-counters')
+            ->assertUnauthorized();
     }
 
     public function test_member_without_pin_cannot_bypass_through_api_or_debug_route(): void
     {
         $member = $this->member(null);
-        Sanctum::actingAs($member);
+
+        Sanctum::actingAs($member, ['member:read']);
+
         $this->getJson('/api/dashboard-counters')
             ->assertForbidden()
             ->assertJsonPath('code', 'security_pin_required');
+
         $this->get('/check-dashboard')
-            ->assertRedirect(route('security-pin.form'));
+            ->assertNotFound();
     }
 
     public function test_api_returns_only_authenticated_members_counters(): void
     {
         $member = $this->member();
-        Sanctum::actingAs($member);
+
+        Sanctum::actingAs($member, ['member:read']);
+
         $this->getJson('/api/dashboard-counters')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.user_info.username', $member->username)
-            ->assertJsonPath('data.overview_counters.total_active_team', 0);
+            ->assertJsonPath(
+                'data.user_info.username',
+                $member->username
+            )
+            ->assertJsonPath(
+                'data.overview_counters.total_active_team',
+                0
+            );
+    }
+
+    public function test_api_rejects_token_without_member_read_permission(): void
+    {
+        $member = $this->member();
+
+        Sanctum::actingAs($member, ['other:read']);
+
+        $this->getJson('/api/dashboard-counters')
+            ->assertForbidden();
     }
 
     public function test_member_with_pin_logs_in_directly_to_dashboard(): void
     {
         $member = $this->member();
+
         $this->post('/login', [
             'username' => $member->username,
             'password' => 'TestPassword123!',
@@ -112,6 +153,7 @@ class MemberDashboardSafetyTest extends TestCase
     public function test_member_without_pin_logs_in_to_security_pin_setup(): void
     {
         $member = $this->member(null);
+
         $this->post('/login', [
             'username' => $member->username,
             'password' => 'TestPassword123!',
@@ -121,7 +163,11 @@ class MemberDashboardSafetyTest extends TestCase
     public function test_active_admin_still_logs_in_to_admin_settings(): void
     {
         $admin = $this->member(null, 'active');
-        $admin->forceFill(['username' => 'ADMIN'])->save();
+
+        $admin->forceFill([
+            'username' => 'ADMIN',
+            'role' => 'admin',
+        ])->save();
 
         $this->post('/login', [
             'username' => 'ADMIN',
@@ -132,32 +178,151 @@ class MemberDashboardSafetyTest extends TestCase
     public function test_admin_cannot_open_member_dashboard(): void
     {
         $admin = $this->member('654321', 'active');
-        $admin->forceFill(['username' => 'ADMIN'])->save();
 
-        $this->actingAs($admin)->get('/member/dashboard')->assertForbidden();
-        $this->getJson('/api/dashboard-counters')->assertForbidden();
+        $admin->forceFill([
+            'username' => 'ADMIN',
+            'role' => 'admin',
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get('/member/dashboard')
+            ->assertForbidden();
+
+        $this->getJson('/api/dashboard-counters')
+            ->assertForbidden();
     }
 
     public function test_pin_setup_redirects_to_dashboard_without_transferring_money(): void
     {
         $member = $this->member(null);
-        $this->actingAs($member)->post('/security-pin', [
-            'current_password' => 'TestPassword123!',
-            'security_pin' => '012345',
-            'security_pin_confirmation' => '012345',
-        ])->assertRedirect(route('member.dashboard'));
+
+        $this->actingAs($member)
+            ->post('/security-pin', [
+                'current_password' => 'TestPassword123!',
+                'security_pin' => '012345',
+                'security_pin_confirmation' => '012345',
+            ])
+            ->assertRedirect(route('member.dashboard'));
 
         $saved = $member->fresh();
-        $this->assertTrue(Hash::check('012345', (string) $saved->security_pin));
-        $this->assertSame('0.00000000', bcadd((string) $saved->available_balance, '0', 8));
-        $this->assertSame('0.00000000', bcadd((string) $saved->lifetime_income, '0', 8));
+
+        $this->assertTrue(
+            Hash::check('012345', (string) $saved->security_pin)
+        );
+
+        $this->assertSame(
+            '0.00000000',
+            bcadd((string) $saved->available_balance, '0', 8)
+        );
+
+        $this->assertSame(
+            '0.00000000',
+            bcadd((string) $saved->lifetime_income, '0', 8)
+        );
     }
 
     public function test_logout_clears_session(): void
     {
         $member = $this->member();
-        $this->actingAs($member)->post('/logout')
+
+        $this->actingAs($member)
+            ->post('/logout')
             ->assertRedirect(route('register.form'));
+
         $this->assertGuest();
+    }
+
+    /*
+     * NEW TEST 15
+     * Admin with a non-ADMIN username cannot
+     * access the Member Dashboard.
+     */
+    public function test_admin_with_different_username_cannot_open_member_dashboard(): void
+    {
+        $admin = $this->member('123456', 'active');
+
+        $admin->forceFill([
+            'username' => 'DASHBOARD_MANAGER',
+            'role' => 'admin',
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get('/member/dashboard')
+            ->assertForbidden();
+    }
+
+    /*
+     * NEW TEST 16
+     * Super Admin cannot open Member Dashboard.
+     */
+    public function test_super_admin_cannot_open_member_dashboard(): void
+    {
+        $admin = $this->member('123456', 'active');
+
+        $admin->forceFill([
+            'username' => 'DASHBOARD_SUPER',
+            'role' => 'super_admin',
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get('/member/dashboard')
+            ->assertForbidden();
+    }
+
+    /*
+     * NEW TEST 17
+     * Member named ADMIN is still a member.
+     */
+    public function test_member_named_admin_can_open_dashboard_with_pin(): void
+    {
+        $member = $this->member('123456', 'active');
+
+        $member->forceFill([
+            'username' => 'ADMIN',
+            'role' => 'member',
+        ])->save();
+
+        $this->actingAs($member)
+            ->get('/member/dashboard')
+            ->assertOk()
+            ->assertViewIs('member.dashboard');
+    }
+
+    /*
+     * NEW TEST 18
+     * Admin cannot bypass role restriction
+     * through the dashboard API.
+     */
+    public function test_admin_with_different_username_cannot_access_dashboard_api(): void
+    {
+        $admin = $this->member('123456', 'active');
+
+        $admin->forceFill([
+            'username' => 'API_MANAGER',
+            'role' => 'admin',
+        ])->save();
+
+        Sanctum::actingAs($admin, ['member:read']);
+
+        $this->getJson('/api/dashboard-counters')
+            ->assertForbidden();
+    }
+
+    /*
+     * NEW TEST 19
+     * Unknown role must not access
+     * the Member Dashboard.
+     */
+    public function test_unknown_role_cannot_open_member_dashboard(): void
+    {
+        $user = $this->member('123456', 'active');
+
+        $user->forceFill([
+            'role' => 'unknown',
+        ])->save();
+
+        $this->actingAs($user)
+            ->get('/member/dashboard')
+            ->assertForbidden();
     }
 }

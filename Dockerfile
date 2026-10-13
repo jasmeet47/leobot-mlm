@@ -44,5 +44,5 @@ EXPOSE 80
 # Never copy the secret file into the Docker image.
 # Keep the secret outside Laravel's public directory.
 #
-# Then run migrations, seed database, and start Apache.
-CMD ["sh", "-c", "if [ -f /etc/secrets/.env ]; then ln -sfn /etc/secrets/.env /var/www/html/.env; fi; php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
+# Start Apache only. Migrations and seeding require separate approval.
+CMD ["sh", "-c", "if [ -f /etc/secrets/.env ]; then ln -sfn /etc/secrets/.env /var/www/html/.env; fi; exec apache2-foreground"]

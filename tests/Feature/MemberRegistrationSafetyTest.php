@@ -152,4 +152,34 @@ class MemberRegistrationSafetyTest extends TestCase
         }
         $this->assertDatabaseCount('financial_ledger', 0);
     }
+
+    public function test_sponsor_verification_is_rate_limited(): void
+    {
+        for ($i = 0; $i < 30; $i++) {
+            $this->postJson('/api/verify-sponsor', [
+                'sponsor_id' => 'UNKNOWN',
+            ])->assertOk();
+        }
+
+        $this->postJson('/api/verify-sponsor', [
+            'sponsor_id' => 'UNKNOWN',
+        ])->assertStatus(429);
+    }
+
+    public function test_web_and_api_registration_share_rate_limit(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/register', [])
+                ->assertUnprocessable();
+        }
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/register', [])
+                ->assertSessionHasErrors('sponsor_id');
+        }
+
+        $this->postJson('/api/register', [])
+            ->assertStatus(429);
+    }
+
 }

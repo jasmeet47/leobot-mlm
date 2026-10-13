@@ -25,3 +25,11 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+/.env.testing
+
+*.bak
+*.backup
+
+/phpunit.postgres.xml
+/phpunit.safety-check.xml

@@ -18,7 +18,8 @@ class EnsureMemberPin
         $stored = (string) $user->security_pin;
 
         // A legacy plain-text PIN is NOT accepted as a completed setup.
-        return $stored !== '' && password_get_info($stored)['algoName'] !== 'unknown';
+        return $stored !== ''
+            && password_get_info($stored)['algoName'] !== 'unknown';
     }
 
     public function handle(Request $request, Closure $next): Response
@@ -29,17 +30,47 @@ class EnsureMemberPin
             abort(401, 'Authentication required.');
         }
 
-        // The member dashboard is not an alternative admin interface.
-        if (strtoupper((string) $user->username) === 'ADMIN') {
-            abort(403, 'Member dashboard is not available to administrators.');
+        /*
+         * Member dashboard access is based on role,
+         * never on username.
+         *
+         * Admin and Super Admin accounts cannot use
+         * the Member Dashboard.
+         */
+        if (
+            in_array(
+                (string) $user->role,
+                ['admin', 'super_admin'],
+                true
+            )
+        ) {
+            abort(
+                403,
+                'Member dashboard is not available to administrators.'
+            );
         }
 
+        /*
+         * Require the member role explicitly.
+         * Unknown or unexpected roles are denied.
+         */
+        abort_unless(
+            (string) $user->role === 'member',
+            403,
+            'Member access required.'
+        );
+
+        /*
+         * A missing or legacy plain-text PIN
+         * does not satisfy the PIN requirement.
+         */
         if (!self::hasConfiguredPin($user)) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'code' => 'security_pin_required',
-                    'message' => 'Please set your Security PIN before opening the dashboard.',
+                    'message' =>
+                        'Please set your Security PIN before opening the dashboard.',
                 ], 403);
             }
 

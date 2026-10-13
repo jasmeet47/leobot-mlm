@@ -15,10 +15,10 @@ class SecurityPinControllerTest extends TestCase
     use RefreshDatabase;
 
     /*
-     * Create a test member.
+     * Create a test user.
      *
-     * All database changes use the temporary
-     * SQLite testing database.
+     * Database changes use the isolated
+     * PostgreSQL testing database.
      */
     private function createMember(
         ?string $pin = null
@@ -51,6 +51,8 @@ class SecurityPinControllerTest extends TestCase
                     : Hash::make($pin),
 
             'status' => 'inactive',
+
+            'role' => 'member',
 
             'created_at' => now(),
             'updated_at' => now(),
@@ -94,7 +96,9 @@ class SecurityPinControllerTest extends TestCase
                 $this->validData()
             );
 
-        $response->assertRedirect(route('member.dashboard'));
+        $response->assertRedirect(
+            route('member.dashboard')
+        );
 
         $response->assertSessionHas(
             'success',
@@ -332,7 +336,7 @@ class SecurityPinControllerTest extends TestCase
     }
 
     /*
-     * TEST 9 - NEW
+     * TEST 9
      * Guest opening the PIN page must
      * be redirected to /join.
      */
@@ -344,7 +348,7 @@ class SecurityPinControllerTest extends TestCase
     }
 
     /*
-     * TEST 10 - NEW
+     * TEST 10
      * Authenticated member can open
      * the Security PIN page.
      */
@@ -368,6 +372,145 @@ class SecurityPinControllerTest extends TestCase
 
         $response->assertSee(
             'security_pin_confirmation'
+        );
+    }
+
+    /*
+     * TEST 11 - NEW
+     * Active admin with a different username
+     * returns to the previous page.
+     */
+    public function test_active_admin_returns_to_previous_page_after_pin_update(): void
+    {
+        $admin = $this->createMember();
+
+        $admin->forceFill([
+            'username' => 'PIN_MANAGER',
+            'role' => 'admin',
+            'status' => 'active',
+        ])->save();
+
+        $response = $this
+            ->actingAs($admin)
+            ->from('/admin/level-config')
+            ->post(
+                '/security-pin',
+                $this->validData()
+            );
+
+        $response->assertRedirect(
+            '/admin/level-config'
+        );
+
+        $this->assertTrue(
+            Hash::check(
+                '123456',
+                (string) $admin
+                    ->fresh()
+                    ->security_pin
+            )
+        );
+    }
+
+    /*
+     * TEST 12 - NEW
+     * Active super admin returns
+     * to the previous page.
+     */
+    public function test_active_super_admin_returns_to_previous_page_after_pin_update(): void
+    {
+        $admin = $this->createMember();
+
+        $admin->forceFill([
+            'username' => 'PIN_SUPER',
+            'role' => 'super_admin',
+            'status' => 'active',
+        ])->save();
+
+        $response = $this
+            ->actingAs($admin)
+            ->from('/admin/level-config')
+            ->post(
+                '/security-pin',
+                $this->validData()
+            );
+
+        $response->assertRedirect(
+            '/admin/level-config'
+        );
+
+        $this->assertTrue(
+            Hash::check(
+                '123456',
+                (string) $admin
+                    ->fresh()
+                    ->security_pin
+            )
+        );
+    }
+
+    /*
+     * TEST 13 - NEW
+     * ADMIN username does not grant admin
+     * redirect behavior to a member.
+     */
+    public function test_member_named_admin_redirects_to_member_dashboard(): void
+    {
+        $member = $this->createMember();
+
+        $member->forceFill([
+            'username' => 'ADMIN',
+            'role' => 'member',
+            'status' => 'active',
+        ])->save();
+
+        $response = $this
+            ->actingAs($member)
+            ->from('/admin/level-config')
+            ->post(
+                '/security-pin',
+                $this->validData()
+            );
+
+        $response->assertRedirect(
+            route('member.dashboard')
+        );
+
+        $this->assertTrue(
+            Hash::check(
+                '123456',
+                (string) $member
+                    ->fresh()
+                    ->security_pin
+            )
+        );
+    }
+
+    /*
+     * TEST 14 - NEW
+     * Inactive admin does not receive
+     * active-admin redirect behavior.
+     */
+    public function test_inactive_admin_does_not_receive_admin_redirect(): void
+    {
+        $admin = $this->createMember();
+
+        $admin->forceFill([
+            'username' => 'PIN_INACTIVE',
+            'role' => 'admin',
+            'status' => 'inactive',
+        ])->save();
+
+        $response = $this
+            ->actingAs($admin)
+            ->from('/admin/level-config')
+            ->post(
+                '/security-pin',
+                $this->validData()
+            );
+
+        $response->assertRedirect(
+            route('member.dashboard')
         );
     }
 }

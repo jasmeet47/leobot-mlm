@@ -48,7 +48,7 @@
     </header>
 
     <h1>Welcome, {{ $member->name }}</h1>
-    <p class="subheading">Member ID: {{ $member->username }} · Account status: {{ ucfirst($member->status) }}</p>
+    <p class="subheading">Member ID: {{ $member->username }} Â· Account status: {{ ucfirst($member->status) }}</p>
 
     @if (session('success'))
         <p class="success" role="status">{{ session('success') }}</p>
@@ -87,6 +87,94 @@
         </div>
     </section>
 
+    <section aria-label="Referral Contact Privacy">
+        <h2>Referral Contact Privacy</h2>
+        <div class="card">
+            <p class="muted">
+                Choose whether your direct sponsor may see your full
+                phone number or email address. Full details are shared
+                only when you give permission AND the admin enables
+                full visibility. You can withdraw permission anytime. Your direct sponsor can see masked or full contact details only with your consent and when the admin enables the corresponding
+            </p>
+
+            <form method="POST"
+                  action="{{ route('member.referral-contact-consent.update') }}">
+                @csrf
+
+                <input type="hidden" name="phone_consent" value="0">
+                <input type="hidden" name="email_consent" value="0">
+
+                <label style="display:block; margin:14px 0">
+                    <input type="checkbox"
+                           name="phone_consent"
+                           value="1"
+                           @checked(old('phone_consent', $phoneConsent))>
+                    Allow my direct sponsor to see my full phone number
+                </label>
+
+                <label style="display:block; margin:14px 0">
+                    <input type="checkbox"
+                           name="email_consent"
+                           value="1"
+                           @checked(old('email_consent', $emailConsent))>
+                    Allow my direct sponsor to see my full email address
+                </label>
+
+                @error('phone_consent')
+                    <p role="alert" style="color:#fca5a5">{{ $message }}</p>
+                @enderror
+
+                @error('email_consent')
+                    <p role="alert" style="color:#fca5a5">{{ $message }}</p>
+                @enderror
+
+                <button class="action" type="submit">
+                    Save Privacy Choices
+                </button>
+            </form>
+        </div>
+    </section>
+    <section aria-label="My Direct Referrals">
+        <h2>My Direct Referrals (Level 1)</h2>
+        <p class="muted">Only members directly referred by you.</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Member ID</th>
+                        <th>Name</th>
+                        <th>Account Status</th>
+                        <th>Joining Date</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Investment</th>
+                        <th>Package Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($referrals as $referral)
+                        <tr>
+                            <td>{{ $referral->username }}</td>
+                            <td>{{ $referral->name }}</td>
+                            <td>{{ ucfirst($referral->status) }}</td>
+                            <td>{{ $referral->created_at ? \Illuminate\Support\Carbon::parse($referral->created_at)->format('d M Y') : '-' }}</td>
+                            <td>{{ $referral->display_phone }}</td>
+                            <td>{{ $referral->display_email }}</td>
+                            <td>{{ $referral->display_investment }}</td>
+                            <td>{{ $referral->display_package_status }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8">No direct referrals found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top:15px">
+            {{ $referrals->links() }}
+        </div>
+    </section>
     <section aria-label="51-level team breakdown">
         <h2>51-Level Team Breakdown</h2>
         <div class="table-wrap">

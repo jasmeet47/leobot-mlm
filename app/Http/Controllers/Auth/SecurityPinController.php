@@ -120,7 +120,7 @@ class SecurityPinController extends Controller
         );
 
         /*
-         * Update only the logged-in member.
+         * Update only the logged-in user.
          * Do not accept user_id from the request.
          */
         $user->forceFill([
@@ -128,19 +128,34 @@ class SecurityPinController extends Controller
         ])->save();
 
         /*
-         * Clear failed-attempt counter
+         * Clear attempt counter
          * after a successful PIN change.
          */
         RateLimiter::clear($rateLimitKey);
 
-        // Preserve the existing Admin flow; members proceed to their dashboard.
-        if (strtoupper((string) $user->username) === 'ADMIN') {
-            return back()->with('success', 'Security PIN saved successfully.');
+        /*
+         * Preserve Admin flow using role,
+         * not username.
+         */
+        if (
+            in_array(
+                (string) $user->role,
+                ['admin', 'super_admin'],
+                true
+            ) &&
+            $user->status === 'active'
+        ) {
+            return back()->with(
+                'success',
+                'Security PIN saved successfully.'
+            );
         }
 
-        return redirect()->route('member.dashboard')->with(
-            'success',
-            'Security PIN saved successfully.'
-        );
+        return redirect()
+            ->route('member.dashboard')
+            ->with(
+                'success',
+                'Security PIN saved successfully.'
+            );
     }
 }

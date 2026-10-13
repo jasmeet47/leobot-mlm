@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
@@ -27,13 +28,15 @@ Route::post('/register', [
 Route::post('/login', [
     LoginController::class,
     'login',
-])->name('login');
+])
+    ->middleware('throttle:5,1')
+    ->name('login');
 
 /*
 |--------------------------------------------------------------------------
 | Protected API Routes
 |--------------------------------------------------------------------------
-| Authentication required.
+| Authentication + read permission + Security PIN.
 */
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,7 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard-counters', [
         DashboardController::class,
         'getCounters',
-    ])->middleware(EnsureMemberPin::class);
+    ])->middleware([
+        CheckAbilities::class . ':member:read',
+        EnsureMemberPin::class,
+    ]);
 
 });
 

@@ -16,8 +16,11 @@ class TradingProfitPoolServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function createUser(string $username = 'ADMIN', string $status = 'active'): User
-    {
+    private function createUser(
+        string $username = 'ADMIN',
+        string $status = 'active',
+        string $role = 'admin'
+    ): User {
         $uuid = str_replace('-', '', (string) Str::uuid());
 
         $id = DB::table('users')->insertGetId([
@@ -28,6 +31,7 @@ class TradingProfitPoolServiceTest extends TestCase
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
             'status' => $status,
+            'role' => $role,
             'activation_balance' => '0.00000000',
             'available_balance' => '0.00000000',
             'total_investment' => '0.00000000',
@@ -72,6 +76,7 @@ class TradingProfitPoolServiceTest extends TestCase
 
         $company = DB::table('company_wallet')->find(1);
         $pool = DB::table('generation_pool_accounts')->find(1);
+
         $this->assertMoney('200', $company->balance);
         $this->assertMoney('300', $pool->balance);
         $this->assertMoney('300', $pool->unallocated_balance);
@@ -93,26 +98,35 @@ class TradingProfitPoolServiceTest extends TestCase
         $this->assertMoney('0', $budgets[0]->paid_amount);
         $this->assertSame(17, (int) $budgets[16]->level_number);
         $this->assertMoney('7.5', $budgets[16]->budget_amount);
-        $this->assertMoney('1.5', $budgets[21]->budget_amount); // level 22
-        $this->assertMoney('0.75', $budgets[41]->budget_amount); // level 42
+        $this->assertMoney('1.5', $budgets[21]->budget_amount);
+        $this->assertMoney('0.75', $budgets[41]->budget_amount);
 
         $sum = '0.00000000';
+
         foreach ($budgets as $budget) {
             $sum = bcadd($sum, (string) $budget->budget_amount, 8);
         }
-        $this->assertMoney('300', bcadd($sum, (string) $funding->rounding_unallocated, 8));
+
+        $this->assertMoney(
+            '300',
+            bcadd($sum, (string) $funding->rounding_unallocated, 8)
+        );
 
         $entries = DB::table('financial_ledger')
             ->where('reference_type', 'generation_profit_funding')
             ->where('reference_id', $id)
             ->orderBy('id')
             ->get();
+
         $this->assertCount(2, $entries);
         $this->assertMoney('-300', $entries[0]->amount);
         $this->assertMoney('300', $entries[1]->amount);
         $this->assertSame('company_wallet', $entries[0]->wallet_type);
         $this->assertSame('generation_pool', $entries[1]->wallet_type);
-        $this->assertNotEquals($entries[0]->transaction_key, $entries[1]->transaction_key);
+        $this->assertNotEquals(
+            $entries[0]->transaction_key,
+            $entries[1]->transaction_key
+        );
 
         $this->assertMoney('0', $admin->fresh()->available_balance);
         $this->assertMoney('0', $admin->fresh()->lifetime_income);
@@ -123,27 +137,40 @@ class TradingProfitPoolServiceTest extends TestCase
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
 
-        $firstId = TradingProfitPoolService::fund($admin, '1000', 'PERIOD-001');
+        $firstId = TradingProfitPoolService::fund(
+            $admin, '1000', 'PERIOD-001'
+        );
+
         DB::table('generation_pool_settings')->where('id', 1)
             ->update(['trading_profit_pool_percent' => '40.000000000']);
 
-        $secondId = TradingProfitPoolService::fund($admin, '1000.00000000', 'period-001');
+        $secondId = TradingProfitPoolService::fund(
+            $admin, '1000.00000000', 'period-001'
+        );
 
         $this->assertSame($firstId, $secondId);
         $this->assertSame(1, DB::table('generation_profit_fundings')->count());
         $this->assertSame(51, DB::table('generation_level_budgets')->count());
         $this->assertSame(2, DB::table('financial_ledger')->count());
-        $this->assertMoney('700', DB::table('company_wallet')->where('id', 1)->value('balance'));
-        $this->assertMoney('300', DB::table('generation_pool_accounts')->where('id', 1)->value('balance'));
+        $this->assertMoney(
+            '700',
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
+        $this->assertMoney(
+            '300',
+            DB::table('generation_pool_accounts')->where('id', 1)->value('balance')
+        );
     }
 
     public function test_same_profit_reference_with_different_amount_is_rejected(): void
     {
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
+
         TradingProfitPoolService::fund($admin, '1000', 'PERIOD-002');
 
         $this->expectException(RuntimeException::class);
+
         TradingProfitPoolService::fund($admin, '900', 'PERIOD-002');
     }
 
@@ -161,24 +188,29 @@ class TradingProfitPoolServiceTest extends TestCase
 
         $this->assertSame(0, DB::table('generation_profit_fundings')->count());
         $this->assertSame(0, DB::table('financial_ledger')->count());
-        $this->assertMoney('299.99999999', DB::table('company_wallet')->where('id', 1)->value('balance'));
+        $this->assertMoney(
+            '299.99999999',
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
     }
 
     public function test_non_admin_cannot_fund(): void
     {
-        $member = $this->createUser('TX123456');
+        $member = $this->createUser('TX123456', 'active', 'member');
         $this->setCompanyBalance('1000');
 
         $this->expectException(AuthorizationException::class);
+
         TradingProfitPoolService::fund($member, '1000', 'PERIOD-004');
     }
 
     public function test_inactive_admin_cannot_fund(): void
     {
-        $admin = $this->createUser('ADMIN', 'inactive');
+        $admin = $this->createUser('ADMIN', 'inactive', 'admin');
         $this->setCompanyBalance('1000');
 
         $this->expectException(AuthorizationException::class);
+
         TradingProfitPoolService::fund($admin, '1000', 'PERIOD-005');
     }
 
@@ -186,10 +218,12 @@ class TradingProfitPoolServiceTest extends TestCase
     {
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
+
         DB::table('generation_pool_settings')->where('id', 1)
             ->update(['trading_profit_pool_percent' => '101.000000000']);
 
         $this->expectException(RuntimeException::class);
+
         TradingProfitPoolService::fund($admin, '1000', 'PERIOD-006');
     }
 
@@ -197,26 +231,35 @@ class TradingProfitPoolServiceTest extends TestCase
     {
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
+
         DB::table('generation_pool_settings')->where('id', 1)
             ->update(['trading_profit_pool_percent' => '98.000000000']);
+
         DB::table('magic_income_settings')->where('id', 1)
             ->update(['trading_profit_pool_percent' => '3.000000000']);
 
         try {
-            TradingProfitPoolService::fund($admin, '1000', 'PERIOD-COMBINED');
+            TradingProfitPoolService::fund(
+                $admin, '1000', 'PERIOD-COMBINED'
+            );
             $this->fail('Combined pool >100% must be rejected.');
         } catch (RuntimeException $e) {
             $this->assertStringContainsString('exceed 100%', $e->getMessage());
         }
+
         $this->assertSame(0, DB::table('generation_profit_fundings')->count());
         $this->assertSame(0, DB::table('financial_ledger')->count());
-        $this->assertMoney('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
+        $this->assertMoney(
+            '1000',
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
     }
 
     public function test_wrong_level_total_is_rejected_atomically(): void
     {
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
+
         DB::table('level_settings')->where('level_number', 1)
             ->update(['commission_percentage' => '31.000000000']);
 
@@ -227,7 +270,10 @@ class TradingProfitPoolServiceTest extends TestCase
             $this->assertStringContainsString('100%', $e->getMessage());
         }
 
-        $this->assertMoney('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
+        $this->assertMoney(
+            '1000',
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
         $this->assertSame(0, DB::table('generation_profit_fundings')->count());
         $this->assertSame(0, DB::table('financial_ledger')->count());
     }
@@ -236,10 +282,12 @@ class TradingProfitPoolServiceTest extends TestCase
     {
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
+
         DB::table('generation_pool_settings')->where('id', 1)
             ->update(['generation_enabled' => true]);
 
         $this->expectException(RuntimeException::class);
+
         TradingProfitPoolService::fund($admin, '1000', 'PERIOD-008');
     }
 
@@ -249,6 +297,7 @@ class TradingProfitPoolServiceTest extends TestCase
         $this->setCompanyBalance('1000');
 
         $this->expectException(RuntimeException::class);
+
         TradingProfitPoolService::fund($admin, '0.00000001', 'PERIOD-009');
     }
 
@@ -256,10 +305,12 @@ class TradingProfitPoolServiceTest extends TestCase
     {
         $admin = $this->createUser();
         $this->setCompanyBalance('1000');
+
         DB::table('generation_pool_accounts')->where('id', 1)
             ->update(['held_balance' => '1.00000000']);
 
         $this->expectException(RuntimeException::class);
+
         TradingProfitPoolService::fund($admin, '1000', 'PERIOD-010');
     }
 
@@ -274,7 +325,156 @@ class TradingProfitPoolServiceTest extends TestCase
         $this->assertSame(2, DB::table('generation_profit_fundings')->count());
         $this->assertSame(102, DB::table('generation_level_budgets')->count());
         $this->assertSame(4, DB::table('financial_ledger')->count());
-        $this->assertMoney('550', DB::table('company_wallet')->where('id', 1)->value('balance'));
-        $this->assertMoney('450', DB::table('generation_pool_accounts')->where('id', 1)->value('balance'));
+
+        $this->assertMoney(
+            '550',
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
+        $this->assertMoney(
+            '450',
+            DB::table('generation_pool_accounts')->where('id', 1)->value('balance')
+        );
+    }
+
+    // NEW ROLE-BASED AUTHORIZATION TESTS
+
+    public function test_username_admin_without_admin_role_cannot_fund(): void
+    {
+        $member = $this->createUser('ADMIN', 'active', 'member');
+        $this->setCompanyBalance('1000');
+
+        try {
+            TradingProfitPoolService::fund(
+                $member, '1000', 'ROLE-USERNAME-DENIED'
+            );
+            $this->fail('Username ADMIN must not grant funding access.');
+        } catch (AuthorizationException $e) {
+            $this->assertSame(
+                0,
+                DB::table('generation_profit_fundings')->count()
+            );
+            $this->assertSame(0, DB::table('financial_ledger')->count());
+            $this->assertMoney(
+                '1000',
+                DB::table('company_wallet')->where('id', 1)->value('balance')
+            );
+        }
+    }
+
+    public function test_active_admin_with_different_username_can_fund(): void
+    {
+        $admin = $this->createUser('FINANCEADMIN', 'active', 'admin');
+        $this->setCompanyBalance('1000');
+
+        $id = TradingProfitPoolService::fund(
+            $admin, '1000', 'ROLE-ADMIN-ALLOWED'
+        );
+
+        $this->assertGreaterThan(0, $id);
+        $this->assertSame(
+            1,
+            DB::table('generation_profit_fundings')->count()
+        );
+        $this->assertMoney(
+            '700',
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
+    }
+
+    public function test_active_super_admin_can_fund(): void
+    {
+        $admin = $this->createUser('SUPERUSER', 'active', 'super_admin');
+        $this->setCompanyBalance('1000');
+
+        $id = TradingProfitPoolService::fund(
+            $admin, '1000', 'ROLE-SUPER-ALLOWED'
+        );
+
+        $this->assertGreaterThan(0, $id);
+        $this->assertSame(
+            1,
+            DB::table('generation_profit_fundings')->count()
+        );
+    }
+
+    public function test_revoked_admin_cannot_fund_using_stale_user_model(): void
+    {
+        $admin = $this->createUser('ADMIN', 'active', 'admin');
+        $this->setCompanyBalance('1000');
+
+        // Keep the old in-memory User model unchanged.
+        DB::table('users')->where('id', $admin->id)
+            ->update(['role' => 'member']);
+
+        try {
+            TradingProfitPoolService::fund(
+                $admin, '1000', 'ROLE-REVOKED-DENIED'
+            );
+            $this->fail('Revoked admin must not fund.');
+        } catch (AuthorizationException $e) {
+            $this->assertSame(
+                0,
+                DB::table('generation_profit_fundings')->count()
+            );
+            $this->assertSame(0, DB::table('financial_ledger')->count());
+            $this->assertMoney(
+                '1000',
+                DB::table('company_wallet')->where('id', 1)->value('balance')
+            );
+        }
+    }
+    public function test_magic_reference_cannot_be_reused_for_generation_funding(): void
+    {
+        $admin = $this->createUser();
+        $this->setCompanyBalance('1000');
+
+        config()->set('leobot.magic_pool_funding_enabled', true);
+
+        \App\Services\MagicPoolFundingService::fundDirectPool(
+            $admin,
+            '10',
+            'SHARED-PROFIT-REF-001'
+        );
+
+        $companyBefore = DB::table('company_wallet')
+            ->where('id', 1)->value('balance');
+        $generationBefore = DB::table('generation_pool_accounts')
+            ->where('id', 1)->value('balance');
+        $ledgerBefore = DB::table('financial_ledger')->count();
+
+        try {
+            TradingProfitPoolService::fund(
+                $admin,
+                '1000',
+                'SHARED-PROFIT-REF-001'
+            );
+
+            $this->fail('Duplicate funding must be rejected.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString(
+                'already used in Magic Pool funding',
+                $e->getMessage()
+            );
+        }
+
+        $this->assertSame(
+            0,
+            DB::table('generation_profit_fundings')->count()
+        );
+
+        $this->assertMoney(
+            (string) $companyBefore,
+            DB::table('company_wallet')->where('id', 1)->value('balance')
+        );
+
+        $this->assertMoney(
+            (string) $generationBefore,
+            DB::table('generation_pool_accounts')->where('id', 1)->value('balance')
+        );
+
+        $this->assertSame(
+            $ledgerBefore,
+            DB::table('financial_ledger')->count()
+        );
     }
 }

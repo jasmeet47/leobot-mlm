@@ -42,7 +42,6 @@ final class TradingProfitPoolService
         string $verifiedProfitAmount,
         string $profitReference
     ): int {
-        self::assertAdmin($admin);
         self::assertMoney($verifiedProfitAmount);
         self::assertReference($profitReference);
         $profitReference = strtoupper($profitReference);
@@ -52,6 +51,8 @@ final class TradingProfitPoolService
             $verifiedProfitAmount,
             $profitReference
         ): int {
+            self::assertAdmin($admin);
+
             // Lock shared funds first: serializes concurrent funding requests.
             $company = DB::table('company_wallet')
                 ->where('id', 1)
@@ -81,6 +82,28 @@ final class TradingProfitPoolService
 
             if (!$pool) {
                 throw new RuntimeException('Generation pool account is missing.');
+            }
+
+            // Reject references already reserved by standalone Magic funding.
+            // Same-reference checks complement, but do not replace, source verification.
+            if (Schema::hasTable('magic_pool_fundings') &&
+                DB::table('magic_pool_fundings')
+                    ->where('source_reference', $profitReference)
+                    ->exists()) {
+                throw new RuntimeException(
+                    'Profit reference already used in Magic Pool funding.'
+                );
+            }
+
+            // Unified funding also creates a generation funding record.
+            // Never treat that record as a legacy funding retry.
+            if (Schema::hasTable('profit_sharing_fundings') &&
+                DB::table('profit_sharing_fundings')
+                    ->where('profit_reference', $profitReference)
+                    ->exists()) {
+                throw new RuntimeException(
+                    'Profit reference already used in unified profit sharing funding.'
+                );
             }
 
             // Idempotency is based on the real profit source, not a new UUID
@@ -332,8 +355,10 @@ final class TradingProfitPoolService
     {
         if (
             !$admin->exists ||
-            strtoupper((string) $admin->username) !== 'ADMIN' ||
-            $admin->status !== 'active'
+            (int) $admin->getKey() <= 0 ||
+            !($actualAdmin = DB::table('users')->where('id', $admin->getKey())->lockForUpdate()->first(['role', 'status'])) ||
+            !in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true) ||
+            (string) $actualAdmin->status !== 'active'
         ) {
             throw new AuthorizationException('Active ADMIN authorization required.');
         }

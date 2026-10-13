@@ -28,6 +28,7 @@ class RegisterController extends Controller
 
         if (is_string($referralCode) && $referralCode !== '') {
             $sponsor = User::where('username', $referralCode)->first();
+
             if ($sponsor) {
                 $sponsorName = $sponsor->name;
             } else {
@@ -52,7 +53,8 @@ class RegisterController extends Controller
             'sponsor_id' => ['required', 'string', 'max:255'],
         ]);
 
-        $sponsor = User::query()->where('username', $data['sponsor_id'])
+        $sponsor = User::query()
+            ->where('username', $data['sponsor_id'])
             ->first(['username', 'name']);
 
         if (!$sponsor) {
@@ -70,8 +72,8 @@ class RegisterController extends Controller
     }
 
     /**
-     * POST /register: ordinary web form (session login + existing success flash).
-     * POST /api/register: stateless JSON, NO web session and NO access token.
+     * POST /register: ordinary web form.
+     * POST /api/register: stateless JSON, no session and no access token.
      */
     public function register(Request $request)
     {
@@ -80,22 +82,37 @@ class RegisterController extends Controller
         $validated = $request->validate([
             'sponsor_id' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users,email',
+            ],
             'mobile' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
         ]);
 
         $user = null;
 
-        // Each retry uses a NEW transaction: a PostgreSQL unique-constraint
-        // violation aborts its transaction and cannot be recovered within it.
+        // Each retry uses a new transaction.
         for ($attempt = 0; $attempt < self::MAX_USERNAME_TRIES; $attempt++) {
             $candidate = 'TX' . random_int(100000, 999999);
 
             try {
-                $user = DB::transaction(function () use ($validated, $candidate) {
-                    $sponsor = User::where('username', $validated['sponsor_id'])
-                        ->lockForUpdate()->first();
+                $user = DB::transaction(function () use (
+                    $validated,
+                    $candidate
+                ) {
+                    $sponsor = User::where(
+                        'username',
+                        $validated['sponsor_id']
+                    )->lockForUpdate()->first();
 
                     if (!$sponsor) {
                         throw ValidationException::withMessages([
@@ -110,11 +127,17 @@ class RegisterController extends Controller
                         'name' => $validated['name'],
                         'email' => $validated['email'],
                         'phone' => $validated['mobile'],
-                        'password' => Hash::make($validated['password']),
+                        'password' => Hash::make(
+                            $validated['password']
+                        ),
                         'security_pin' => null,
                         'status' => 'inactive',
                     ]);
-                    \App\Services\TeamCounterService::synchronize((int) $newMember->id);
+
+                    \App\Services\TeamCounterService::synchronize(
+                        (int) $newMember->id
+                    );
+
                     return $newMember;
                 }, 3);
 
@@ -127,14 +150,15 @@ class RegisterController extends Controller
         }
 
         if (!$user) {
-            throw new RuntimeException('Could not allocate a unique member username. Please retry.');
+            throw new RuntimeException(
+                'Could not allocate a unique member username. Please retry.'
+            );
         }
 
         $referralLink = url('/join?ref=' . $user->username);
 
         if ($request->is('api/*')) {
-            // API registrations must not call Auth::login() or session()->regenerate().
-            // Activation remains required; no bearer token is issued by registration.
+            // API registration issues no session or bearer token.
             return response()->json([
                 'success' => true,
                 'message' => 'Registration successful. Activation is required.',
@@ -159,31 +183,38 @@ class RegisterController extends Controller
     }
 
     /**
-     * Only retry the users.username constraint. A duplicate email, foreign
-     * key error or any other DB exception must NEVER be silently retried.
+     * Retry only users.username unique-constraint collisions.
      */
-    private static function isUsernameCollision(QueryException $exception): bool
-    {
+    private static function isUsernameCollision(
+        QueryException $exception
+    ): bool {
         $sqlState = (string) ($exception->errorInfo[0] ?? '');
         $driverCode = (string) ($exception->errorInfo[1] ?? '');
         $message = strtolower($exception->getMessage());
 
-        $isUniqueViolation = $sqlState === '23505'      // PostgreSQL
-            || ($sqlState === '23000' && $driverCode === '1062') // MySQL
-            || ($sqlState === '23000' && $driverCode === '19'); // SQLite
+        $isUniqueViolation = $sqlState === '23505'
+            || ($sqlState === '23000' && $driverCode === '1062')
+            || ($sqlState === '23000' && $driverCode === '19');
 
         return $isUniqueViolation
-            && (str_contains($message, 'users_username_unique')
-                || str_contains($message, 'users.username'));
+            && (
+                str_contains($message, 'users_username_unique')
+                || str_contains($message, 'users.username')
+            );
     }
 
     /**
-     * Same per-IP guard for both the web and API endpoints. The limit counts
-     * failed attempts as well as successful attempts, preventing easy abuse.
+     * Rate-limit public registration and sponsor verification.
      */
-    private static function limitPublicRequest(Request $request, string $action, int $limit): void
-    {
-        $key = 'leobot:' . $action . ':' . hash('sha256', $request->ip() ?? 'unknown');
+    private static function limitPublicRequest(
+        Request $request,
+        string $action,
+        int $limit
+    ): void {
+        $key = 'leobot:'
+            . $action
+            . ':'
+            . hash('sha256', $request->ip() ?? 'unknown');
 
         if (RateLimiter::tooManyAttempts($key, $limit)) {
             abort(429, 'Too many requests. Please try again later.');
@@ -192,7 +223,9 @@ class RegisterController extends Controller
         RateLimiter::hit($key, 60);
     }
 
-    // Existing web login behavior retained.
+    /**
+     * Web login with role-based admin redirect.
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -208,12 +241,26 @@ class RegisterController extends Controller
         if ($loginSuccess) {
             $request->session()->regenerate();
 
-            if (strtoupper((string) $request->user()->username) === 'ADMIN') {
-                return redirect()->intended('/admin/level-config');
+            $user = $request->user();
+
+            // Only active admin/super_admin roles receive admin redirect.
+            // A username of ADMIN alone grants no admin privileges.
+            if (
+                $user->status === 'active'
+                && in_array(
+                    $user->role,
+                    ['admin', 'super_admin'],
+                    true
+                )
+            ) {
+                return redirect('/admin/level-config');
             }
 
-            // Explicit destination: a pre-saved intended URL cannot bypass PIN setup.
-            return \App\Http\Middleware\EnsureMemberPin::hasConfiguredPin($request->user())
+            // Members must complete PIN setup before dashboard access.
+            // A saved intended URL cannot bypass PIN setup.
+            return \App\Http\Middleware\EnsureMemberPin::hasConfiguredPin(
+                $user
+            )
                 ? redirect()->route('member.dashboard')
                 : redirect()->route('security-pin.form');
         }

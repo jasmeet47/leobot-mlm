@@ -10,11 +10,24 @@ class AdminOnly
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (
-            !$request->user() ||
-            strtoupper((string) $request->user()->username) !== 'ADMIN' ||
-            $request->user()->status !== 'active'
-        ) {
+        $user = $request->user();
+
+        // Unauthenticated users cannot access admin routes.
+        if (!$user) {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Only active accounts can access admin routes.
+        if ($user->status !== 'active') {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Authorization is based on role, not username.
+        if (!in_array(
+            $user->role,
+            ['admin', 'super_admin'],
+            true
+        )) {
             abort(403, 'Unauthorized.');
         }
 
