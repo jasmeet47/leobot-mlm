@@ -65,7 +65,9 @@ class AdminDashboardSecurityTest extends TestCase
             ->get('/admin/dashboard')
             ->assertOk()
             ->assertSee('Admin Dashboard')
-            ->assertSee('51-Level Commission');
+            ->assertSee('51-Level Commission')
+            ->assertSee('Member Management')
+            ->assertSee('View Members');
     }
 
     public function test_active_super_admin_can_access_dashboard(): void

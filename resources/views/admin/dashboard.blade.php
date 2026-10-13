@@ -232,6 +232,17 @@
             </a>
         </div>
 
+        <div class="card">
+            <h2>Member Management</h2>
+            <p>
+                View registered members, search usernames,
+                and review sponsor and account status.
+                Read-only access.
+            </p>
+            <a href="{{ route('admin.members.index') }}">
+                View Members
+            </a>
+        </div>
     </section>
 
 </main>
