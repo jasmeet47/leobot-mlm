@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Admin\ReferralPrivacyController;
+use App\Http\Controllers\Admin\MemberManagementController;
 
 use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -152,6 +153,17 @@ Route::middleware('admin')->group(function () {
     | Main Admin Dashboard
     |--------------------------------------------------------------------------
     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Read-Only Member Management
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/members', [
+        MemberManagementController::class,
+        'index',
+    ])->name('admin.members.index');
 
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');

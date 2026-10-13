@@ -107,9 +107,9 @@ $other = @(
 )
 
 if (
-    $allTests.Count -ne 27 -or
+    $allTests.Count -ne 28 -or
     $truncation.Count -ne 3 -or
-    $refresh.Count -ne 20 -or
+    $refresh.Count -ne 21 -or
     $other.Count -ne 4
 ) {
     Stop-Safely "Unexpected test file counts. Review before running."
