@@ -147,6 +147,16 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::middleware('admin')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Main Admin Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+
 
     /*
     |--------------------------------------------------------------------------
