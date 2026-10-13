@@ -1,4 +1,4 @@
-﻿# LeoBot - Disposable Database Test Runner
+# LeoBot - Disposable Database Test Runner
 $ErrorActionPreference = "Stop"
 
 $php = "C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64\php.exe"
@@ -107,9 +107,9 @@ $other = @(
 )
 
 if (
-    $allTests.Count -ne 26 -or
+    $allTests.Count -ne 27 -or
     $truncation.Count -ne 3 -or
-    $refresh.Count -ne 19 -or
+    $refresh.Count -ne 20 -or
     $other.Count -ne 4
 ) {
     Stop-Safely "Unexpected test file counts. Review before running."
