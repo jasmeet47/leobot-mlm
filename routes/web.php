@@ -170,6 +170,10 @@ Route::middleware('admin')->group(function () {
         'show',
     ])->whereNumber('member')->name('admin.members.show');
 
+    Route::get('/admin/members/{member}/referrals', [
+        MemberManagementController::class,
+        'referrals',
+    ])->whereNumber('member')->name('admin.members.referrals');
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');

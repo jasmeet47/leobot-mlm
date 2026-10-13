@@ -90,6 +90,11 @@
             </div>
         </div>
 
+        <p>
+            <a href="{{ route('admin.members.referrals', $member->id) }}">
+                View Direct Referrals
+            </a>
+        </p>
         <p class="notice">
             Read-only member information. No account or financial changes
             can be performed from this page.

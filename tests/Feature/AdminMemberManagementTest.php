@@ -36,6 +36,142 @@ class AdminMemberManagementTest extends TestCase
         return User::findOrFail($id);
     }
 
+    private function createDirectReferral(User $sponsor, string $username): User
+    {
+        $referral = $this->createUser('member', 'active', $username);
+
+        DB::table('users')
+            ->where('id', $referral->id)
+            ->update(['sponsor_user_id' => $sponsor->id]);
+
+        return $referral->fresh();
+    }
+
+    public function test_guest_cannot_view_direct_referrals(): void
+    {
+        $member = $this->createUser();
+        $this->get(route('admin.members.referrals', $member->id))->assertForbidden();
+    }
+
+    public function test_regular_member_cannot_view_direct_referrals(): void
+    {
+        $member = $this->createUser();
+        $this->actingAs($this->createUser())
+            ->get(route('admin.members.referrals', $member->id))
+            ->assertForbidden();
+    }
+
+    public function test_inactive_admin_cannot_view_direct_referrals(): void
+    {
+        $member = $this->createUser();
+        $this->actingAs($this->createUser('admin', 'inactive'))
+            ->get(route('admin.members.referrals', $member->id))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_view_direct_referrals_without_other_teams(): void
+    {
+        $admin = $this->createUser('admin');
+        $sponsor = $this->createUser('member', 'active', 'TEAMSPONSOR');
+        $otherSponsor = $this->createUser('member', 'active', 'OTHERSPONSOR');
+        $this->createDirectReferral($sponsor, 'DIRECTTEAM001');
+        $this->createDirectReferral($sponsor, 'DIRECTTEAM002');
+        $this->createDirectReferral($otherSponsor, 'OTHERTEAM001');
+
+        $this->actingAs($admin)
+            ->get(route('admin.members.referrals', $sponsor->id))
+            ->assertOk()
+            ->assertSee('Direct Referrals')
+            ->assertSee('DIRECTTEAM001')
+            ->assertSee('DIRECTTEAM002')
+            ->assertDontSee('OTHERTEAM001')
+            ->assertSee('View Details');
+    }
+
+    public function test_super_admin_can_view_direct_referrals(): void
+    {
+        $admin = $this->createUser('super_admin');
+        $member = $this->createUser();
+        $this->actingAs($admin)
+            ->get(route('admin.members.referrals', $member->id))
+            ->assertOk();
+    }
+
+    public function test_direct_referral_search_escapes_wildcards(): void
+    {
+        $admin = $this->createUser('admin');
+        $sponsor = $this->createUser();
+        $this->createDirectReferral($sponsor, 'REF%SPECIAL');
+        $this->createDirectReferral($sponsor, 'REFXSPECIAL');
+        $this->createDirectReferral($sponsor, 'REF_SPECIAL');
+        $this->createDirectReferral($sponsor, 'REFYSPECIAL');
+
+        $url = route('admin.members.referrals', $sponsor->id);
+        $this->actingAs($admin)
+            ->get($url . '?search=' . urlencode('REF%'))
+            ->assertOk()
+            ->assertSee('REF%SPECIAL')
+            ->assertDontSee('REFXSPECIAL');
+
+        $this->actingAs($admin)
+            ->get($url . '?search=' . urlencode('REF_'))
+            ->assertOk()
+            ->assertSee('REF_SPECIAL')
+            ->assertDontSee('REFYSPECIAL');
+    }
+
+    public function test_direct_referral_search_rejects_long_input(): void
+    {
+        $admin = $this->createUser('admin');
+        $member = $this->createUser();
+        $this->actingAs($admin)
+            ->getJson(route('admin.members.referrals', $member->id) . '?search=' . str_repeat('A', 101))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('search');
+    }
+
+    public function test_direct_referral_pagination(): void
+    {
+        $admin = $this->createUser('admin');
+        $sponsor = $this->createUser();
+        for ($i = 1; $i <= 25; $i++) {
+            $this->createDirectReferral($sponsor, sprintf('TEAMUSER%03d', $i));
+        }
+
+        $url = route('admin.members.referrals', $sponsor->id);
+        $this->actingAs($admin)
+            ->get($url)
+            ->assertOk()
+            ->assertSee('TEAMUSER025')
+            ->assertDontSee('TEAMUSER005');
+
+        $this->actingAs($admin)
+            ->get($url . '?page=2')
+            ->assertOk()
+            ->assertSee('TEAMUSER005')
+            ->assertDontSee('TEAMUSER025');
+    }
+
+    public function test_missing_referral_member_returns_404(): void
+    {
+        $this->actingAs($this->createUser('admin'))
+            ->get('/admin/members/999999999/referrals')
+            ->assertNotFound();
+    }
+
+    public function test_direct_referral_page_does_not_expose_credentials(): void
+    {
+        $admin = $this->createUser('admin');
+        $sponsor = $this->createUser();
+        $referral = $this->createDirectReferral($sponsor, 'SAFEDETAIL001');
+
+        $this->actingAs($admin)
+            ->get(route('admin.members.referrals', $sponsor->id))
+            ->assertOk()
+            ->assertDontSee($referral->password)
+            ->assertDontSee('security_pin')
+            ->assertDontSee('TestPassword123!');
+    }
     public function test_guest_cannot_access_members(): void
     {
         $this->get('/admin/members')->assertForbidden();
