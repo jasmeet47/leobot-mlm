@@ -131,6 +131,7 @@ class ActivationService
             }
 
             if (
+                $member->is_blocked ||
                 !in_array(
                     $member->status,
                     ['active', 'inactive'],

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\EnsureAccountNotBlocked;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => AdminOnly::class,
+            'account.not_blocked' => EnsureAccountNotBlocked::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

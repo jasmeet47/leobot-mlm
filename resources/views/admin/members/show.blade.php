@@ -80,7 +80,7 @@
 
         <div class="field">
             <div class="label">Account Status</div>
-            <div class="value">{{ $member->status }}</div>
+            <div class="value">{{ $member->status }}{{ $member->is_blocked ? ' (Account Blocked)' : '' }}</div>
         </div>
 
         <div class="field">
@@ -95,10 +95,45 @@
                 View Direct Referrals
             </a>
         </p>
-        <p class="notice">
-            Read-only member information. No account or financial changes
-            can be performed from this page.
-        </p>
+        <p><a href="{{ route('admin.members.team-levels', $member->id) }}">View 51-Level Team</a></p>
+
+        @if (session('success'))
+            <p role="status">{{ session('success') }}</p>
+        @endif
+        @if ($member->role === 'member')
+            <h2>Account Access Management</h2>
+            <p>Blocking stops logins and new income eligibility. Existing team, principal and history are preserved.</p>
+            @if (!$member->is_blocked)
+                <form method="POST" action="{{ route('admin.members.block', $member->id) }}">
+                    @csrf
+                    <label for="block-reason">Reason for block (5–500 characters)</label>
+                    <textarea id="block-reason" name="reason" required minlength="5" maxlength="500" rows="3" style="display:block;width:100%;box-sizing:border-box;">{{ old('reason') }}</textarea>
+                    <button type="submit">Block Member ID</button>
+                </form>
+            @else
+                <form method="POST" action="{{ route('admin.members.unblock', $member->id) }}">
+                    @csrf
+                    <label for="unblock-reason">Reason for unblock (5–500 characters)</label>
+                    <textarea id="unblock-reason" name="reason" required minlength="5" maxlength="500" rows="3" style="display:block;width:100%;box-sizing:border-box;">{{ old('reason') }}</textarea>
+                    <button type="submit">Unblock Member ID</button>
+                </form>
+            @endif
+            @error('reason') <p role="alert">{{ $message }}</p> @enderror
+        @endif
+
+        <h2>Block/Unblock History (latest 20)</h2>
+        @forelse ($blockAudits as $audit)
+            <div class="field">
+                <strong>{{ ucfirst($audit->action) }}</strong>
+                by {{ $audit->admin_username }}
+                at {{ $audit->created_at }}
+                <div>{{ $audit->previous_status }} → {{ $audit->new_status }}</div>
+                <div>Reason: {{ $audit->reason }}</div>
+            </div>
+        @empty
+            <p>No block/unblock history.</p>
+        @endforelse
+        <p class="notice">Member details and team views are read-only. Account access actions are audited; no wallet, income or principal adjustments are made.</p>
     </div>
 </div>
 </body>

@@ -39,7 +39,7 @@ Route::post('/login', [
 | Authentication + read permission + Security PIN.
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'account.not_blocked'])->group(function () {
 
     Route::get('/dashboard-counters', [
         DashboardController::class,

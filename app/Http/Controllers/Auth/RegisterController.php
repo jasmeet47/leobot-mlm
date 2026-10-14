@@ -173,6 +173,7 @@ class RegisterController extends Controller
         }
 
         Auth::login($user);
+        $request->session()->put('member_login_version', (int) $user->member_login_version);
         $request->session()->regenerate();
 
         return back()->with([
@@ -239,9 +240,18 @@ class RegisterController extends Controller
         ]);
 
         if ($loginSuccess) {
-            $request->session()->regenerate();
-
             $user = $request->user();
+            if ($user->is_blocked) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'username' => 'Invalid username or password.',
+                ])->withInput($request->only('username'));
+            }
+
+            $request->session()->regenerate();
+            $request->session()->put('member_login_version', (int) $user->member_login_version);
 
             // Only active admin/super_admin roles receive admin redirect.
             // A username of ADMIN alone grants no admin privileges.

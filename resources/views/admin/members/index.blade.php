@@ -62,7 +62,7 @@
                             <td>{{ $member->sponsor?->username ?? $member->sponsor_id ?? '—' }}</td>
                             <td>
                                 <span class="{{ $member->status === 'active' ? 'active' : 'inactive' }}">
-                                    {{ ucfirst($member->status) }}
+                                    {{ $member->is_blocked ? 'Blocked (' . ucfirst($member->status) . ')' : ucfirst($member->status) }}
                                 </span>
                             </td>
                             <td>{{ $member->created_at?->format('d M Y') ?? '—' }}</td>

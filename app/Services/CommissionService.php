@@ -100,7 +100,7 @@ class CommissionService
 
             $ancestor = DB::table('users')
                 ->where('id', $nextId)
-                ->first(['id', 'status', 'sponsor_user_id']);
+                ->first(['id', 'status', 'is_blocked', 'sponsor_user_id']);
 
             if (!$ancestor) {
                 // Missing sponsor: remaining generations have no identifiable payee.
@@ -133,7 +133,8 @@ class CommissionService
             } elseif ($recipient === null) {
                 $status = 'unallocated_missing_upline';
                 $bucket = 'unallocated';
-            } elseif ((string) $recipient->status !== 'active') {
+            } elseif ((string) $recipient->status !== 'active' ||
+                in_array($recipient->is_blocked, [true, 1, '1', 't', 'true'], true)) {
                 $status = 'held_recipient_inactive';
                 $bucket = 'held';
             } elseif (!DB::table('activation_packages')

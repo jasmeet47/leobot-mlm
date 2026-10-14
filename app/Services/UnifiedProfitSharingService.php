@@ -154,8 +154,13 @@ final class UnifiedProfitSharingService
             $directRows = [];
             $directTotal = '0.00000000';
             foreach ($normalized as $userId => $memberProfit) {
-                if (!DB::table('users')->where('id', $userId)->exists()) {
+                $owner = DB::table('users')->where('id', $userId)
+                    ->lockForUpdate()->first(['is_blocked']);
+                if (!$owner) {
                     throw new RuntimeException("Unknown profit owner user ID {$userId}.");
+                }
+                if (in_array($owner->is_blocked, [true, 1, '1', 't', 'true'], true)) {
+                    throw new RuntimeException('Blocked member is not eligible for new income reserves.');
                 }
                 $selfShare = self::percentOf($memberProfit, $selfRate);
                 $directTotal = bcadd($directTotal, $selfShare, 8);

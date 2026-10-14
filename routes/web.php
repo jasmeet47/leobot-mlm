@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Admin\ReferralPrivacyController;
 use App\Http\Controllers\Admin\MemberManagementController;
+use App\Http\Controllers\Admin\MemberBlockController;
 
 use App\Http\Controllers\Auth\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -62,7 +63,7 @@ Route::post('/login', [
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'account.not_blocked'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -174,6 +175,21 @@ Route::middleware('admin')->group(function () {
         MemberManagementController::class,
         'referrals',
     ])->whereNumber('member')->name('admin.members.referrals');
+
+    Route::get('/admin/members/{member}/team-levels', [
+        MemberManagementController::class,
+        'teamLevels',
+    ])->whereNumber('member')->name('admin.members.team-levels');
+
+    Route::post('/admin/members/{member}/block', [
+        MemberBlockController::class,
+        'block',
+    ])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.block');
+
+    Route::post('/admin/members/{member}/unblock', [
+        MemberBlockController::class,
+        'unblock',
+    ])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.unblock');
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');

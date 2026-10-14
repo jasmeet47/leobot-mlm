@@ -257,6 +257,12 @@ class BusinessQualificationService
             return false;
         }
 
+        // A blocked member cannot gain NEW generation eligibility.
+        // Keep the underlying team/business totals untouched.
+        if (User::query()->whereKey($userId)->where('is_blocked', true)->exists()) {
+            return false;
+        }
+
         $result = self::calculate($userId);
 
         return $level <=

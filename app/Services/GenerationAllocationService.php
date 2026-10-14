@@ -110,7 +110,7 @@ final class GenerationAllocationService
 
             // Create an all-members/all-active-packages snapshot; never silently
             // truncate. For larger networks use a future audited batch worker.
-            $users = DB::table('users')->select('id', 'status', 'sponsor_user_id')
+            $users = DB::table('users')->select('id', 'status', 'is_blocked', 'sponsor_user_id')
                 ->orderBy('id')->limit(self::MAX_USERS + 1)->get();
             if ($users->count() > self::MAX_USERS) {
                 throw new RuntimeException('Network exceeds safe snapshot size.');
@@ -228,7 +228,8 @@ final class GenerationAllocationService
                             }
                             $unlocked = $unlockCache[$candidateId];
                             $reason = 'qualified';
-                            if ((string) $byId[$candidateId]->status !== 'active') {
+                            if ((string) $byId[$candidateId]->status !== 'active' ||
+                                in_array($byId[$candidateId]->is_blocked, [true, 1, '1', 't', 'true'], true)) {
                                 $reason = 'member_inactive';
                             } elseif (!isset($activeOwner[$candidateId])) {
                                 $reason = 'no_active_package';
