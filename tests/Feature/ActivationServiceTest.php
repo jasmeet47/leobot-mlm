@@ -15,6 +15,14 @@ class ActivationServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Positive-path tests only; live activation remains OFF.
+        config()->set('leobot.member_activation_enabled', true);
+    }
+
     /*
      * Create a test member.
      * This member belongs only to the test database.

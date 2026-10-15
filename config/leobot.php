@@ -1,7 +1,7 @@
 <?php
 
 return [
-    // Magic Pool Funding फिलहाल बंद रहेगी।
-    // Security Review के बाद ही Enable करेंगे।
+    // Fail closed. Enabling any financial operation requires a separate review.
+    'member_activation_enabled' => false,
     'magic_pool_funding_enabled' => false,
 ];

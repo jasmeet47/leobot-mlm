@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\MagicPoolFundingService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -18,8 +18,18 @@ use Tests\TestCase;
  */
 class MagicPoolFundingServiceTest extends TestCase
 {
-    use DatabaseTruncation;
+    use RefreshDatabase {
+        refreshDatabase as private refreshDatabaseWithLaravelTrait;
+    }
 
+    public function refreshDatabase()
+    {
+        // Validate the actual database before Laravel may run migrate:fresh.
+        // The existing guard permits only the disposable PostgreSQL database.
+        $this->beforeTruncatingDatabase();
+
+        $this->refreshDatabaseWithLaravelTrait();
+    }
     protected function beforeTruncatingDatabase(): void
     {
         $connection = DB::connection();
@@ -47,6 +57,7 @@ class MagicPoolFundingServiceTest extends TestCase
                 'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
             );
         }
+        \Tests\Support\FinancialSeedState::captureIfNeeded();
     }
 
     protected function setUp(): void

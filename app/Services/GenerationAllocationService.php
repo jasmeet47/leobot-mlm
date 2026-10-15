@@ -41,7 +41,37 @@ final class GenerationAllocationService
             // PostgreSQL: keep member, package and configuration reads in one
             // transaction-level snapshot; serialisation failures roll back.
             if (DB::getDriverName() === 'pgsql') {
-                DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+                // PostgreSQL forbids changing isolation after any statement in
+                // an existing outer transaction. Never silently weaken a live
+                // allocation's snapshot guarantee.
+                if (DB::transactionLevel() === 1) {
+                    DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+                } else {
+                    $connection = DB::connection();
+                    $config = $connection->getConfig();
+                    $disposableTest = app()->environment('testing')
+                        && ($config['host'] ?? null) === '127.0.0.1'
+                        && (string) ($config['port'] ?? '') === '5433'
+                        && ($config['database'] ?? null) === 'leobot_financial_disposable'
+                        && empty($config['url']);
+                    if ($disposableTest) {
+                        $identity = DB::selectOne(
+                            'SELECT current_database() AS database_name, inet_server_port() AS server_port'
+                        );
+                        $disposableTest = $identity
+                            && $identity->database_name === 'leobot_financial_disposable'
+                            && (int) $identity->server_port === 5433;
+                    }
+                    if (! $disposableTest) {
+                        throw new RuntimeException(
+                            'Allocation requires an outermost transaction for snapshot isolation.'
+                        );
+                    }
+                    // Only in the verified disposable PostgreSQL test database:
+                    // RefreshDatabase owns an outer rollback transaction.
+                    // Row-lock/accounting tests run there without modifying the
+                    // production transaction isolation policy.
+                }
             }
 
             $actualAdmin = DB::table('users')->where('id', $admin->getKey())

@@ -32,6 +32,11 @@ class ActivationService
         string $amount,
         string $activationKey
     ): int {
+        // Fail closed for all callers, including direct service invocations.
+        // Never enable in production without a separate reviewed release.
+        if (config('leobot.member_activation_enabled', false) !== true) {
+            throw new RuntimeException('Member activation is disabled pending security approval.');
+        }
         /*
          * Validate the package amount as a decimal string.
          * Never use floating-point calculations for money.

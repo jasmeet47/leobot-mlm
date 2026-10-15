@@ -7,7 +7,7 @@ use App\Services\GenerationAllocationService;
 use App\Services\TradingProfitPoolService;
 use App\Services\UnifiedProfitSharingService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -16,8 +16,18 @@ use Tests\TestCase;
 
 class UnifiedProfitSharingServiceTest extends TestCase
 {
-    use DatabaseTruncation;
+    use RefreshDatabase {
+        refreshDatabase as private refreshDatabaseWithLaravelTrait;
+    }
 
+    public function refreshDatabase()
+    {
+        // Validate the actual database before Laravel may run migrate:fresh.
+        // The existing guard permits only the disposable PostgreSQL database.
+        $this->beforeTruncatingDatabase();
+
+        $this->refreshDatabaseWithLaravelTrait();
+    }
     protected function beforeTruncatingDatabase(): void
     {
         $connection = DB::connection();
@@ -46,6 +56,7 @@ class UnifiedProfitSharingServiceTest extends TestCase
                 'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
             );
         }
+        \Tests\Support\FinancialSeedState::captureIfNeeded();
     }
 
     protected function setUp(): void
@@ -468,7 +479,7 @@ class UnifiedProfitSharingServiceTest extends TestCase
             ->update(['combined_funding_enabled' => false]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('unified');
+        $this->expectExceptionMessage('permanently retired');
 
         TradingProfitPoolService::fund(
             $admin, '1000', 'CROSS-UNIFIED-LEGACY'
@@ -484,11 +495,19 @@ class UnifiedProfitSharingServiceTest extends TestCase
             ->where('id', 1)
             ->update(['balance' => '1000']);
 
-        TradingProfitPoolService::fund(
-            $admin,
-            '1000',
-            'LEGACY-USED'
-        );
+        // Model an EXISTING historical legacy record without calling the
+        // permanently retired entry point. Do not create new legacy funding.
+        DB::table('generation_profit_fundings')->insert([
+            'profit_reference' => 'LEGACY-USED',
+            'approved_by' => $admin->id,
+            'verified_profit_amount' => '1000.00000000',
+            'pool_percentage_snapshot' => '30.000000000',
+            'pool_amount' => '300.00000000',
+            'rounding_unallocated' => '0.00000000',
+            'status' => 'funded_unallocated',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         DB::table('profit_sharing_settings')
             ->where('id', 1)

@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\GenerationAllocationService;
-use App\Services\TradingProfitPoolService;
+use App\Services\UnifiedProfitSharingService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -15,8 +15,18 @@ use Tests\TestCase;
 
 class GenerationAllocationServiceTest extends TestCase
 {
-    use DatabaseTruncation;
+    use RefreshDatabase {
+        refreshDatabase as private refreshDatabaseWithLaravelTrait;
+    }
 
+    public function refreshDatabase()
+    {
+        // Validate the actual database before Laravel may run migrate:fresh.
+        // The existing guard permits only the disposable PostgreSQL database.
+        $this->beforeTruncatingDatabase();
+
+        $this->refreshDatabaseWithLaravelTrait();
+    }
     protected function beforeTruncatingDatabase(): void
     {
         $connection = DB::connection();
@@ -45,6 +55,7 @@ class GenerationAllocationServiceTest extends TestCase
                 'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
             );
         }
+        \Tests\Support\FinancialSeedState::captureIfNeeded();
     }
 
     protected function setUp(): void
@@ -120,11 +131,20 @@ class GenerationAllocationServiceTest extends TestCase
             ->where('id', 1)
             ->update(['balance' => '2000.00000000']);
 
-        return TradingProfitPoolService::fund(
+        // Unified funding reserves 67% self, 30% generation and 3% magic.
+        // It is explicitly enabled only in this disposable test transaction.
+        DB::table('profit_sharing_settings')->where('id', 1)
+            ->update(['combined_funding_enabled' => true]);
+
+        $id = UnifiedProfitSharingService::fund(
             $admin,
             '1000.00000000',
-            $ref
+            $ref,
+            [$admin->id => '1000.00000000']
         );
+
+        return (int) DB::table('profit_sharing_fundings')
+            ->where('id', $id)->value('generation_funding_id');
     }
 
     private function money(string $expected, mixed $actual): void
@@ -153,7 +173,7 @@ class GenerationAllocationServiceTest extends TestCase
             DB::table('generation_member_allocations')->count()
         );
         $this->money('0', $admin->fresh()->available_balance);
-        $this->assertSame(2, DB::table('financial_ledger')->count());
+        $this->assertSame(4, DB::table('financial_ledger')->count());
     }
 
     public function test_level_one_business_weights_are_sixty_thirty_from_ninety(): void
@@ -200,7 +220,7 @@ class GenerationAllocationServiceTest extends TestCase
 
         $this->money('0', $a->fresh()->available_balance);
         $this->money('0', $b->fresh()->lifetime_income);
-        $this->assertSame(4, DB::table('financial_ledger')->count());
+        $this->assertSame(6, DB::table('financial_ledger')->count());
     }
 
     public function test_unqualified_share_is_held_not_redistributed(): void
@@ -236,7 +256,7 @@ class GenerationAllocationServiceTest extends TestCase
             ->where('id', 1)->value('payable_balance'));
         $this->money('210', DB::table('generation_pool_accounts')
             ->where('id', 1)->value('unallocated_balance'));
-        $this->assertSame(6, DB::table('financial_ledger')->count());
+        $this->assertSame(8, DB::table('financial_ledger')->count());
     }
 
     public function test_inactive_candidate_is_held(): void
@@ -314,7 +334,7 @@ class GenerationAllocationServiceTest extends TestCase
         );
         $this->money('90', DB::table('generation_pool_accounts')
             ->where('id', 1)->value('payable_balance'));
-        $this->assertSame(4, DB::table('financial_ledger')->count());
+        $this->assertSame(6, DB::table('financial_ledger')->count());
     }
 
     public function test_non_admin_cannot_classify(): void
@@ -377,11 +397,7 @@ class GenerationAllocationServiceTest extends TestCase
         $fund = $this->funded($admin);
         GenerationAllocationService::allocate($admin, $fund);
 
-        $second = TradingProfitPoolService::fund(
-            $admin,
-            '1000',
-            'SECOND-PERIOD'
-        );
+        $second = $this->funded($admin, 'SECOND-PERIOD');
 
         $this->assertNotEquals($fund, $second);
         $this->assertSame(
@@ -449,7 +465,7 @@ class GenerationAllocationServiceTest extends TestCase
             0,
             DB::table('generation_member_allocations')->count()
         );
-        $this->assertSame(2, DB::table('financial_ledger')->count());
+        $this->assertSame(4, DB::table('financial_ledger')->count());
         $this->money('300', DB::table('generation_pool_accounts')
             ->where('id', 1)->value('unallocated_balance'));
     }

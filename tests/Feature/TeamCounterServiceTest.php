@@ -16,6 +16,13 @@ class TeamCounterServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Positive-path activation tests only; live configuration remains OFF.
+        config()->set('leobot.member_activation_enabled', true);
+    }
+
     private int $sequence = 0;
 
     private function member(?User $sponsor = null, string $status = 'inactive', string $wallet = '0'): User
