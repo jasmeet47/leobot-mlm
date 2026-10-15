@@ -17,6 +17,12 @@ class AdminOnly
             abort(403, 'Unauthorized.');
         }
 
+        // Blocked accounts must never retain administrator access,
+        // even when their role and activation status remain unchanged.
+        if ($user->is_blocked) {
+            abort(403, 'Unauthorized.');
+        }
+
         // Only active accounts can access admin routes.
         if ($user->status !== 'active') {
             abort(403, 'Unauthorized.');
