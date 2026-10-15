@@ -172,7 +172,7 @@ class MemberDashboardSafetyTest extends TestCase
         $this->post('/login', [
             'username' => 'ADMIN',
             'password' => 'TestPassword123!',
-        ])->assertRedirect('/admin/level-config');
+        ])->assertRedirect(route('admin.dashboard'));
     }
 
     public function test_admin_cannot_open_member_dashboard(): void

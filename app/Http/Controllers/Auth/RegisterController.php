@@ -263,7 +263,7 @@ class RegisterController extends Controller
                     true
                 )
             ) {
-                return redirect('/admin/level-config');
+                return redirect()->route('admin.dashboard');
             }
 
             // Members must complete PIN setup before dashboard access.

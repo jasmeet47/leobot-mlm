@@ -237,7 +237,7 @@
             <p>
                 View registered members, search usernames,
                 and review sponsor and account status.
-                Read-only access.
+                View member details and audited block/unblock controls.
             </p>
             <a href="{{ route('admin.members.index') }}">
                 View Members

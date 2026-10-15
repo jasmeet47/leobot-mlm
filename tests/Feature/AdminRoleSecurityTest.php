@@ -215,7 +215,7 @@ class AdminRoleSecurityTest extends TestCase
         $this->post('/login', [
             'username' => $admin->username,
             'password' => 'TestPassword123!',
-        ])->assertRedirect('/admin/level-config');
+        ])->assertRedirect(route('admin.dashboard'));
     }
 
     /**
@@ -232,7 +232,7 @@ class AdminRoleSecurityTest extends TestCase
         $this->post('/login', [
             'username' => $admin->username,
             'password' => 'TestPassword123!',
-        ])->assertRedirect('/admin/level-config');
+        ])->assertRedirect(route('admin.dashboard'));
     }
 
     /**

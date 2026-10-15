@@ -48,7 +48,7 @@
     </header>
 
     <h1>Welcome, {{ $member->name }}</h1>
-    <p class="subheading">Member ID: {{ $member->username }} Â· Account status: {{ ucfirst($member->status) }}</p>
+    <p class="subheading">Member ID: {{ $member->username }} &middot; Account status: {{ ucfirst($member->status) }}</p>
 
     @if (session('success'))
         <p class="success" role="status">{{ session('success') }}</p>
