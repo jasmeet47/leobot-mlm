@@ -525,4 +525,20 @@ class GenerationAllocationServiceTest extends TestCase
 
         GenerationAllocationService::allocate($admin, $fund);
     }
+    public function test_blocked_admin_with_stale_model_cannot_allocate(): void
+    {
+        $admin = $this->admin();
+        $fundingId = $this->funded($admin, 'BLOCKED-ALLOCATE-001');
+        DB::table('users')->where('id', $admin->id)->update(['is_blocked' => true]);
+
+        try {
+            GenerationAllocationService::allocate($admin, $fundingId);
+            $this->fail('Blocked admin must not allocate with a stale model.');
+        } catch (AuthorizationException $exception) {
+            $this->assertSame(0, DB::table('generation_allocation_runs')->count());
+            $this->money('300', DB::table('generation_pool_accounts')->where('id', 1)->value('balance'));
+        }
+    }
+
+
 }

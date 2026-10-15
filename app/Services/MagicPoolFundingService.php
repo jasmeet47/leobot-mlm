@@ -79,11 +79,11 @@ final class MagicPoolFundingService
             $actualAdmin = DB::table('users')
                 ->where('id', $admin->getKey())
                 ->lockForUpdate()
-                ->first(['id', 'role', 'status']);
+                ->first(['id', 'role', 'status', 'is_blocked']);
 
             if (!$actualAdmin ||
                 !in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true) ||
-                (string) $actualAdmin->status !== 'active') {
+                ((string) $actualAdmin->status !== 'active' || in_array($actualAdmin->is_blocked, [true, 1, '1', 't', 'true'], true))) {
                 throw new AuthorizationException('Active ADMIN approval required.');
             }
 

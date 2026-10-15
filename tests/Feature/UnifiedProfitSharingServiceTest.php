@@ -909,4 +909,28 @@ class UnifiedProfitSharingServiceTest extends TestCase
             DB::table('financial_ledger')->count()
         );
     }
+    public function test_blocked_admin_with_stale_model_cannot_fund_or_change_reserves(): void
+    {
+        $admin = $this->admin();
+        $member = $this->member('TXBLOCKEDPROFIT');
+        $this->enable('1000');
+        DB::table('users')->where('id', $admin->id)->update(['is_blocked' => true]);
+
+        try {
+            UnifiedProfitSharingService::fund(
+                $admin,
+                '1000.00000000',
+                'BLOCKED-ADMIN-PROFIT-001',
+                [$member->id => '1000.00000000']
+            );
+            $this->fail('Blocked admin must not fund even with a stale model.');
+        } catch (AuthorizationException $exception) {
+            $this->assertSame(0, DB::table('profit_sharing_fundings')->count());
+            $this->assertSame(0, DB::table('financial_ledger')->count());
+            $this->eqMoney('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
+            $this->eqMoney('0', DB::table('generation_pool_accounts')->where('id', 1)->value('balance'));
+        }
+    }
+
+
 }

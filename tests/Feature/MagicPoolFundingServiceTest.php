@@ -726,4 +726,21 @@ class MagicPoolFundingServiceTest extends TestCase
             );
         }
     }
+    public function test_blocked_admin_with_stale_model_cannot_fund_magic_pool(): void
+    {
+        $admin = $this->admin();
+        $this->enable('1000');
+        DB::table('users')->where('id', $admin->id)->update(['is_blocked' => true]);
+
+        try {
+            MagicPoolFundingService::fundDirectPool($admin, '10', 'BLOCKED-MAGIC-001');
+            $this->fail('Blocked admin must not fund magic pool with a stale model.');
+        } catch (AuthorizationException $exception) {
+            $this->assertSame(0, DB::table('magic_pool_fundings')->count());
+            $this->assertSame(0, DB::table('financial_ledger')->count());
+            $this->assertAmount('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
+        }
+    }
+
+
 }

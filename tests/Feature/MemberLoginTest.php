@@ -102,4 +102,18 @@ class MemberLoginTest extends TestCase
 
         $this->assertGuest();
     }
+    public function test_blocked_active_member_cannot_create_web_session(): void
+    {
+        $member = $this->createMember();
+        DB::table('users')->where('id', $member->id)->update(['status' => 'active', 'is_blocked' => true]);
+
+        $this->from('/join')->post('/login', [
+            'username' => $member->username,
+            'password' => 'TestPassword123!',
+        ])->assertRedirect('/join')->assertSessionHasErrors('username');
+
+        $this->assertGuest();
+    }
+
+
 }

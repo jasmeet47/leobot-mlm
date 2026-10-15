@@ -241,7 +241,7 @@ class RegisterController extends Controller
 
         if ($loginSuccess) {
             $user = $request->user();
-            if ($user->is_blocked) {
+            if ($user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
