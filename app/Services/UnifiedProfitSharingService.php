@@ -33,6 +33,12 @@ final class UnifiedProfitSharingService
         string $profitReference,
         array $memberProfits
     ): int {
+        // Defense in depth: prevent direct service calls from funding production
+        // unless separately approved, even if a database funding switch is ON.
+        if (app()->environment('production') &&
+            config('leobot.production_financial_approval', false) !== true) {
+            throw new RuntimeException('Unified funding is disabled pending production financial approval.');
+        }
         self::money($companyProfit, true);
         if (!preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{2,99}\z/D', $profitReference)) {
             throw new InvalidArgumentException('Invalid profit statement reference.');
@@ -147,8 +153,9 @@ final class UnifiedProfitSharingService
                 self::percentage($rate);
             }
             $rateSum = bcadd(bcadd($selfRate, $generationRate, 9), $magicRate, 9);
-            if (bccomp($rateSum, '100.000000000', 9) !== 0) {
-                throw new RuntimeException('SELF + Generation + Magic must equal exactly 100%.');
+            if (bccomp($selfRate, '67', 9) !== 0 || bccomp($generationRate, '30', 9) !== 0 ||
+                bccomp($magicRate, '3', 9) !== 0 || bccomp($rateSum, '100', 9) !== 0) {
+                throw new RuntimeException('Unified trading profit split must be 67% Self / 30% Generation / 3% Magic.');
             }
 
             $directRows = [];
@@ -187,15 +194,18 @@ final class UnifiedProfitSharingService
             $genParts = bcadd(bcadd((string) $generationAccount->unallocated_balance,
                 (string) $generationAccount->held_balance, 8), (string) $generationAccount->payable_balance, 8);
             if (bccomp($genParts, (string) $generationAccount->balance, 8) !== 0 ||
-                bccomp((string) $generationAccount->total_funded, (string) $generationAccount->balance, 8) !== 0 ||
-                bccomp((string) $generationAccount->total_paid, '0', 8) !== 0) {
+                bccomp(bcsub((string) $generationAccount->total_funded, (string) $generationAccount->total_paid, 8),
+                    (string) $generationAccount->balance, 8) !== 0) {
                 throw new RuntimeException('Generation reserve accounting is inconsistent.');
             }
-            foreach (['self_balance','magic_balance','total_self_funded','total_magic_funded'] as $field) {
+            foreach (['self_balance','magic_balance','total_self_funded','total_magic_funded',
+                'total_self_settled','total_magic_settled'] as $field) {
                 self::nonnegative((string) $reserves->{$field});
             }
-            if (bccomp((string) $reserves->self_balance, (string) $reserves->total_self_funded, 8) !== 0 ||
-                bccomp((string) $reserves->magic_balance, (string) $reserves->total_magic_funded, 8) !== 0) {
+            if (bccomp(bcadd((string) $reserves->self_balance, (string) $reserves->total_self_settled, 8),
+                    (string) $reserves->total_self_funded, 8) !== 0 ||
+                bccomp(bcadd((string) $reserves->magic_balance, (string) $reserves->total_magic_settled, 8),
+                    (string) $reserves->total_magic_funded, 8) !== 0) {
                 throw new RuntimeException('SELF/Magic reserve accounting is inconsistent.');
             }
             self::nonnegative((string) $company->balance);

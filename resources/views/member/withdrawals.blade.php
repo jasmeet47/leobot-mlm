@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LeoBot — My Withdrawals</title></head>
+<body style="font:15px system-ui,sans-serif;max-width:760px;margin:auto;padding:2rem"><h1>Withdrawal Requests</h1><p><a href="{{route('member.dashboard')}}">← Member Dashboard</a></p>
+<p>Available earnings wallet only. Requests hold the gross amount pending admin approval; no external transfer is performed automatically.</p>
+@if(session('status'))<p>{{session('status')}}</p>@endif
+@foreach($errors->all() as $error)<p style="color:#a11">{{$error}}</p>@endforeach
+<form method="post" action="{{route('member.withdrawals.store')}}">@csrf
+<p><label>Amount (USDT) <input name="amount" required placeholder="10.00000000"></label></p>
+<p><label>Unique request reference <input name="request_key" required placeholder="WITHDRAW-2026-ABC"></label></p>
+<button @disabled(!$enabled)>Request hold</button></form>
+<h2>My History</h2><table style="width:100%"><tr><th>ID</th><th>Amount</th><th>Status</th></tr>
+@foreach($history as $row)<tr><td>{{$row->id}}</td><td>{{$row->gross_amount}}</td><td>{{$row->status}}</td></tr>@endforeach</table>{{$history->links()}}
+</body></html>

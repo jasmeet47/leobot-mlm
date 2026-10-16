@@ -64,6 +64,80 @@
         </div>
     </section>
 
+    <section aria-label="Member income summary">
+        <h2>My Income Summary</h2>
+        <p class="muted">
+            Reserved and held amounts are not paid income and are not
+            included in your available wallet balance.
+        </p>
+
+        <div class="grid">
+            <div class="card">
+                <div class="label">Self Income Reserved</div>
+                <div class="value">{{ bcadd($incomeSummary['self_reserved'], '0', 8) }}</div>
+                <div class="unit">USDT - Reserved, not paid</div>
+            </div>
+
+            <div class="card">
+                <div class="label">Generation Qualified Reserve</div>
+                <div class="value">{{ bcadd($incomeSummary['generation_qualified'], '0', 8) }}</div>
+                <div class="unit">USDT - Qualified, not paid</div>
+            </div>
+
+            <div class="card">
+                <div class="label">Generation Held</div>
+                <div class="value">{{ bcadd($incomeSummary['generation_held'], '0', 8) }}</div>
+                <div class="unit">USDT - Unqualified, not payable</div>
+            </div>
+
+            <div class="card">
+                <div class="label">Magic Income</div>
+                <div class="value">Not allocated</div>
+                <div class="unit">Company pool is not member income</div>
+            </div>
+        </div>
+    </section>
+
+    <section aria-label="Member wallet transaction history">
+        <h2>My Wallet Transaction History</h2>
+        <p class="muted">
+            Only completed transactions recorded against your member
+            wallet are listed. Reserve movements are excluded.
+        </p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Entry Type</th>
+                        <th>Wallet</th>
+                        <th>Amount (USDT)</th>
+                        <th>Balance After (USDT)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($walletHistory as $transaction)
+                        <tr>
+                            <td>{{ $transaction->created_at ? \Illuminate\Support\Carbon::parse($transaction->created_at)->format('d M Y H:i') : '-' }}</td>
+                            <td>{{ $transaction->entry_type }}</td>
+                            <td>{{ $transaction->wallet_type }}</td>
+                            <td>{{ bcadd((string) $transaction->amount, '0', 8) }}</td>
+                            <td>{{ bcadd((string) $transaction->balance_after, '0', 8) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">No completed wallet transactions recorded.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top:15px">
+            {{ $walletHistory->links() }}
+        </div>
+    </section>
     <section aria-label="Member referral link">
         <h2>Your Referral Link</h2>
         <div class="card">

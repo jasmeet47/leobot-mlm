@@ -176,6 +176,11 @@
     </div>
 
     <section class="grid">
+    <div class="card">
+        <h2>Unified Funding Audit</h2>
+        <p>Review 67/30/3 internal reserves. Funding entry remains disabled without separate approval. No payouts.</p>
+        <a href="{{ route('admin.unified-funding.index') }}">Review Funding</a>
+    </div>
 
         <div class="card">
             <h2>51-Level Commission</h2>

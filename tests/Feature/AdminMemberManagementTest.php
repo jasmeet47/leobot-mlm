@@ -11,7 +11,42 @@ use Tests\TestCase;
 
 class AdminMemberManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase {
+        refreshDatabase as private leobotOriginalRefreshDatabase;
+    }
+
+    public function refreshDatabase(): void
+    {
+        $name = config('database.default');
+        $cfg = config('database.connections.' . $name, []);
+
+        $safe = app()->environment('testing')
+            && $name === 'pgsql'
+            && ($cfg['host'] ?? '') === '127.0.0.1'
+            && (string) ($cfg['port'] ?? '') === '5433'
+            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && empty($cfg['url']);
+
+        if (!$safe) {
+            throw new \RuntimeException(
+                'SAFETY STOP: Disposable PostgreSQL required.'
+            );
+        }
+
+        $identity = \Illuminate\Support\Facades\DB::selectOne(
+            'SELECT current_database() AS database_name, inet_server_port() AS server_port'
+        );
+
+        if (!$identity
+            || $identity->database_name !== 'leobot_financial_disposable'
+            || (int) $identity->server_port !== 5433) {
+            throw new \RuntimeException(
+                'SAFETY STOP: Database identity mismatch.'
+            );
+        }
+
+        $this->leobotOriginalRefreshDatabase();
+    }
 
     private function createUser(
         string $role = 'member',
@@ -50,7 +85,7 @@ class AdminMemberManagementTest extends TestCase
     public function test_guest_cannot_view_direct_referrals(): void
     {
         $member = $this->createUser();
-        $this->get(route('admin.members.referrals', $member->id))->assertForbidden();
+        $this->get(route('admin.members.referrals', $member->id))->assertRedirect('/join');
     }
 
     public function test_regular_member_cannot_view_direct_referrals(): void
@@ -174,7 +209,7 @@ class AdminMemberManagementTest extends TestCase
     }
     public function test_guest_cannot_access_members(): void
     {
-        $this->get('/admin/members')->assertForbidden();
+        $this->get('/admin/members')->assertRedirect('/join');
     }
 
     public function test_member_cannot_access_members(): void
@@ -247,7 +282,7 @@ class AdminMemberManagementTest extends TestCase
         $member = $this->createUser();
 
         $this->get(route('admin.members.show', $member->id))
-            ->assertForbidden();
+            ->assertRedirect('/join');
     }
 
     public function test_regular_member_cannot_view_member_details(): void

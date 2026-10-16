@@ -10,7 +10,42 @@ use Tests\TestCase;
 
 class ReferralPrivacyAuditTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase {
+        refreshDatabase as private leobotOriginalRefreshDatabase;
+    }
+
+    public function refreshDatabase(): void
+    {
+        $name = config('database.default');
+        $cfg = config('database.connections.' . $name, []);
+
+        $safe = app()->environment('testing')
+            && $name === 'pgsql'
+            && ($cfg['host'] ?? '') === '127.0.0.1'
+            && (string) ($cfg['port'] ?? '') === '5433'
+            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && empty($cfg['url']);
+
+        if (!$safe) {
+            throw new \RuntimeException(
+                'SAFETY STOP: Disposable PostgreSQL required.'
+            );
+        }
+
+        $identity = \Illuminate\Support\Facades\DB::selectOne(
+            'SELECT current_database() AS database_name, inet_server_port() AS server_port'
+        );
+
+        if (!$identity
+            || $identity->database_name !== 'leobot_financial_disposable'
+            || (int) $identity->server_port !== 5433) {
+            throw new \RuntimeException(
+                'SAFETY STOP: Database identity mismatch.'
+            );
+        }
+
+        $this->leobotOriginalRefreshDatabase();
+    }
 
     private function validSettings(): array
     {

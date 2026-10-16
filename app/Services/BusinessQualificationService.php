@@ -247,7 +247,7 @@ class BusinessQualificationService
      * has unlocked a particular level.
      *
      * Member activation status and income caps
-     * must also be checked by CommissionService.
+     * must be enforced by active allocation and payout controls.
      */
     public static function isLevelUnlocked(
         int $userId,

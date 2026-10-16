@@ -13,7 +13,40 @@ use Tests\TestCase;
 
 class IncomeSettingsSafetyTest extends TestCase
 {
-    use RefreshDatabase;
+    use \Illuminate\Foundation\Testing\DatabaseTransactions {
+        beginDatabaseTransaction as private beginSafeTransaction;
+    }
+
+    public function beginDatabaseTransaction(): void
+    {
+        $connection = \Illuminate\Support\Facades\DB::connection();
+        $config = $connection->getConfig();
+
+        $safe = app()->environment('testing')
+            && $connection->getDriverName() === 'pgsql'
+            && ($config['host'] ?? '') === '127.0.0.1'
+            && (string) ($config['port'] ?? '') === '5433'
+            && ($config['database'] ?? '') === 'leobot_financial_disposable'
+            && empty($config['url']);
+
+        if ($safe) {
+            $identity = \Illuminate\Support\Facades\DB::selectOne(
+                'SELECT current_database() AS database_name, inet_server_port() AS server_port'
+            );
+
+            $safe = $identity
+                && $identity->database_name === 'leobot_financial_disposable'
+                && (int) $identity->server_port === 5433;
+        }
+
+        if (! $safe) {
+            throw new \RuntimeException(
+                'SAFETY STOP: Disposable PostgreSQL required.'
+            );
+        }
+
+        $this->beginSafeTransaction();
+    }
 
     private function user(
         string $username = 'ADMIN',

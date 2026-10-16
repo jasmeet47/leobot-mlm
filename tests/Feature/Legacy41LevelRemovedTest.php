@@ -53,9 +53,9 @@ class Legacy41LevelRemovedTest extends TestCase
         );
     }
 
-    public function test_current_51_level_services_remain_available(): void
+    public function test_obsolete_preview_removed_and_team_service_remains(): void
     {
-        $this->assertTrue(
+        $this->assertFalse(
             class_exists(\App\Services\CommissionService::class)
         );
 

@@ -449,6 +449,10 @@
 
             </form>
 
+            @if(session('status'))
+                <p class="success" role="status">{{ session('status') }}</p>
+            @endif
+
         </div>
 
 

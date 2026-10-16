@@ -220,6 +220,51 @@ class MemberDashboardController extends Controller
             $contactConsent->email_consent ?? false
         );
 
+        // Member-specific reserves only. None of these amounts are paid income.
+        $selfReserved = DB::table('profit_sharing_self_reserves')
+            ->where('user_id', $member->id)
+            ->where('status', 'reserved_no_payout')
+            ->selectRaw('COALESCE(SUM(self_share_reserved), 0) AS total')
+            ->first();
+
+        $generationQualified = DB::table('generation_member_allocations')
+            ->where('user_id', $member->id)
+            ->where('classification', 'payable')
+            ->where('status', 'qualified_reserved_no_payout')
+            ->selectRaw('COALESCE(SUM(share_amount), 0) AS total')
+            ->first();
+
+        $generationHeld = DB::table('generation_member_allocations')
+            ->where('user_id', $member->id)
+            ->where('classification', 'held')
+            ->where('status', 'held_unqualified')
+            ->selectRaw('COALESCE(SUM(share_amount), 0) AS total')
+            ->first();
+
+        $incomeSummary = [
+            'self_reserved' => (string) ($selfReserved->total ?? '0'),
+            'generation_qualified' => (string) ($generationQualified->total ?? '0'),
+            'generation_held' => (string) ($generationHeld->total ?? '0'),
+        ];
+
+        // Completed member wallet entries only; never show company pool journals.
+        $walletHistory = DB::table('financial_ledger')
+            ->where('user_id', $member->id)
+            ->whereIn('wallet_type', [
+                'available_balance',
+                'activation_balance',
+            ])
+            ->where('status', 'completed')
+            ->select([
+                'id',
+                'entry_type',
+                'wallet_type',
+                'amount',
+                'balance_after',
+                'created_at',
+            ])
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'wallet_page');
         return view('member.dashboard', [
             'member' => $member,
             'teamSummary' => $teamSummary,
@@ -227,6 +272,8 @@ class MemberDashboardController extends Controller
             'referrals' => $referrals,
             'phoneConsent' => $phoneConsent,
             'emailConsent' => $emailConsent,
+            'incomeSummary' => $incomeSummary,
+            'walletHistory' => $walletHistory,
         ]);
     }
 

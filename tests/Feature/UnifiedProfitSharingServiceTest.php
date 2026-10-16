@@ -387,37 +387,24 @@ class UnifiedProfitSharingServiceTest extends TestCase
         );
     }
 
-    public function test_custom_seventy_twenty_five_five_percentages(): void
+    public function test_custom_seventy_twenty_five_five_percentages_are_rejected(): void
     {
         $admin = $this->admin();
         $owner = $this->member();
-
         $this->enable();
-
-        DB::table('profit_sharing_settings')
-            ->where('id', 1)
-            ->update(['self_profit_percent' => '70']);
-
-        DB::table('generation_pool_settings')
-            ->where('id', 1)
-            ->update(['trading_profit_pool_percent' => '25']);
-
-        DB::table('magic_income_settings')
-            ->where('id', 1)
-            ->update(['trading_profit_pool_percent' => '5']);
-
-        $id = UnifiedProfitSharingService::fund(
-            $admin,
-            '1000',
-            'CUSTOM-PERCENT',
-            [$owner->id => '1000']
-        );
-
-        $f = DB::table('profit_sharing_fundings')->find($id);
-
-        $this->eqMoney('700', $f->self_amount);
-        $this->eqMoney('250', $f->generation_amount);
-        $this->eqMoney('50', $f->magic_amount);
+        DB::table('profit_sharing_settings')->where('id', 1)->update(['self_profit_percent' => '70']);
+        DB::table('generation_pool_settings')->where('id', 1)->update(['trading_profit_pool_percent' => '25']);
+        DB::table('magic_income_settings')->where('id', 1)->update(['trading_profit_pool_percent' => '5']);
+        try {
+            UnifiedProfitSharingService::fund($admin, '1000', 'CUSTOM-PERCENT', [$owner->id => '1000']);
+            $this->fail('Only 67/30/3 is permitted.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('67% Self / 30% Generation / 3% Magic', $e->getMessage());
+        }
+        $this->assertSame(0, DB::table('profit_sharing_fundings')->count());
+        $this->assertSame(0, DB::table('generation_profit_fundings')->count());
+        $this->assertSame(0, DB::table('financial_ledger')->count());
+        $this->eqMoney('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
     }
 
     public function test_insufficient_company_funds_rollback_all_reserves(): void
@@ -828,87 +815,30 @@ class UnifiedProfitSharingServiceTest extends TestCase
             );
         }
     }
-    public function test_magic_reference_cannot_be_reused_for_unified_funding(): void
+    public function test_legacy_magic_reference_cannot_be_reused_for_unified_funding(): void
     {
         $admin = $this->admin();
         $owner = $this->member('MAGICREFOWNER');
-
-        config()->set('leobot.magic_pool_funding_enabled', true);
-        DB::table('company_wallet')->where('id', 1)->update(['balance' => '1000']);
-
-        \App\Services\MagicPoolFundingService::fundDirectPool(
-            $admin,
-            '10',
-            'MAGIC-UNIFIED-SHARED-001'
-        );
-
-        $this->enable('990');
-
-        $companyBefore = DB::table('company_wallet')
-            ->where('id', 1)->value('balance');
-        $generationBefore = DB::table('generation_pool_accounts')
-            ->where('id', 1)->first();
-        $reservesBefore = DB::table('profit_sharing_reserve_accounts')
-            ->where('id', 1)->first();
-        $ledgerBefore = DB::table('financial_ledger')->count();
-
+        $this->enable('1000');
+        // Simulate a pre-existing historical Magic reservation without invoking the disabled funding service.
+        DB::table('magic_pool_fundings')->insert([
+            'source_reference' => 'MAGIC-UNIFIED-SHARED-001',
+            'funding_mode' => 'direct_pool', 'approved_by' => $admin->id,
+            'pool_amount' => '10.00000000', 'status' => 'reserved_no_payout',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
         try {
-            UnifiedProfitSharingService::fund(
-                $admin,
-                '1000',
-                'MAGIC-UNIFIED-SHARED-001',
-                [$owner->id => '1000']
-            );
-
-            $this->fail('Duplicate funding must be rejected.');
+            UnifiedProfitSharingService::fund($admin, '1000', 'MAGIC-UNIFIED-SHARED-001', [$owner->id => '1000']);
+            $this->fail('Historical Magic reference must be rejected.');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString(
-                'already used in Magic Pool funding',
-                $e->getMessage()
-            );
+            $this->assertStringContainsString('already used in Magic Pool funding', $e->getMessage());
         }
-
-        $this->assertSame(
-            0,
-            DB::table('profit_sharing_fundings')->count()
-        );
-
-        $this->eqMoney(
-            (string) $companyBefore,
-            DB::table('company_wallet')->where('id', 1)->value('balance')
-        );
-
-        $generationAfter = DB::table('generation_pool_accounts')
-            ->where('id', 1)->first();
-
-        foreach ([
-            'balance', 'unallocated_balance', 'held_balance',
-            'payable_balance', 'total_funded', 'total_paid'
-        ] as $field) {
-            $this->eqMoney(
-                (string) $generationBefore->{$field},
-                $generationAfter->{$field}
-            );
-        }
-
-        $reservesAfter = DB::table('profit_sharing_reserve_accounts')
-            ->where('id', 1)->first();
-
-        foreach ([
-            'self_balance', 'magic_balance',
-            'total_self_funded', 'total_magic_funded'
-        ] as $field) {
-            $this->eqMoney(
-                (string) $reservesBefore->{$field},
-                $reservesAfter->{$field}
-            );
-        }
-
-        $this->assertSame(
-            $ledgerBefore,
-            DB::table('financial_ledger')->count()
-        );
+        $this->assertSame(0, DB::table('profit_sharing_fundings')->count());
+        $this->assertSame(0, DB::table('generation_profit_fundings')->count());
+        $this->assertSame(0, DB::table('financial_ledger')->count());
+        $this->eqMoney('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
     }
+
     public function test_blocked_admin_with_stale_model_cannot_fund_or_change_reserves(): void
     {
         $admin = $this->admin();
