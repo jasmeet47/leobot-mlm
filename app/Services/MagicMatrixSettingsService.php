@@ -56,7 +56,7 @@ final class MagicMatrixSettingsService
     /** All 20 levels explicitly supplied; zero until rates are approved. Must sum to 100%. */
     public static function updateLevelRates(User $admin, array $rates): void
     {
-        self::requireWriteApproval();
+        self::requireRatesApproval();
         if (count($rates) !== 20 || array_keys($rates) !== range(1, 20)) {
             throw new InvalidArgumentException('All 20 matrix levels are required, numbered 1 through 20.');
         }
@@ -98,6 +98,14 @@ final class MagicMatrixSettingsService
                 'created_at' => now(),
             ]);
         }, 3);
+    }
+
+    private static function requireRatesApproval(): void
+    {
+        if (config('leobot_magic.magic_matrix_rates_write_enabled', false) !== true ||
+            (app()->environment('production') && config('leobot_magic.production_rates_approval', false) !== true)) {
+            throw new RuntimeException('Magic Matrix rates write disabled pending separate approval.');
+        }
     }
 
     private static function requireWriteApproval(): void

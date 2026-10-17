@@ -20,8 +20,8 @@
 <form method="post" action="{{route('admin.magic.rates')}}">@csrf
 <table><thead><tr><th>Level</th><th>Percentage of source ID's Magic allocation</th></tr></thead><tbody>
 @foreach($rates as $rate)<tr><td>{{(int)$rate->level}}</td><td><input type="text" name="rates[{{(int)$rate->level}}]" value="{{old('rates.'.(int)$rate->level,(string)$rate->pool_percent)}}" required></td></tr>@endforeach</tbody></table>
-<button type="button" onclick="document.querySelectorAll('input[name^=\"rates[\"]').forEach(x=>x.value='5.000000000')" @disabled(!$canEdit)>Fill proposed 5% × 20</button>
-<button @disabled(!$canEdit)>Save audited rate table</button></form></section>
+<button type="button" onclick="document.querySelectorAll('input[name^=\"rates[\"]').forEach(x=>x.value='5.000000000')" @disabled(!$canEditRates)>Fill proposed 5% × 20</button>
+<button @disabled(!$canEditRates)>Save audited rate table</button></form></section>
 <section><h2>Manual verified settlement (one source ID)</h2>
 <p>No automatic payout is triggered by funding. Requires verified existing funding, live eligibility, caps, 100% rate table and separate settlement approval.</p>
 <form method="post" action="{{route('admin.magic.settle')}}">@csrf

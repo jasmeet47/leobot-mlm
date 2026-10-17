@@ -7,5 +7,7 @@ return [
     'magic_matrix_topup_enabled' => false,
     'magic_matrix_settlement_enabled' => false,
     'magic_matrix_settings_write_enabled' => false,
+    'magic_matrix_rates_write_enabled' => false,
+    'production_rates_approval' => false,
     'production_financial_approval' => false,
 ];

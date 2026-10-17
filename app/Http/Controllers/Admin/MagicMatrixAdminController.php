@@ -22,12 +22,15 @@ final class MagicMatrixAdminController extends Controller
             'recent'=>DB::table('magic_income_entitlements')->orderByDesc('id')->limit(25)->get(),
             'canEdit'=>config('leobot_magic.magic_matrix_settings_write_enabled',false)===true &&
                 (!app()->environment('production') || config('leobot_magic.production_financial_approval',false)===true),
+            'canEditRates'=>config('leobot_magic.magic_matrix_rates_write_enabled',false)===true &&
+                (!app()->environment('production') || config('leobot_magic.production_rates_approval',false)===true),
             'canSettle'=>config('leobot_magic.magic_matrix_settlement_enabled',false)===true &&
                 (!app()->environment('production') || config('leobot_magic.production_financial_approval',false)===true),
         ]);
     }
     public function updateRates(Request $request):RedirectResponse {
-        abort_unless(config('leobot_magic.magic_matrix_settings_write_enabled',false)===true,404);
+        abort_unless(config('leobot_magic.magic_matrix_rates_write_enabled',false)===true &&
+            (!app()->environment('production') || config('leobot_magic.production_rates_approval',false)===true),404);
         $data=$request->validate(['rates'=>['required','array','size:20'],'rates.*'=>['required','regex:/\A\d+(?:\.\d{1,9})?\z/D']]);
         $rates=[];
         foreach (range(1,20) as $i) {

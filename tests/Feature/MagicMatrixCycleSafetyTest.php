@@ -251,6 +251,7 @@ final class MagicMatrixCycleSafetyTest extends TestCase
         $this->unlock();
         $admin = $this->person('admin');
         config()->set('leobot_magic.magic_matrix_settings_write_enabled', true);
+        config()->set('leobot_magic.magic_matrix_rates_write_enabled', true);
         \App\Services\MagicMatrixSettingsService::update($admin, '60', 4, 'weekly');
         \App\Services\MagicMatrixSettingsService::updateLevelRates($admin, array_fill_keys(range(1, 20), '5.000000000'));
         $this->assertSame('60.00000000', (string) DB::table('magic_matrix_settings')->where('id', 1)->value('minimum_tier_usdt'));
