@@ -40,7 +40,7 @@ final class UsdtPaymentVerificationPolicyTest extends TestCase
     }
     public function test_unverified_chain_receipt_is_rejected(): void
     {
-        $chain = $this->createMock(UsdtChainVerifier::class);
+        $chain = $this->createStub(UsdtChainVerifier::class);
         $chain->method('verified')->willReturn(false);
         $this->expectException(RuntimeException::class);
         (new UsdtPaymentVerificationPolicy($chain))->assertVerified('BEP20', self::HASH, self::ADDRESS, self::ADDRESS, '10');
