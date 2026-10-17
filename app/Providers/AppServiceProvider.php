@@ -17,7 +17,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(UsdtChainVerifier::class, DisabledUsdtChainVerifier::class);
-        $this->app->bind(UsdtWalletOwnershipVerifier::class, DisabledUsdtWalletOwnershipVerifier::class);
+        if ($this->app->environment('testing')) {
+            $this->app->bind(UsdtWalletOwnershipVerifier::class, \App\Services\MultiNetworkUsdtWalletOwnershipVerifier::class);
+        } else {
+            $this->app->bind(UsdtWalletOwnershipVerifier::class, DisabledUsdtWalletOwnershipVerifier::class);
+        }
     }
 
     /**
