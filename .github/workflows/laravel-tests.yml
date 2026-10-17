@@ -1,14 +1,10 @@
-
 name: LeoBot Laravel Security Tests
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
@@ -21,8 +17,12 @@ jobs:
     env:
       APP_ENV: testing
       APP_DEBUG: "false"
-      DB_CONNECTION: sqlite
-      DB_DATABASE: ":memory:"
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5433"
+      DB_DATABASE: leobot_financial_disposable
+      DB_USERNAME: leobot_ci
+      DB_PASSWORD: leobot_ci_disposable_only
       DB_URL: ""
       SESSION_DRIVER: array
       CACHE_STORE: array
@@ -30,32 +30,65 @@ jobs:
       MAIL_MAILER: log
 
     steps:
-      # Download LeoBot project from GitHub.
       - name: Checkout Repository
         uses: actions/checkout@v6
 
-      # Install PHP 8.3 and Laravel extensions.
       - name: Setup PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          extensions: mbstring, dom, fileinfo, pdo_sqlite, sqlite3, bcmath, curl, xml, zip, intl, gd
+          extensions: mbstring, dom, fileinfo, pdo_pgsql, pgsql, bcmath, curl, xml, zip, intl, gd
           tools: composer:v2
           coverage: none
 
-      # Install Laravel and PHPUnit dependencies.
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # Create a temporary test-only encryption key.
-      # Never use the production Render APP_KEY.
       - name: Generate Testing APP_KEY
         run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
 
-      # Prevent PHP output before session/redirect headers.
+      - name: Start Isolated PostgreSQL
+        run: |
+          docker run -d \
+            --name leobot-ci-postgres \
+            -e POSTGRES_DB=leobot_financial_disposable \
+            -e POSTGRES_USER=leobot_ci \
+            -e POSTGRES_PASSWORD=leobot_ci_disposable_only \
+            -p 127.0.0.1:5433:5433 \
+            postgres:16 -c port=5433
+
+          for i in $(seq 1 30); do
+            if docker exec leobot-ci-postgres pg_isready \
+              -U leobot_ci -d leobot_financial_disposable -p 5433; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs leobot-ci-postgres
+          exit 1
+
+      - name: Verify Disposable Database
+        run: |
+          php -r '
+            $pdo = new PDO(
+              "pgsql:host=127.0.0.1;port=5433;dbname=leobot_financial_disposable",
+              "leobot_ci",
+              "leobot_ci_disposable_only"
+            );
+            $row = $pdo->query(
+              "SELECT current_database() AS db, inet_server_port() AS port"
+            )->fetch(PDO::FETCH_ASSOC);
+            if ($row["db"] !== "leobot_financial_disposable" || (int)$row["port"] !== 5433) {
+              throw new RuntimeException("SAFETY STOP: CI database identity mismatch");
+            }
+            echo "Disposable PostgreSQL identity verified\n";
+          '
+
+      - name: Prepare Disposable Database
+        run: php artisan migrate --force
+
       - name: Check PHP Header Safety
         run: php artisan test --filter=PhpHeaderSafetyTest
 
-      # Run all Laravel automated tests.
-      - name: Run All Laravel Tests
+      - name: Run Laravel Tests
         run: php artisan test
