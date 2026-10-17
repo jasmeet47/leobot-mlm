@@ -6,7 +6,7 @@
 <form method="post" action="{{route('member.withdrawals.store')}}">@csrf
 <p><label>Amount (USDT) <input name="amount" required placeholder="10.00000000"></label></p>
 <p><label>Unique request reference <input name="request_key" required placeholder="WITHDRAW-2026-ABC"></label></p>
-<button @disabled(!$enabled)>Request hold</button></form>
+<p><label>Verified USDT wallet <select name="usdt_wallet_id" required><option value="">Select verified wallet</option>@foreach($verifiedWallets as $wallet)<option value="{{$wallet->id}}" @selected(old("usdt_wallet_id") == $wallet->id)>{{$wallet->network}} - {{$wallet->address}}</option>@endforeach</select></label></p>@if($verifiedWallets->isEmpty())<p>No verified USDT wallet available. Withdrawal requests are disabled.</p>@endif<button @disabled(!$enabled || $verifiedWallets->isEmpty())>Request hold</button></form>
 <h2>My History</h2><table style="width:100%"><tr><th>ID</th><th>Amount</th><th>Status</th></tr>
 @foreach($history as $row)<tr><td>{{$row->id}}</td><td>{{$row->gross_amount}}</td><td>{{$row->status}}</td></tr>@endforeach</table>{{$history->links()}}
 </body></html>

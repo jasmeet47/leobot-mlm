@@ -16,6 +16,7 @@ final class WithdrawalMemberController extends Controller {
         return view('member.withdrawals',[
             'history'=>DB::table('withdrawal_requests')->where('user_id',$request->user()->id)
                 ->orderByDesc('id')->paginate(20),
+            'verifiedWallets'=>DB::table('usdt_member_wallets')->where('user_id',$request->user()->id)->whereNotNull('verified_at')->whereNull('revoked_at')->whereIn('network',['TRC20','BEP20'])->orderBy('id')->get(['id','network','address']),
             'enabled'=>config('leobot.withdrawals_enabled',false)===true &&
                 (!app()->environment('production') || config('leobot.production_financial_approval',false)===true),
         ]);
