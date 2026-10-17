@@ -343,6 +343,7 @@ Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMembe
 
         return response()->json([
             'authenticated' => $user !== null,
+            'diagnostic_user_id' => $user?->getKey(),
             'admin_role' => in_array($role, ['admin', 'super_admin'], true),
             'active' => $status === 'active',
             'blocked' => (bool) ($user?->is_blocked ?? true),
