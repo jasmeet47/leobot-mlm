@@ -330,3 +330,26 @@ Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMembe
     Route::post('/member/withdrawals', [\App\Http\Controllers\Member\WithdrawalMemberController::class, 'store'])
         ->middleware('throttle:3,1')->name('member.withdrawals.store');
 });
+
+// LEOBOT_AUTH_DIAGNOSTIC_V1
+// TEMPORARY: remove after production authentication diagnosis.
+\Route::middleware(['web', 'auth'])->get(
+    '/internal/auth-diagnostic',
+    function (\Illuminate\Http\Request $request) {
+        $user = $request->user();
+
+        $role = (string) ($user?->role ?? '');
+        $status = (string) ($user?->status ?? '');
+
+        return response()->json([
+            'authenticated' => $user !== null,
+            'admin_role' => in_array($role, ['admin', 'super_admin'], true),
+            'active' => $status === 'active',
+            'blocked' => (bool) ($user?->is_blocked ?? true),
+            'session_version_matches' =>
+                (int) ($user?->member_login_version ?? -1)
+                === (int) $request->session()->get('member_login_version', -2),
+        ])->header('Cache-Control', 'no-store');
+    }
+)->name('internal.auth-diagnostic');
+
