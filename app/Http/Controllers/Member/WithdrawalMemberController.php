@@ -24,8 +24,9 @@ final class WithdrawalMemberController extends Controller {
         $data=$request->validate([
             'amount'=>['required','regex:/\A\d+(?:\.\d{1,8})?\z/D'],
             'request_key'=>['required','regex:/\A[A-Za-z0-9][A-Za-z0-9._:-]{2,99}\z/D'],
+            'usdt_wallet_id'=>['required','integer','min:1'],
         ]);
-        try {WithdrawalRequestService::request($request->user(),$data['amount'],$data['request_key']);}
+        try {WithdrawalRequestService::request($request->user(),$data['amount'],$data['request_key'],'earnings',(int)$data['usdt_wallet_id']);}
         catch (RuntimeException|\InvalidArgumentException|AuthorizationException $e) {
             return back()->withErrors(['withdrawal'=>$e->getMessage()]);
         }

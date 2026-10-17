@@ -110,8 +110,18 @@ final class OptionAIntegrationFinancialTest extends TestCase
             'member_requests_enabled'=>true,'admin_review_enabled'=>true,
         ]);
         config()->set('leobot.withdrawals_enabled',true);
-        $id=WithdrawalRequestService::request($member,'20.00000000','OA-WITH-001');
-        $this->assertSame($id,WithdrawalRequestService::request($member,'20.00000000','OA-WITH-001'));
+        $walletId=DB::table('usdt_member_wallets')->insertGetId([
+    'user_id'=>$member->id,
+    'network'=>'BEP20',
+    'address'=>'0x1111111111111111111111111111111111111111',
+    'verified_at'=>now(),
+    'verification_method'=>'integration_test_fixture',
+    'proof_digest'=>str_repeat('a',64),
+    'created_at'=>now(),
+    'updated_at'=>now(),
+]);
+$id=WithdrawalRequestService::request($member,'20.00000000','OA-WITH-001','earnings',$walletId);
+        $this->assertSame($id,WithdrawalRequestService::request($member,'20.00000000','OA-WITH-001','earnings',$walletId));
         $this->assertSame('80.00000000',(string)DB::table('users')->find($member->id)->available_balance);
         WithdrawalRequestService::approve($admin,$id);
         $this->assertSame('approved_awaiting_payment',(string)DB::table('withdrawal_requests')->find($id)->status);

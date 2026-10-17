@@ -25,14 +25,17 @@ final class WithdrawalRequestService
             throw new RuntimeException('Withdrawal operation is disabled in admin settings.');
         }
     }
-    public static function request(User $member,string $amount,string $requestKey,string $kind='earnings'): int {
+    public static function request(User $member,string $amount,string $requestKey,string $kind='earnings',?int $usdtWalletId=null): int {
         self::gate('member_requests_enabled');
         if ($kind!=='earnings') {
             throw new RuntimeException('Principal withdrawals require verified principal release ledger; unavailable.');
         }
         self::money($amount);
         self::reference($requestKey);
-        return DB::transaction(function()use($member,$amount,$requestKey):int{
+        if ($usdtWalletId === null || $usdtWalletId < 1) {
+            throw new RuntimeException('Verified USDT payout wallet is required.');
+        }
+        return DB::transaction(function()use($member,$amount,$requestKey,$usdtWalletId):int{
             $user=DB::table('users')->where('id',$member->getKey())->lockForUpdate()->first();
             if (!$user || $user->status!=='active' || self::blocked($user)) {
                 throw new AuthorizationException('Active unblocked member required.');
@@ -42,11 +45,15 @@ final class WithdrawalRequestService
             if ($old) {
                 if ((int)$old->user_id!==(int)$user->id ||
                     bccomp((string)$old->gross_amount,$amount,8)!==0 ||
-                    $old->wallet_type!=='available_balance') {
+                    $old->wallet_type!=='available_balance' ||
+                    (int)($old->usdt_member_wallet_id ?? 0)!==$usdtWalletId ||
+                    empty($old->locked_payment_address)) {
                     throw new RuntimeException('Withdrawal request key reused with different details.');
                 }
                 return (int)$old->id;
             }
+            // Row lock and wallet ownership are checked before any balance is held.
+            $wallet=UsdtVerifiedWallet::forWithdrawal((int)$user->id,$usdtWalletId);
             WalletService::debit((int)$user->id,'available_balance',$amount,
                 'withdrawal_hold','withdrawal:hold:'.$key,
                 ['description'=>'Held pending administrator verification']);
@@ -54,6 +61,9 @@ final class WithdrawalRequestService
                 'user_id'=>$user->id,'request_key'=>$key,'wallet_type'=>'available_balance',
                 'gross_amount'=>$amount,'fee_amount'=>'0.00000000',
                 'net_amount'=>$amount,'status'=>'requested',
+                'usdt_member_wallet_id'=>$usdtWalletId,
+                'payment_network'=>$wallet->network,
+                'locked_payment_address'=>$wallet->address,
                 'created_at'=>now(),'updated_at'=>now(),
             ]);
             self::event($id,(int)$user->id,'requested');
