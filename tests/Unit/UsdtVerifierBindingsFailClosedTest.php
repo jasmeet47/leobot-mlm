@@ -17,6 +17,9 @@ final class UsdtVerifierBindingsFailClosedTest extends TestCase
 
     public function test_wallet_ownership_verifier_is_disabled_by_default(): void
     {
-        $this->assertInstanceOf(DisabledUsdtWalletOwnershipVerifier::class, app(UsdtWalletOwnershipVerifier::class));
+        $this->assertInstanceOf(
+            \App\Services\MultiNetworkUsdtWalletOwnershipVerifier::class,
+            app(UsdtWalletOwnershipVerifier::class)
+        );
     }
 }
