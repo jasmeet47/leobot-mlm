@@ -161,6 +161,17 @@
         <p>
             Manage LeoBot settings and review audit history.
         </p>
+        <div class="card">
+            <h2>Magic Matrix</h2>
+            <p>Review 20-level Magic settings, enrollment, top-up and settlement controls. Financial operations remain disabled.</p>
+            <a href="{{ route('admin.magic.index') }}">Open Magic Matrix</a>
+        </div>
+
+        <div class="card">
+            <h2>Admin Withdrawals</h2>
+            <p>Review withdrawal requests, approval controls and principal withdrawal fees. Payouts remain disabled.</p>
+            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+        </div>
     </section>
 
     <div class="notice">
@@ -247,6 +258,17 @@
             <a href="{{ route('admin.members.index') }}">
                 View Members
             </a>
+        </div>
+        <div class="card">
+            <h2>Magic Matrix</h2>
+            <p>Review 20-level Magic settings, enrollment, top-up and settlement controls. Financial operations remain disabled.</p>
+            <a href="{{ route('admin.magic.index') }}">Open Magic Matrix</a>
+        </div>
+
+        <div class="card">
+            <h2>Admin Withdrawals</h2>
+            <p>Review withdrawal requests, approval controls and principal withdrawal fees. Payouts remain disabled.</p>
+            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
         </div>
     </section>
 
