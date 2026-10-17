@@ -28,14 +28,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
-    libpq-dev \
+    libpq-dev libgmp-dev \
     zip \
     unzip \
     git \
     && docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \
-    && docker-php-ext-install \
+    && docker-php-ext-install gmp \
         gd \
         pdo \
         pdo_mysql \
