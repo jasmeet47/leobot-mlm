@@ -44,6 +44,73 @@ body{background:radial-gradient(ellipse at 90% 0%,#153153 0%,#080f1e 43%,#060c16
 main section,main .card,main .stat-card,main .panel,main .notice{border-radius:14px}main table{width:100%}main th{letter-spacing:.025em}main a,main button{transition:filter .18s ease,transform .18s ease}main button:hover{filter:brightness(1.1)}
 @media(max-width:720px){.lb-terminal-grid{grid-template-columns:1fr}.lb-terminal{padding:18px;border-radius:16px}.lb-terminal-tile{min-height:auto}.lb-terminal-status{white-space:normal}}
 </style>
+<style>
+/* LEOBOT_MEMBER_PREMIUM_DARK_V1 */
+body {
+    background: radial-gradient(ellipse at 90% 0%, #173455 0%, #091424 45%, #060c16 100%) fixed !important;
+    color: #e9f3ff !important;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+main, main.container, .container, .dashboard-container, .dashboard {
+    color: #e9f3ff !important;
+}
+main.container, .dashboard-container, .dashboard {
+    background-color: #0d1b2e !important;
+    border-color: #2a405b !important;
+}
+main h1, main h2, main h3,
+.container h1, .container h2, .container h3 {
+    color: #f1f7ff !important;
+}
+main p, main small, .container p, .container small {
+    color: #b2c6dd !important;
+}
+main .card, main .panel, main .stat-card,
+.container .card, .container .panel, .container .stat-card,
+.dashboard .card {
+    background: #13243a !important;
+    color: #e9f3ff !important;
+    border: 1px solid #2b435e !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 30px rgba(0, 5, 15, .15) !important;
+}
+main .card h2, main .card h3,
+.container .card h2, .container .card h3 {
+    color: #f1f7ff !important;
+}
+main table, .container table {
+    color: #e9f3ff !important;
+    width: 100%;
+}
+main th, .container th {
+    background: #1b304b !important;
+    color: #f1f7ff !important;
+}
+main td, .container td {
+    border-color: #30465f !important;
+}
+main input, main select, main textarea,
+.container input, .container select, .container textarea {
+    background: #0a1829 !important;
+    color: #f1f7ff !important;
+    border: 1px solid #38516d !important;
+}
+main a, .container a {
+    transition: filter .2s ease;
+}
+main a:hover, .container a:hover {
+    filter: brightness(1.12);
+}
+@media (max-width: 768px) {
+    main.container, .dashboard-container, .dashboard {
+        padding: 16px !important;
+    }
+    main table, .container table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+</style>
 </head>
 <body>
 <main class="container">
