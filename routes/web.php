@@ -325,6 +325,20 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
         ->middleware('throttle:5,1')->name('admin.withdrawals.fee');
 });
 Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMemberPin::class])->group(function () {
+    Route::get('/member/usdt-wallets/page', function () {
+        return view('member.usdt-wallets');
+    })->name('member.usdt-wallets.page');
+    Route::get('/member/usdt-wallets',
+        [\App\Http\Controllers\Member\UsdtWalletController::class, 'index'])
+        ->middleware('throttle:30,1')->name('member.usdt-wallets.index');
+
+    Route::post('/member/usdt-wallets/challenge',
+        [\App\Http\Controllers\Member\UsdtWalletController::class, 'challenge'])
+        ->middleware('throttle:5,1')->name('member.usdt-wallets.challenge');
+
+    Route::post('/member/usdt-wallets/verify',
+        [\App\Http\Controllers\Member\UsdtWalletController::class, 'verify'])
+        ->middleware('throttle:5,1')->name('member.usdt-wallets.verify');
     Route::get('/member/withdrawals', [\App\Http\Controllers\Member\WithdrawalMemberController::class, 'index'])
         ->name('member.withdrawals.index');
     Route::post('/member/withdrawals', [\App\Http\Controllers\Member\WithdrawalMemberController::class, 'store'])

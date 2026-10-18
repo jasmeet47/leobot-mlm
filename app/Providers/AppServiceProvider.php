@@ -27,21 +27,12 @@ class AppServiceProvider extends ServiceProvider
 
             return $app->make(DisabledUsdtChainVerifier::class);
         });
-        if ($this->app->environment('testing')) {
-            $this->app->bind(UsdtWalletOwnershipVerifier::class, \App\Services\MultiNetworkUsdtWalletOwnershipVerifier::class);
-        } else {
-            $this->app->bind(UsdtWalletOwnershipVerifier::class, function ($app) {
-                if (
-                    config('leobot.production_financial_approval', false) === true &&
-                    config('leobot_usdt_rpc.enabled', false) === true &&
-                    config('leobot_withdrawal.external_payment_verification_enabled', false) === true
-                ) {
-                    return $app->make(\App\Services\MultiNetworkUsdtWalletOwnershipVerifier::class);
-                }
-
-                return $app->make(DisabledUsdtWalletOwnershipVerifier::class);
-            });
-        }
+        // Wallet ownership signatures authorize enrollment only.
+        // They do not authorize deposits, withdrawals, or payments.
+        $this->app->bind(
+            UsdtWalletOwnershipVerifier::class,
+            \App\Services\MultiNetworkUsdtWalletOwnershipVerifier::class
+        );
     }
 
     /**
