@@ -51,6 +51,10 @@ Route::post('/register', [
 |--------------------------------------------------------------------------
 */
 
+/* LEOBOT_GET_LOGIN_REDIRECT_V1 */
+Route::get('/login', function () {
+    return redirect()->route('register.form');
+})->name('login.form');
 Route::post('/login', [
     RegisterController::class,
     'login',
