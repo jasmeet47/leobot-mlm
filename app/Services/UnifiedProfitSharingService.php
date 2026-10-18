@@ -153,9 +153,8 @@ final class UnifiedProfitSharingService
                 self::percentage($rate);
             }
             $rateSum = bcadd(bcadd($selfRate, $generationRate, 9), $magicRate, 9);
-            if (bccomp($selfRate, '67', 9) !== 0 || bccomp($generationRate, '30', 9) !== 0 ||
-                bccomp($magicRate, '3', 9) !== 0 || bccomp($rateSum, '100', 9) !== 0) {
-                throw new RuntimeException('Unified trading profit split must be 67% Self / 30% Generation / 3% Magic.');
+            if (bccomp($rateSum, '100', 9) !== 0) {
+                throw new RuntimeException('Unified trading profit percentages must total exactly 100%.');
             }
 
             $directRows = [];

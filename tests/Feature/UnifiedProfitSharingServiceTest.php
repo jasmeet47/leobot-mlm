@@ -387,24 +387,37 @@ class UnifiedProfitSharingServiceTest extends TestCase
         );
     }
 
-    public function test_custom_seventy_twenty_five_five_percentages_are_rejected(): void
+    public function test_custom_seventy_twenty_five_five_percentages_are_accepted(): void
     {
         $admin = $this->admin();
         $owner = $this->member();
         $this->enable();
-        DB::table('profit_sharing_settings')->where('id', 1)->update(['self_profit_percent' => '70']);
-        DB::table('generation_pool_settings')->where('id', 1)->update(['trading_profit_pool_percent' => '25']);
-        DB::table('magic_income_settings')->where('id', 1)->update(['trading_profit_pool_percent' => '5']);
-        try {
-            UnifiedProfitSharingService::fund($admin, '1000', 'CUSTOM-PERCENT', [$owner->id => '1000']);
-            $this->fail('Only 67/30/3 is permitted.');
-        } catch (RuntimeException $e) {
-            $this->assertStringContainsString('67% Self / 30% Generation / 3% Magic', $e->getMessage());
-        }
-        $this->assertSame(0, DB::table('profit_sharing_fundings')->count());
-        $this->assertSame(0, DB::table('generation_profit_fundings')->count());
-        $this->assertSame(0, DB::table('financial_ledger')->count());
-        $this->eqMoney('1000', DB::table('company_wallet')->where('id', 1)->value('balance'));
+
+        DB::table('profit_sharing_settings')->where('id', 1)
+            ->update(['self_profit_percent' => '70']);
+        DB::table('generation_pool_settings')->where('id', 1)
+            ->update(['trading_profit_pool_percent' => '25']);
+        DB::table('magic_income_settings')->where('id', 1)
+            ->update(['trading_profit_pool_percent' => '5']);
+
+        $id = UnifiedProfitSharingService::fund(
+            $admin, '1000', 'CUSTOM-PERCENT', [$owner->id => '1000']
+        );
+
+        $funding = DB::table('profit_sharing_fundings')->find($id);
+
+        $this->eqMoney('700', $funding->self_amount);
+        $this->eqMoney('250', $funding->generation_amount);
+        $this->eqMoney('50', $funding->magic_amount);
+        $this->eqMoney('1000', $funding->funded_total);
+        $this->eqMoney('0', $funding->company_rounding_remainder);
+
+        $this->eqMoney('250', DB::table('generation_pool_accounts')
+            ->where('id', 1)->value('balance'));
+
+        $reserve = DB::table('profit_sharing_reserve_accounts')->find(1);
+        $this->eqMoney('700', $reserve->self_balance);
+        $this->eqMoney('50', $reserve->magic_balance);
     }
 
     public function test_insufficient_company_funds_rollback_all_reserves(): void
