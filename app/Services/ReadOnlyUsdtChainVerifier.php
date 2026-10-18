@@ -96,7 +96,11 @@ final class ReadOnlyUsdtChainVerifier implements UsdtChainVerifier
             || strtolower((string)($i['id'] ?? '')) !== strtolower($hash)
             || ($i['receipt']['result'] ?? '') !== 'SUCCESS'
             || ($t['ret'][0]['contractRet'] ?? '') !== 'SUCCESS'
-            || empty($i['blockNumber']) || empty($ct['raw_data']['expiration'])) return false;
+            || empty($i['blockNumber']) || empty($ct['raw_data']['expiration'])
+            || !isset($t['raw_data'], $ct['raw_data'])
+            || !is_array($t['raw_data']) || !is_array($ct['raw_data'])
+            || $t['raw_data'] !== $ct['raw_data']
+            || ($ct['ret'][0]['contractRet'] ?? '') !== 'SUCCESS') return false;
         foreach (($i['log'] ?? []) as $log) {
             if (!is_array($log) || strtolower((string)($log['address'] ?? '')) !== substr(self::TRON_USDT, 2)) continue;
             $topics=$log['topics'] ?? [];

@@ -126,8 +126,8 @@ final class ReadOnlyUsdtChainVerifierComprehensiveTest extends TestCase
         ],$infoChanges);
         Http::fake(function ($request) use ($info) {
             $path=parse_url($request->url(),PHP_URL_PATH);
-            if ($path==='/wallet/gettransactionbyid') return Http::response(['txID'=>self::TRON_HASH,'ret'=>[['contractRet'=>'SUCCESS']]]);
-            if ($path==='/walletsolidity/gettransactionbyid') return Http::response(['txID'=>self::TRON_HASH,'raw_data'=>['expiration'=>9999999999999]]);
+            if ($path==='/wallet/gettransactionbyid') return Http::response(['txID'=>self::TRON_HASH,'ret'=>[['contractRet'=>'SUCCESS']],'raw_data'=>['expiration'=>9999999999999]]);
+            if ($path==='/walletsolidity/gettransactionbyid') return Http::response(['txID'=>self::TRON_HASH,'ret'=>[['contractRet'=>'SUCCESS']],'raw_data'=>['expiration'=>9999999999999]]);
             if ($path==='/walletsolidity/gettransactioninfobyid') return Http::response($info);
             return Http::response([],404);
         });
