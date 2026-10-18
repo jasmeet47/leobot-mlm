@@ -139,6 +139,71 @@ body{background:radial-gradient(ellipse at 90% 0%,#153153 0%,#080f1e 43%,#060c16
 main section,main .card,main .stat-card,main .panel,main .notice{border-radius:14px}main table{width:100%}main th{letter-spacing:.025em}main a,main button{transition:filter .18s ease,transform .18s ease}main button:hover{filter:brightness(1.1)}
 @media(max-width:720px){.lb-terminal-grid{grid-template-columns:1fr}.lb-terminal{padding:18px;border-radius:16px}.lb-terminal-tile{min-height:auto}.lb-terminal-status{white-space:normal}}
 </style>
+<style>
+/* LEOBOT_ADMIN_DARK_THEME_FIX_V1 */
+body {
+    background: #080f1e !important;
+    color: #e8f1fc !important;
+}
+main.container {
+    background: #0e1b2e !important;
+    color: #e8f1fc !important;
+    border: 1px solid #283d56 !important;
+    border-radius: 18px !important;
+}
+main.container h1,
+main.container h2,
+main.container h3 {
+    color: #f1f7ff !important;
+}
+main.container p,
+main.container small {
+    color: #a9bdd5 !important;
+}
+main.container .card,
+main.container .panel,
+main.container .notice {
+    background: #13243a !important;
+    color: #e8f1fc !important;
+    border: 1px solid #2c435d !important;
+    box-shadow: none !important;
+}
+main.container .card h2,
+main.container .card h3 {
+    color: #eaf4ff !important;
+}
+main.container .card p {
+    color: #b4c7dc !important;
+}
+main.container a:not(.btn) {
+    color: #82c5ff;
+}
+main.container .card a {
+    color: #ffffff !important;
+}
+main.container table {
+    color: #e8f1fc !important;
+}
+main.container th {
+    background: #1a304b !important;
+    color: #f0f6ff !important;
+}
+main.container td {
+    border-color: #30465e !important;
+}
+main.container input,
+main.container select,
+main.container textarea {
+    background: #0b1829 !important;
+    color: #f1f7ff !important;
+    border: 1px solid #39516c !important;
+}
+@media(max-width:768px) {
+    main.container {
+        padding: 16px !important;
+    }
+}
+</style>
 </head>
 
 <body>
