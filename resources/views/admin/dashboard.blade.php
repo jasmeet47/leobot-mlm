@@ -204,6 +204,32 @@ main.container textarea {
     }
 }
 </style>
+<style>
+/* LEOBOT_ADMIN_WHITE_PANEL_FIX_V2 */
+main.container,
+body main.container,
+main.container > div,
+main.container > section {
+    background-color: #0e1b2e !important;
+    color: #e8f1fc !important;
+}
+main.container > h1,
+main.container > h2,
+main.container > h3,
+main.container > p,
+main.container > div > h1,
+main.container > div > h2,
+main.container > div > p {
+    color: #e8f1fc !important;
+}
+main.container .card {
+    background-color: #13243a !important;
+    color: #e8f1fc !important;
+}
+main.container .card p {
+    color: #b4c7dc !important;
+}
+</style>
 </head>
 
 <body>
