@@ -59,6 +59,7 @@ Route::post('/login', [
     RegisterController::class,
     'login',
 ])
+    ->middleware(\App\Http\Middleware\MeasureLoginRequest::class)
     ->middleware('throttle:5,1')
     ->name('login.submit');
 
