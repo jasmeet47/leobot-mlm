@@ -133,6 +133,55 @@ final class ReadOnlyUsdtChainVerifierComprehensiveTest extends TestCase
         });
     }
 
+    public function test_trc20_mismatched_confirmed_transaction_rejected(): void
+    {
+        Http::fake(function ($request) {
+            $path = parse_url($request->url(), PHP_URL_PATH);
+
+            if ($path === '/wallet/gettransactionbyid') {
+                return Http::response([
+                    'txID' => self::TRON_HASH,
+                    'ret' => [['contractRet' => 'SUCCESS']],
+                    'raw_data' => ['expiration' => 1111111111111],
+                ]);
+            }
+
+            if ($path === '/walletsolidity/gettransactionbyid') {
+                return Http::response([
+                    'txID' => self::TRON_HASH,
+                    'ret' => [['contractRet' => 'SUCCESS']],
+                    'raw_data' => ['expiration' => 9999999999999],
+                ]);
+            }
+
+            if ($path === '/walletsolidity/gettransactioninfobyid') {
+                return Http::response([
+                    'id' => self::TRON_HASH,
+                    'receipt' => ['result' => 'SUCCESS'],
+                    'blockNumber' => 1234,
+                    'log' => [[
+                        'address' => 'a614f803b6fd780986a42c78ec9c7f77e6ded13c',
+                        'topics' => [
+                            substr(self::TRANSFER, 2),
+                            str_repeat('0', 64),
+                            str_repeat('0', 24) . 'a614f803b6fd780986a42c78ec9c7f77e6ded13c',
+                        ],
+                        'data' => str_pad(dechex(1000000), 64, '0', STR_PAD_LEFT),
+                    ]],
+                ]);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $this->assertFalse(
+            (new ReadOnlyUsdtChainVerifier())->verified(
+                'TRC20', self::TRON_HASH, self::TRON_TO, '1'
+            )
+        );
+
+        Http::assertSentCount(3);
+    }
     public function test_trc20_matching_confirmed_transfer_succeeds(): void
     {
         $this->fakeTron();
