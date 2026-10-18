@@ -111,6 +111,46 @@ main a:hover, .container a:hover {
     }
 }
 </style>
+<style>
+/* LEOBOT_MEMBER_MENU_V1 */
+.lb-member-menu {
+    position: relative;
+}
+.lb-member-menu > summary {
+    list-style: none;
+    display: inline-block;
+    cursor: pointer;
+}
+.lb-member-menu > summary::-webkit-details-marker {
+    display: none;
+}
+.lb-member-menu:not([open]) .lb-member-menu-panel {
+    display: none;
+}
+.lb-member-menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    z-index: 100;
+    width: min(270px, 85vw);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 14px;
+    background: #101d30;
+    border: 1px solid #30445e;
+    border-radius: 14px;
+    box-shadow: 0 16px 36px #0008;
+}
+.lb-member-menu-panel .action {
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+.lb-member-menu-panel form {
+    margin: 0;
+}
+</style>
 </head>
 <body>
 <main class="container">
@@ -128,12 +168,27 @@ main a:hover, .container a:hover {
 </section>
     <header>
         <div class="brand">LEOBOT <small>Member Dashboard</small></div>
+        <!-- LEOBOT_MEMBER_MENU_V1 -->
         <nav class="actions" aria-label="Member actions">
-            <a class="action" href="{{ route('security-pin.form') }}">Change Security PIN</a>
-            <form method="POST" action="{{ route('logout') }}" style="margin:0">
-                @csrf
-                <button class="action" type="submit">Logout</button>
-            </form>
+            <details class="lb-member-menu">
+                <summary class="action" aria-label="Open member menu">
+                    &#9776; Menu
+                </summary>
+                <div class="lb-member-menu-panel">
+                    <a class="action" href="{{ route('member.dashboard') }}">Dashboard</a>
+                    <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
+                    <button class="action" type="button" disabled
+                        title="Fund Transfer is not enabled yet"
+                        style="opacity:.55;cursor:not-allowed">
+                        Fund Transfer (Coming Soon)
+                    </button>
+                    <a class="action" href="{{ route('security-pin.form') }}">Change Security PIN</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="action" type="submit">Logout</button>
+                    </form>
+                </div>
+            </details>
         </nav>
     </header>
 

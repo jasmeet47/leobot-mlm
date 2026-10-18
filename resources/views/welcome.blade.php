@@ -109,7 +109,8 @@
                         <p role="status">Your account access is currently restricted.</p>
                     @endif
                 @else
-                    <a class="btn" href="{{ route('register.form') }}">Login or Register</a>
+                    <a class="btn" href="{{ route('register.form') }}">Login</a>
+                    <a class="btn" href="{{ route('register.form') }}">Sign Up</a>
                 @endauth
             </div>
 

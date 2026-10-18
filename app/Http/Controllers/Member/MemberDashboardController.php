@@ -227,24 +227,25 @@ class MemberDashboardController extends Controller
             ->selectRaw('COALESCE(SUM(self_share_reserved), 0) AS total')
             ->first();
 
-        $generationQualified = DB::table('generation_member_allocations')
+        // Combine two generation reserve reads into one database round trip.
+        $generationTotals = DB::table('generation_member_allocations')
             ->where('user_id', $member->id)
-            ->where('classification', 'payable')
-            ->where('status', 'qualified_reserved_no_payout')
-            ->selectRaw('COALESCE(SUM(share_amount), 0) AS total')
-            ->first();
-
-        $generationHeld = DB::table('generation_member_allocations')
-            ->where('user_id', $member->id)
-            ->where('classification', 'held')
-            ->where('status', 'held_unqualified')
-            ->selectRaw('COALESCE(SUM(share_amount), 0) AS total')
+            ->selectRaw(
+                "COALESCE(SUM(CASE WHEN classification = ? AND status = ? THEN share_amount ELSE 0 END), 0) AS qualified_total,
+                 COALESCE(SUM(CASE WHEN classification = ? AND status = ? THEN share_amount ELSE 0 END), 0) AS held_total",
+                [
+                    'payable',
+                    'qualified_reserved_no_payout',
+                    'held',
+                    'held_unqualified',
+                ]
+            )
             ->first();
 
         $incomeSummary = [
             'self_reserved' => (string) ($selfReserved->total ?? '0'),
-            'generation_qualified' => (string) ($generationQualified->total ?? '0'),
-            'generation_held' => (string) ($generationHeld->total ?? '0'),
+            'generation_qualified' => (string) ($generationTotals->qualified_total ?? '0'),
+            'generation_held' => (string) ($generationTotals->held_total ?? '0'),
         ];
 
         // Completed member wallet entries only; never show company pool journals.
