@@ -234,9 +234,17 @@ class RegisterController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        // LEOBOT_LOGIN_TIMING_V1 - temporary diagnostic, no personal data
+        $lbLoginStart = hrtime(true);
+
         $loginSuccess = Auth::attempt([
             'username' => $credentials['username'],
             'password' => $credentials['password'],
+        ]);
+
+        \Illuminate\Support\Facades\Log::info('leobot.login.auth_timing', [
+            'auth_ms' => round((hrtime(true) - $lbLoginStart) / 1000000, 2),
+            'success' => $loginSuccess,
         ]);
 
         if ($loginSuccess) {
