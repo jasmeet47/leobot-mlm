@@ -151,6 +151,50 @@ main a:hover, .container a:hover {
     margin: 0;
 }
 </style>
+<style>
+/* LEOBOT_INTERNATIONAL_TRADING_UI_V2: presentation only */
+:root { --lb-gold:#e6bd6a; --lb-gold-soft:#f7dfaa; --lb-panel:#0e1b2c; --lb-line:#2b3e54; }
+html { scroll-behavior:smooth; scroll-padding-top:22px; }
+body { background:radial-gradient(ellipse at 15% -10%,#20344d 0%,transparent 40%),linear-gradient(150deg,#07101d,#0b1727 70%,#08111e) fixed!important; }
+main.container { max-width:1400px!important; padding-top:18px; }
+header { position:relative; z-index:20; padding:13px 17px; border:1px solid #2d4158; border-radius:18px; background:#0d1b2df2; box-shadow:0 12px 35px #03091665; }
+.brand { color:var(--lb-gold)!important; font-size:22px; letter-spacing:.09em; }
+.brand small { color:#91a7c0; }
+.lb-terminal { border-color:#4b4b4a; background:linear-gradient(120deg,#172a40,#0b192b 75%); }
+.lb-terminal-eyebrow,.lb-eyebrow { color:var(--lb-gold)!important; font-size:11px; font-weight:800; letter-spacing:.16em; }
+.lb-terminal-status { border-color:#466253; }
+.lb-terminal-tile { border-color:#30455b; background:#0c1b2ec9; }
+.lb-terminal-tile .accent { color:#50d5ad; }
+.lb-nav-groups { gap:8px; }
+.lb-nav-groups>.lb-nav-dropdown>summary,.lb-home-link { border-color:#364c64; background:#14263c; font-size:13px; font-weight:700; }
+.lb-nav-dropdown[open]>summary { color:var(--lb-gold-soft); border-color:var(--lb-gold); }
+.lb-member-menu-panel { width:min(310px,92vw); background:#0c1a2b; border-color:#425773; padding:10px; max-height:65vh; overflow-y:auto; }
+.lb-member-menu-panel .action { padding:10px 12px; font-size:13px; border:0; background:transparent; }
+.lb-member-menu-panel .action:hover,.lb-member-menu-panel .action:focus-visible { background:#1b314a; color:var(--lb-gold-soft); }
+.lb-nav-groups .lb-nav-dropdown:last-of-type .lb-member-menu-panel { right:0; }
+main section { scroll-margin-top:24px; }
+main section>h2 { padding-left:13px; border-left:3px solid var(--lb-gold); font-size:19px; }
+main .card { border-color:#2d425a!important; background:linear-gradient(150deg,#13263c,#0e1d30)!important; }
+main .card .value { color:#f2f7ff; font-variant-numeric:tabular-nums; }
+main .card .label { color:#9eb2c9; }
+.table-wrap { border-color:#30465c; }
+main th { color:var(--lb-gold-soft)!important; }
+main tr:hover td { background:#152a40; }
+.lb-profile-strip { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px 22px; border:1px solid #35465a; background:#101f32; border-radius:15px; }
+.lb-profile-strip>div { display:flex; flex-direction:column; gap:4px; }
+.lb-profile-strip strong { font-size:19px; }
+.lb-profile-strip small { color:#9aafc8; }
+.lb-account-status,.lb-small-tag { color:#d6e4f5; background:#1a3047; border:1px solid #34506a; padding:7px 11px; border-radius:999px; font-size:12px; }
+.lb-section-topline { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.lb-records-overview { padding:22px; border:1px solid #30465b; border-radius:16px; background:linear-gradient(110deg,#14263b,#0d1c2d); }
+.lb-inline-link { display:inline-block; margin-top:8px; border-color:#78613c; color:var(--lb-gold-soft); }
+.lb-bottom-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.lb-info-card { scroll-margin-top:25px; }
+.lb-info-card h2 { margin-top:10px; }
+@media(max-width:900px) { .lb-nav-groups { width:100%; } header { align-items:flex-start; } }
+@media(max-width:700px) { .lb-bottom-grid { grid-template-columns:1fr; } .lb-nav-groups { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } .lb-nav-groups .lb-member-menu { min-width:0; } .lb-nav-groups .lb-member-menu>summary { width:100%; text-align:center; padding:10px 7px; } .lb-member-menu-panel { right:auto; left:0; width:min(300px,88vw); } .lb-nav-groups .lb-member-menu:nth-last-child(-n+2) .lb-member-menu-panel { right:0; left:auto; } }
+@media(max-width:420px) { .lb-nav-groups { grid-template-columns:1fr 1fr; } .lb-home-link { text-align:center; } .lb-terminal-head { align-items:flex-start; } }
+</style>
 </head>
 <body>
 <main class="container">
@@ -168,8 +212,38 @@ main a:hover, .container a:hover {
 </section>
     <header>
         <div class="brand">LEOBOT <small>Member Dashboard</small></div>
-        <!-- LEOBOT_MEMBER_MENU_V1 -->
-        <nav class="actions" aria-label="Member actions">
+        <!-- LEOBOT_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
+        <nav class="actions lb-nav-groups" aria-label="Member actions">
+            <a class="action lb-home-link" href="{{ route('member.dashboard') }}">Overview</a>
+            <details class="lb-member-menu lb-nav-dropdown">
+                <summary class="action">My Team <span aria-hidden="true">⌄</span></summary>
+                <div class="lb-member-menu-panel">
+                    <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
+                    <a class="action" href="#direct-referrals">My Direct Referrals (Level 1)</a>
+                    <a class="action" href="#referral-privacy">Referral Contact Privacy</a>
+                    <a class="action" href="#team-overview">Your Team Overview</a>
+                    <a class="action" href="#referral-link">Your Referral Link</a>
+                </div>
+            </details>
+            <details class="lb-member-menu lb-nav-dropdown">
+                <summary class="action">My Finance <span aria-hidden="true">⌄</span></summary>
+                <div class="lb-member-menu-panel">
+                    <a class="action" href="#wallet-history">My Wallet Transaction History</a>
+                    <a class="action" href="#income-summary">My Income Summary</a>
+                    <a class="action" href="#financial-records">Financial Records</a>
+                    <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
+                </div>
+            </details>
+            <details class="lb-member-menu lb-nav-dropdown">
+                <summary class="action">My Account <span aria-hidden="true">⌄</span></summary>
+                <div class="lb-member-menu-panel">
+                    <a class="action" href="#member-profile">Profile</a>
+                    <a class="action" href="#account-summary">Your Account Summary</a>
+                    <a class="action" href="#account-settings">Account</a>
+                    <a class="action" href="#member-support">Support</a>
+                    <a class="action" href="{{ route('security-pin.form') }}">Change Security PIN</a>
+                </div>
+            </details>
             <details class="lb-member-menu">
                 <summary class="action" aria-label="Open member menu">
                     &#9776; Menu
@@ -192,12 +266,16 @@ main a:hover, .container a:hover {
         </nav>
     </header>
 
+    <section id="member-profile" class="lb-profile-strip" aria-label="Member profile">
+        <div><span class="lb-eyebrow">MEMBER PROFILE</span><strong>{{ $member->name }}</strong><small>ID: {{ $member->username }}</small></div>
+        <span class="lb-account-status">{{ ucfirst($member->status) }} account</span>
+    </section>
     <h1>Welcome, {{ $member->name }}</h1>
     <p class="subheading">Member ID: {{ $member->username }} &middot; Account status: {{ ucfirst($member->status) }}</p>
 
     @if (session('success'))
         <p class="success" role="status">{{ session('success') }}</p>
-    @endif<section aria-label="Member financial summary">
+    @endif<section id="account-summary" aria-label="Member financial summary">
         <h2>Your Account Summary</h2>
         <div class="grid">
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
@@ -207,7 +285,7 @@ main a:hover, .container a:hover {
         </div>
     </section>
 
-    <section aria-label="Member income summary">
+    <section id="income-summary" aria-label="Member income summary">
         <h2>My Income Summary</h2>
         <p class="muted">
             Reserved and held amounts are not paid income and are not
@@ -241,7 +319,14 @@ main a:hover, .container a:hover {
         </div>
     </section>
 
-    <section aria-label="Member wallet transaction history">
+    <section id="financial-records" class="lb-records-overview" aria-label="Financial records">
+        <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>
+        <h2>Financial Records</h2>
+        <p class="muted">Your available balance and income reserves are shown above. Completed wallet entries appear in the transaction history below; held and reserved amounts are not paid income.</p>
+        <a class="action lb-inline-link" href="#wallet-history">View Wallet Transaction History →</a>
+    </section>
+
+    <section id="wallet-history" aria-label="Member wallet transaction history">
         <h2>My Wallet Transaction History</h2>
         <p class="muted">
             Only completed transactions recorded against your member
@@ -281,7 +366,7 @@ main a:hover, .container a:hover {
             {{ $walletHistory->links() }}
         </div>
     </section>
-    <section aria-label="Member referral link">
+    <section id="referral-link" aria-label="Member referral link">
         <h2>Your Referral Link</h2>
         <div class="card">
             <label class="label" for="member-referral-link">Share your personal registration link</label>
@@ -295,7 +380,7 @@ main a:hover, .container a:hover {
             <p id="referral-copy-status" class="muted" role="status" aria-live="polite" style="margin:10px 0 0"></p>
         </div>
     </section>
-    <section aria-label="Team summary">
+    <section id="team-overview" aria-label="Team summary">
         <h2>Your Team Overview</h2>
         <div class="grid">
             <div class="card"><div class="label">Active Team</div><div class="value">{{ (int) ($teamSummary->total_active_team ?? 0) }}</div></div>
@@ -304,7 +389,7 @@ main a:hover, .container a:hover {
         </div>
     </section>
 
-    <section aria-label="Referral Contact Privacy">
+    <section id="referral-privacy" aria-label="Referral Contact Privacy">
         <h2>Referral Contact Privacy</h2>
         <div class="card">
             <p class="muted">
@@ -351,7 +436,7 @@ main a:hover, .container a:hover {
             </form>
         </div>
     </section>
-    <section aria-label="My Direct Referrals">
+    <section id="direct-referrals" aria-label="My Direct Referrals">
         <h2>My Direct Referrals (Level 1)</h2>
         <p class="muted">Only members directly referred by you.</p>
         <div class="table-wrap">
@@ -392,7 +477,7 @@ main a:hover, .container a:hover {
             {{ $referrals->links() }}
         </div>
     </section>
-    <section aria-label="51-level team breakdown">
+    <section id="team-breakdown" aria-label="51-level team breakdown">
         <h2>51-Level Team Breakdown</h2>
         <div class="table-wrap">
             <table>
@@ -409,6 +494,19 @@ main a:hover, .container a:hover {
                 @endfor
                 </tbody>
             </table>
+        </div>
+    </section>
+    <section class="lb-bottom-grid" aria-label="Account and support">
+        <div id="account-settings" class="card lb-info-card">
+            <span class="lb-eyebrow">SECURITY CENTER</span>
+            <h2>Account</h2>
+            <p class="muted">Manage your security PIN and view your account status. Existing login and account controls remain unchanged.</p>
+            <a class="action lb-inline-link" href="{{ route('security-pin.form') }}">Security PIN Settings →</a>
+        </div>
+        <div id="member-support" class="card lb-info-card">
+            <span class="lb-eyebrow">MEMBER ASSISTANCE</span>
+            <h2>Support</h2>
+            <p class="muted">For assistance, use the official LeoBot support contact provided by your administrator. No support channel is configured on this dashboard.</p>
         </div>
     </section>
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
