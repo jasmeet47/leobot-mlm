@@ -242,6 +242,7 @@ main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); b
                 <summary class="action">My Team <span aria-hidden="true">⌄</span></summary>
                 <div class="lb-member-menu-panel">
                     <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
+                    <a class="action" href="{{ route('member.team-levels') }}">&#128101; View My 51-Level Team</a>
                     <a class="action" href="#direct-referrals">My Direct Referrals (Level 1)</a>
                     <a class="action" href="#referral-privacy">Referral Contact Privacy</a>
                     <a class="action" href="#team-overview">Your Team Overview</a>
