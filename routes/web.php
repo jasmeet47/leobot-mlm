@@ -69,21 +69,10 @@ Route::post('/login', [
 | Named routes retained for existing Blade references
 |--------------------------------------------------------------------------
 */
-Route::get('/forgot-password', function () {
-    abort(404);
-})->name('password.otp.request');
-
-Route::post('/forgot-password', function () {
-    abort(404);
-})->name('password.otp.send');
-
-Route::get('/reset-password-otp', function () {
-    abort(404);
-})->name('password.otp.form');
-
-Route::post('/reset-password-otp', function () {
-    abort(404);
-})->name('password.otp.reset');
+Route::get('/forgot-password', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'requestForm'])->name('password.otp.request');
+Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'send'])->middleware('throttle:3,1')->name('password.otp.send');
+Route::get('/reset-password-otp', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'resetForm'])->name('password.otp.form');
+Route::post('/reset-password-otp', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'reset'])->middleware('throttle:5,1')->name('password.otp.reset');
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +81,10 @@ Route::post('/reset-password-otp', function () {
 */
 
 Route::middleware(['auth', 'account.not_blocked'])->group(function () {
+    // Read-only 51-level member viewer: authenticated user is the only root.
+    Route::get('/member/team-levels', [\App\Http\Controllers\Member\MemberTeamViewerController::class, 'index'])
+        ->middleware(\App\Http\Middleware\EnsureMemberPin::class)
+        ->name('member.team-levels');
 
     /*
     |--------------------------------------------------------------------------
@@ -177,6 +170,9 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
 */
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
+    Route::get('/admin/password-otp-settings', [\App\Http\Controllers\Admin\PasswordOtpSettingsController::class, 'index'])->name('admin.password-otp.index');
+    Route::post('/admin/password-otp-settings', [\App\Http\Controllers\Admin\PasswordOtpSettingsController::class, 'update'])->middleware('throttle:5,1')->name('admin.password-otp.update');
+
     /*
     |--------------------------------------------------------------------------
     | Main Admin Dashboard
