@@ -195,21 +195,44 @@ main tr:hover td { background:#152a40; }
 @media(max-width:700px) { .lb-bottom-grid { grid-template-columns:1fr; } .lb-nav-groups { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } .lb-nav-groups .lb-member-menu { min-width:0; } .lb-nav-groups .lb-member-menu>summary { width:100%; text-align:center; padding:10px 7px; } .lb-member-menu-panel { right:auto; left:0; width:min(300px,88vw); } .lb-nav-groups .lb-member-menu:nth-last-child(-n+2) .lb-member-menu-panel { right:0; left:auto; } }
 @media(max-width:420px) { .lb-nav-groups { grid-template-columns:1fr 1fr; } .lb-home-link { text-align:center; } .lb-terminal-head { align-items:flex-start; } }
 </style>
+<style>
+/* LEOBOT_UI_FINAL_POLISH_V3: navigation, spacing, responsive-only */
+main.container { padding-top:18px!important; }
+main.container>header { margin:0 0 16px; position:relative; z-index:50; box-shadow:0 8px 30px #020a1580; }
+main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); border-radius:17px; }
+.lb-terminal-grid { margin-top:15px; }
+.lb-terminal-tile { min-height:86px; padding:13px 15px; }
+.lb-terminal-tile small { margin-bottom:6px; }
+.lb-terminal-foot { margin-top:12px!important; }
+.lb-profile-strip { margin-top:0; margin-bottom:20px; }
+.lb-nav-groups { justify-content:flex-end; }
+.lb-nav-groups>.lb-nav-dropdown { position:relative; }
+.lb-nav-groups .lb-member-menu-panel { z-index:100; }
+.lb-nav-groups .lb-nav-dropdown:first-of-type .lb-member-menu-panel { left:0; right:auto; }
+.lb-nav-groups .lb-nav-dropdown:last-of-type .lb-member-menu-panel { left:auto; right:0; }
+.lb-nav-groups summary:focus-visible, .lb-nav-groups a:focus-visible, .lb-nav-groups button:focus-visible { outline:2px solid #e6bd6a; outline-offset:3px; }
+.lb-member-menu-panel form button { width:100%; text-align:left; }
+.lb-nav-groups .lb-member-menu-panel .action:disabled { color:#8190a5; }
+@media(max-width:900px) { main.container>header { align-items:center; } .lb-nav-groups { width:auto; flex:1; justify-content:flex-end; } }
+@media(max-width:700px) {
+ main.container { width:96%; }
+ main.container>header { padding:14px; gap:12px; }
+ main.container>header .brand { width:100%; }
+ .lb-nav-groups { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .lb-nav-groups .lb-home-link { display:flex; align-items:center; justify-content:center; }
+ .lb-nav-groups .lb-nav-dropdown { width:100%; }
+ .lb-nav-groups .lb-nav-dropdown>summary { display:block; width:100%; text-align:center; }
+ .lb-nav-groups .lb-member-menu-panel { width:min(310px,92vw); }
+ .lb-nav-groups .lb-nav-dropdown:nth-of-type(2) .lb-member-menu-panel { left:auto; right:0; }
+ .lb-terminal-grid { grid-template-columns:1fr; gap:8px; }
+ .lb-terminal-tile { min-height:0; }
+ .lb-profile-strip { padding:14px; }
+}
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+</style>
 </head>
 <body>
 <main class="container">
-<section class="lb-terminal" aria-label="LeoBot member financial dashboard">
-  <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LEOBOT / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LeoBot account information is shown below.</p></div>
-    <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Secure member session</div>
-  </div>
-  <div class="lb-terminal-grid">
-    <div class="lb-terminal-tile"><small>Account</small><strong>Member Portal</strong></div>
-    <div class="lb-terminal-tile"><small>Financial records</small><strong class="accent">Verified records only</strong></div>
-    <div class="lb-terminal-tile"><small>Trading feed</small><strong>Not connected</strong></div>
-  </div>
-  <p class="lb-terminal-foot lb-terminal-note">International trading-inspired interface only. Income, wallet balances and history below are from LeoBot records, not MT5.</p>
-</section>
     <header>
         <div class="brand">LEOBOT <small>Member Dashboard</small></div>
         <!-- LEOBOT_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
@@ -242,36 +265,34 @@ main tr:hover td { background:#152a40; }
                     <a class="action" href="#account-settings">Account</a>
                     <a class="action" href="#member-support">Support</a>
                     <a class="action" href="{{ route('security-pin.form') }}">Change Security PIN</a>
-                </div>
-            </details>
-            <details class="lb-member-menu">
-                <summary class="action" aria-label="Open member menu">
-                    &#9776; Menu
-                </summary>
-                <div class="lb-member-menu-panel">
-                    <a class="action" href="{{ route('member.dashboard') }}">Dashboard</a>
-                    <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
-                    <button class="action" type="button" disabled
-                        title="Fund Transfer is not enabled yet"
-                        style="opacity:.55;cursor:not-allowed">
-                        Fund Transfer (Coming Soon)
-                    </button>
-                    <a class="action" href="{{ route('security-pin.form') }}">Change Security PIN</a>
+                    <button class="action" type="button" disabled title="Fund Transfer is not enabled yet" style="opacity:.55;cursor:not-allowed">Fund Transfer (Coming Soon)</button>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="action" type="submit">Logout</button>
                     </form>
                 </div>
             </details>
+
         </nav>
     </header>
+<section class="lb-terminal" aria-label="LeoBot member financial dashboard">
+  <div class="lb-terminal-head">
+    <div><div class="lb-terminal-eyebrow">LEOBOT / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LeoBot account information is shown below.</p></div>
+    <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Member account overview</div>
+  </div>
+  <div class="lb-terminal-grid">
+    <div class="lb-terminal-tile"><small>Account</small><strong>Member Portal</strong></div>
+    <div class="lb-terminal-tile"><small>Financial records</small><strong class="accent">Verified records only</strong></div>
+    <div class="lb-terminal-tile"><small>Trading feed</small><strong>Not connected</strong></div>
+  </div>
+  <p class="lb-terminal-foot lb-terminal-note">International trading-inspired interface only. Income, wallet balances and history below are from LeoBot records, not MT5.</p>
+</section>
+
 
     <section id="member-profile" class="lb-profile-strip" aria-label="Member profile">
         <div><span class="lb-eyebrow">MEMBER PROFILE</span><strong>{{ $member->name }}</strong><small>ID: {{ $member->username }}</small></div>
         <span class="lb-account-status">{{ ucfirst($member->status) }} account</span>
     </section>
-    <h1>Welcome, {{ $member->name }}</h1>
-    <p class="subheading">Member ID: {{ $member->username }} &middot; Account status: {{ ucfirst($member->status) }}</p>
 
     @if (session('success'))
         <p class="success" role="status">{{ session('success') }}</p>
@@ -529,6 +550,29 @@ main tr:hover td { background:#152a40; }
             input.select();
             status.textContent = 'Link selected. Press Ctrl+C to copy.';
         }
+    });
+})();
+</script>
+<script>
+/* LEOBOT_UI_FINAL_POLISH_V3: exclusive menus; no financial actions */
+(function () {
+    const menus = Array.from(document.querySelectorAll('.lb-nav-groups details.lb-nav-dropdown'));
+    menus.forEach(function (menu) {
+        menu.addEventListener('toggle', function () {
+            if (!menu.open) return;
+            menus.forEach(function (other) { if (other !== menu) other.open = false; });
+        });
+        menu.querySelectorAll('a[href^="#"]').forEach(function (link) {
+            link.addEventListener('click', function () { menu.open = false; });
+        });
+    });
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('.lb-nav-groups')) return;
+        menus.forEach(function (menu) { menu.open = false; });
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        menus.forEach(function (menu) { menu.open = false; });
     });
 })();
 </script>
