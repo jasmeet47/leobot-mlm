@@ -345,3 +345,5 @@ Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMembe
     Route::post('/member/withdrawals', [\App\Http\Controllers\Member\WithdrawalMemberController::class, 'store'])
         ->middleware('throttle:3,1')->name('member.withdrawals.store');
 });
+
+require __DIR__.'/leobot_financial_ui.php';
