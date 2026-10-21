@@ -230,52 +230,127 @@ main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); b
 }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
 </style>
+<!-- LEOBOT_TOP_RIGHT_HAMBURGER_V1: member presentation only -->
+<style>
+main.container > header {display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:12px}
+main.container > header .brand {width:auto!important; min-width:0}
+.lb-hamburger-nav {display:flex!important; flex:0 0 auto!important; width:auto!important; margin-left:auto; justify-content:flex-end!important}
+.lb-hamburger-nav .lb-hamburger {position:relative; width:auto!important}
+.lb-hamburger-nav .lb-hamburger-trigger {display:flex!important; align-items:center; justify-content:center; gap:6px; min-width:50px; min-height:45px; padding:7px 12px!important; font-size:25px!important; line-height:1; width:auto!important; text-align:center; border:1px solid #78613c; color:#f7dfaa}
+.lb-hamburger-nav .lb-hamburger-panel {position:absolute; top:calc(100% + 10px); right:0!important; left:auto!important; width:min(330px,calc(100vw - 28px))!important; max-height:75vh; overflow-y:auto; z-index:300; display:flex; flex-direction:column}
+.lb-hamburger-nav .lb-hamburger-panel .action {text-align:left!important; width:100%; white-space:normal}
+body.lb-menu-ready .lb-menu-detail {display:none}
+body.lb-menu-ready .lb-menu-detail.lb-menu-visible {display:block}
+body.lb-menu-ready .lb-bottom-grid.lb-menu-visible {display:grid}
+body.lb-menu-ready .lb-profile-strip.lb-menu-visible {display:flex}
+@media(max-width:700px) {main.container > header .brand {font-size:19px} .lb-hamburger-nav {display:flex!important; width:auto!important; flex:none!important} .lb-menu-caption {display:none}}
+</style>
+<style>
+/* LEOBOT_MEMBER_MENU_FOUR_GROUPS_V1: presentation only */
+.lb-hamburger-panel .lb-menu-group-title { position:sticky; top:0; z-index:1; padding:10px 12px 6px; margin-top:6px; font-size:12px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:#f1cd86; background:#0b1b2d; border-bottom:1px solid rgba(241,205,134,.25); }
+.lb-hamburger-panel .lb-menu-group-title:first-child { margin-top:0; }
+.lb-hamburger-panel .action { padding-left:15px!important; }
+</style>
+
+<style id="LEOBOT_SHARED_DARK_GOLD_V2">
+/* Local UI theme only. No application logic or event handlers are modified. */
+:root { color-scheme: dark; --lb-bg:#091729; --lb-surface:#10243a; --lb-surface-2:#17314b; --lb-gold:#e6ba62; --lb-text:#eaf1f9; --lb-muted:#b7c7d9; --lb-border:#3b526b; }
+html, body { background-color:var(--lb-bg) !important; color:var(--lb-text); }
+body, main, .container, .wrapper, .page, .page-wrap, .content, .content-wrapper { color:var(--lb-text); }
+h1,h2,h3,h4,h5,h6 { color:var(--lb-gold); }
+a { color:var(--lb-gold); }
+a:hover { color:#ffe0a1; }
+/* Explicitly theme common card/table/form containers while preserving layout. */
+.card, .panel, .box, .stat-card, .metric-card, .table-responsive, fieldset, .form-card, .summary-card { background-color:var(--lb-surface) !important; color:var(--lb-text) !important; border-color:var(--lb-border) !important; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { background-color:#0d2136 !important; color:var(--lb-text) !important; border-color:var(--lb-border) !important; }
+input::placeholder,textarea::placeholder { color:#a9bdd0 !important; opacity:1; }
+label,legend,small { color:var(--lb-muted); }
+table { color:var(--lb-text); border-color:var(--lb-border); }
+th { color:var(--lb-gold); border-color:var(--lb-border) !important; }
+td { border-color:var(--lb-border) !important; }
+thead { background-color:var(--lb-surface-2); }
+tr:hover td { background-color:rgba(230,186,98,.06); }
+button, .btn { border-color:var(--lb-border); }
+button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not-allowed; }
+.alert, .notice, .message { border-color:var(--lb-border); }
+:focus-visible { outline:2px solid var(--lb-gold); outline-offset:2px; }
+@media (max-width: 640px) { table { max-width:100%; } input, select, textarea { max-width:100%; box-sizing:border-box; } }
+</style>
+
+<!-- LEOBOT_REFERRAL_ALWAYS_VISIBLE_V1 -->
+<style>
+#referral-link{display:block!important;visibility:visible!important;opacity:1!important;max-height:none!important;overflow:visible!important}
+</style>
 </head>
 <body>
 <main class="container">
     <header>
         <div class="brand">LEOBOT <small>Member Dashboard</small></div>
         <!-- LEOBOT_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
-        <nav class="actions lb-nav-groups" aria-label="Member actions">
-            <a class="action lb-home-link" href="{{ route('member.dashboard') }}">Overview</a>
-            <details class="lb-member-menu lb-nav-dropdown">
-                <summary class="action">My Team <span aria-hidden="true">⌄</span></summary>
-                <div class="lb-member-menu-panel">
-                    <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
-                    <a class="action" href="{{ route('member.team-levels') }}">&#128101; View My 51-Level Team</a>
-                    <a class="action" href="#direct-referrals">My Direct Referrals (Level 1)</a>
-                    <a class="action" href="#referral-privacy">Referral Contact Privacy</a>
-                    <a class="action" href="#team-overview">Your Team Overview</a>
-                    <a class="action" href="#referral-link">Your Referral Link</a>
-                </div>
-            </details>
-            <details class="lb-member-menu lb-nav-dropdown">
-                <summary class="action">My Finance <span aria-hidden="true">⌄</span></summary>
-                <div class="lb-member-menu-panel">
-                    <a class="action" href="#wallet-history">My Wallet Transaction History</a>
-                    <a class="action" href="#income-summary">My Income Summary</a>
-                    <a class="action" href="#financial-records">Financial Records</a>
-                    <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
-                </div>
-            </details>
-            <details class="lb-member-menu lb-nav-dropdown">
-                <summary class="action">My Account <span aria-hidden="true">⌄</span></summary>
-                <div class="lb-member-menu-panel">
-                    <a class="action" href="#member-profile">Profile</a>
-                    <a class="action" href="#account-summary">Your Account Summary</a>
-                    <a class="action" href="#account-settings">Account</a>
-                    <a class="action" href="#member-support">Support</a>
-                    <a class="action" href="{{ route('security-pin.form') }}">Change Security PIN</a>
-                    <button class="action" type="button" disabled title="Fund Transfer is not enabled yet" style="opacity:.55;cursor:not-allowed">Fund Transfer (Coming Soon)</button>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="action" type="submit">Logout</button>
-                    </form>
-                </div>
-            </details>
+        <nav class="actions lb-nav-groups lb-hamburger-nav" aria-label="Member actions">
+    <details class="lb-member-menu lb-nav-dropdown lb-hamburger" id="lb-hamburger-menu">
+        <summary class="action lb-hamburger-trigger" aria-label="Open member menu" title="Member menu"><span aria-hidden="true">&#9776;</span><span class="lb-menu-caption"> Menu</span></summary>
+        <div class="lb-member-menu-panel lb-hamburger-panel" aria-label="Member navigation">
+            <!-- LEOBOT_MEMBER_MENU_FOUR_GROUPS_V1 -->
+            <div class="lb-menu-group-title" role="heading" aria-level="3">Dashboard</div>
+            <a class="action" href="{{ route('member.dashboard') }}">Dashboard Overview</a>
 
-        </nav>
+            <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
+            <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
+            <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
+            <a class="action" href="#team-overview">Team / Referral</a>
+            <a class="action" href="#direct-referrals">My Direct Referrals</a>
+            <a class="action" href="#referral-link">Referral Link</a>
+            <a class="action" href="#referral-privacy">Referral Contact Privacy</a>
+
+            <div class="lb-menu-group-title" role="heading" aria-level="3">My Finance</div>
+            <a class="action" href="#income-summary">Income Details</a>
+            <a class="action" href="#wallet-history">My Wallet Transaction History</a>
+            <a class="action" href="#financial-records">Financial Records</a>
+            <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
+            <a class="action" href="{{ route('member.withdrawals.index') }}">Withdrawals</a>
+            <button class="action" type="button" disabled title="Fund Transfer is not enabled" style="opacity:.55;cursor:not-allowed">Fund Transfer (Coming Soon)</button>
+
+            <div class="lb-menu-group-title" role="heading" aria-level="3">My Account</div>
+            <a class="action" href="#member-profile">Profile / Settings</a>
+            <a class="action" href="#account-settings">Account / Security PIN</a>
+            <a class="action" href="#member-support">Support</a>
+            <form method="POST" action="{{ route('logout') }}">@csrf<button class="action" type="submit">Logout</button></form>
+        </div>
+    </details>
+</nav>
     </header>
+@if(!empty($magicIncomeSummary))
+<section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
+  <h2>Magic Income (Settled)</h2>
+  <div class="grid">
+    <div class="card"><div class="label">Weekly</div><div class="value">{{ $magicIncomeSummary['weekly_usdt'] }} USDT</div></div>
+    <div class="card"><div class="label">Monthly</div><div class="value">{{ $magicIncomeSummary['monthly_usdt'] }} USDT</div></div>
+    <div class="card"><div class="label">Lifetime</div><div class="value">{{ $magicIncomeSummary['lifetime_usdt'] }} USDT</div></div>
+  </div>
+  <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
+</section>
+@endif
+<!-- LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
+<style>
+.lb-quick-actions{margin:18px 0 22px;padding:18px;border:1px solid #2b435e;border-radius:16px;background:#101d30}
+.lb-quick-actions h2{margin:0 0 12px;font-size:20px;color:#f1f7ff}
+.lb-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.lb-quick-link{display:flex;flex-direction:column;justify-content:center;min-height:96px;gap:6px;padding:15px;border:1px solid #35516e;border-radius:12px;background:#192b43;color:#f1f7ff;text-decoration:none;font:inherit;text-align:left}
+.lb-quick-link strong{font-size:17px}.lb-quick-link small{color:#b2c6dd}
+.lb-quick-link:not([disabled]):hover,.lb-quick-link:not([disabled]):focus-visible{border-color:#38bdf8}
+.lb-quick-link[disabled]{opacity:.6;cursor:not-allowed}
+</style>
+<section class="lb-quick-actions" aria-label="Member quick actions">
+  <h2>Quick Actions</h2>
+  <div class="lb-quick-grid">
+    <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>Deposit evidence / review</small></a>
+    <button class="lb-quick-link" type="button" disabled title="Stake route not available"><strong>Stake</strong><small>Coming soon</small></button>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>Transfer request page</small></a>
+  </div>
+</section>
+<!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
 <section class="lb-terminal" aria-label="LeoBot member financial dashboard">
   <div class="lb-terminal-head">
     <div><div class="lb-terminal-eyebrow">LEOBOT / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LeoBot account information is shown below.</p></div>
@@ -297,7 +372,8 @@ main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); b
 
     @if (session('success'))
         <p class="success" role="status">{{ session('success') }}</p>
-    @endif<section id="account-summary" aria-label="Member financial summary">
+    @endif
+<section id="account-summary" aria-label="Member financial summary">
         <h2>Your Account Summary</h2>
         <div class="grid">
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
@@ -575,6 +651,141 @@ main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); b
         if (event.key !== 'Escape') return;
         menus.forEach(function (menu) { menu.open = false; });
     });
+})();
+</script>
+<script>
+/* LEOBOT_TOP_RIGHT_HAMBURGER_V1: visibility only, no data or financial changes */
+(function () {
+    var ids = ['team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','referral-link','account-settings','member-support'];
+    var menu = document.getElementById('lb-hamburger-menu');
+    var bottom = document.querySelector('section.lb-bottom-grid');
+    ids.forEach(function(id) { var el=document.getElementById(id); if(el && el!==bottom) el.classList.add('lb-menu-detail'); });
+    if (bottom) bottom.classList.add('lb-menu-detail');
+    function reveal() {
+        ids.forEach(function(id) { var el=document.getElementById(id); if(el) el.classList.remove('lb-menu-visible'); });
+        if (bottom) bottom.classList.remove('lb-menu-visible');
+        var id = decodeURIComponent((location.hash || '').slice(1));
+        if (ids.indexOf(id) === -1) return;
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (id === 'account-settings' || id === 'member-support') {
+            if (bottom) bottom.classList.add('lb-menu-visible');
+        }
+        el.classList.add('lb-menu-visible');
+        requestAnimationFrame(function () { el.scrollIntoView({block:'start',behavior:'auto'}); });
+    }
+    document.body.classList.add('lb-menu-ready');
+    window.addEventListener('hashchange', reveal);
+    if (menu) menu.querySelectorAll('a[href^="#"]').forEach(function(link) {
+        link.addEventListener('click', function() { menu.open=false; if (location.hash === link.getAttribute('href')) reveal(); });
+    });
+    // Preserve the current panel when following paginated records.
+    document.querySelectorAll('#wallet-history a[href],#direct-referrals a[href]').forEach(function(a) {
+        try { var u=new URL(a.href,location.href); if(u.origin===location.origin && !u.hash) { u.hash = a.closest('#wallet-history') ? 'wallet-history' : 'direct-referrals'; a.href=u.toString(); } } catch(e) {}
+    });
+    reveal();
+})();
+</script>
+<!-- LEOBOT_REFERRAL_OVERVIEW_VISIBLE_V1: presentation-only card; original referral generation remains unchanged -->
+<style id="LEOBOT_REFERRAL_OVERVIEW_VISIBLE_V1">
+#leobot-referral-overview-card{display:block!important;visibility:visible!important;opacity:1!important;background:#10243b!important;border:1px solid #b68b41!important;border-radius:14px!important;padding:18px!important;margin:16px 0 22px!important;color:#e7eef8!important;box-sizing:border-box!important;max-width:100%!important}
+#leobot-referral-overview-card h2{color:#f4c66b!important;font-size:1.15rem!important;margin:0 0 10px!important}
+#leobot-referral-overview-card .lb-referral-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#leobot-referral-overview-card input{flex:1 1 280px;min-width:0;padding:12px!important;border:1px solid #52667d!important;border-radius:8px!important;background:#091729!important;color:#fff!important;box-sizing:border-box!important}
+#leobot-referral-overview-card button{padding:12px 16px!important;border:0!important;border-radius:8px!important;background:#f4c66b!important;color:#091729!important;font-weight:700!important;cursor:pointer!important}
+#leobot-referral-overview-card p{margin:9px 0 0!important;color:#cbd7e6!important}
+</style>
+<script>
+(function () {
+  function initLeoBotReferralCard() {
+    var original = document.getElementById('member-referral-link');
+    if (true) return; // Disable duplicate top referral card; keep original section.
+    var section = document.getElementById('referral-link');
+    var target = document.querySelector('main') || (section && section.parentElement);
+    if (!target) return;
+    var card = document.createElement('div');
+    card.id = 'leobot-referral-overview-card';
+    card.setAttribute('aria-label', 'Your referral link');
+    var heading = document.createElement('h2');
+    heading.textContent = 'Your Referral Link';
+    var row = document.createElement('div');
+    row.className = 'lb-referral-row';
+    var field = document.createElement('input');
+    field.type = 'text';
+    field.readOnly = true;
+    field.setAttribute('aria-label', 'Personal referral URL');
+    field.value = original.value || original.getAttribute('value') || '';
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Copy Referral Link';
+    var status = document.createElement('p');
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    if (!field.value) status.textContent = 'Referral URL is empty. Please check registration link generation.';
+    button.addEventListener('click', function () {
+      var value = original.value || field.value;
+      if (!value) { status.textContent = 'Referral URL is unavailable.'; return; }
+      field.value = value;
+      function fallback() {
+        field.focus(); field.select();
+        try { status.textContent = document.execCommand('copy') ? 'Referral link copied.' : 'Select and copy the link manually.'; }
+        catch (e) { status.textContent = 'Select and copy the link manually.'; }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(function () { status.textContent = 'Referral link copied.'; }, fallback);
+      } else { fallback(); }
+    });
+    row.appendChild(field); row.appendChild(button);
+    card.appendChild(heading); card.appendChild(row); card.appendChild(status);
+    target.insertBefore(card, target.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLeoBotReferralCard);
+  else initLeoBotReferralCard();
+})();
+</script>
+<!-- LEOBOT_REFERRAL_COPY_FINAL_V1: clipboard enhancement, no referral generation changes -->
+<script>
+(function () {
+    'use strict';
+    function setupReferralCopy() {
+        var button = document.getElementById('copy-referral-button');
+        var input = document.getElementById('member-referral-link');
+        var status = document.getElementById('referral-copy-status');
+        if (!button || !input) return;
+        // Capture phase handles the click before older bubbling handlers.
+        button.addEventListener('click', async function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var value = input.value || '';
+            if (!value) {
+                if (status) status.textContent = 'Referral link is empty.';
+                return;
+            }
+            var copied = false;
+            // Clipboard API generally requires HTTPS or localhost.
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(value);
+                    copied = true;
+                } catch (error) { /* Try legacy copy below. */ }
+            }
+            if (!copied) {
+                try {
+                    input.focus();
+                    input.select();
+                    input.setSelectionRange(0, value.length);
+                    copied = !!document.execCommand('copy');
+                } catch (error) { copied = false; }
+            }
+            if (status) status.textContent = copied ? 'Referral link copied!' : 'Link selected. Press Ctrl+C to copy.';
+            if (!copied) { input.focus(); input.select(); }
+        }, true);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupReferralCopy, { once: true });
+    } else {
+        setupReferralCopy();
+    }
 })();
 </script>
 </body>
