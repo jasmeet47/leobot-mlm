@@ -170,6 +170,15 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
 */
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
+    Route::get('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'index'])->name('admin.quick-links.index');
+    Route::post('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'update'])->middleware('throttle:10,1')->name('admin.quick-links.update');
+    Route::get('/admin/mt5/view', [\App\Http\Controllers\Mt5DisplayController::class, 'admin'])->name('admin.mt5.view');
+    Route::post('/admin/mt5/toggle', [\App\Http\Controllers\Mt5DisplayController::class, 'toggle'])->middleware('throttle:5,1')->name('admin.mt5.toggle');
+    Route::get('/admin/registration-email-otp-settings', [\App\Http\Controllers\Admin\RegistrationEmailOtpSettingsController::class, 'index'])->name('admin.registration-otp.index');
+    Route::post('/admin/registration-email-otp-settings', [\App\Http\Controllers\Admin\RegistrationEmailOtpSettingsController::class, 'update'])->middleware('throttle:5,1')->name('admin.registration-otp.update');
+    Route::post('/admin/members/{member}/soft-delete', [\App\Http\Controllers\Admin\MemberRetirementController::class, 'retire'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.soft-delete');
+    Route::post('/admin/members/{member}/restore', [\App\Http\Controllers\Admin\MemberRetirementController::class, 'restore'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.restore');
+    Route::post('/admin/members/{member}/safe-delete', [\App\Http\Controllers\Admin\MemberSafeDeleteController::class, 'destroy'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.safe-delete');
     Route::get('/admin/password-otp-settings', [\App\Http\Controllers\Admin\PasswordOtpSettingsController::class, 'index'])->name('admin.password-otp.index');
     Route::post('/admin/password-otp-settings', [\App\Http\Controllers\Admin\PasswordOtpSettingsController::class, 'update'])->middleware('throttle:5,1')->name('admin.password-otp.update');
 
@@ -306,6 +315,15 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
+    Route::get('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'index'])->name('admin.quick-links.index');
+    Route::post('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'update'])->middleware('throttle:10,1')->name('admin.quick-links.update');
+    Route::get('/admin/mt5/view', [\App\Http\Controllers\Mt5DisplayController::class, 'admin'])->name('admin.mt5.view');
+    Route::post('/admin/mt5/toggle', [\App\Http\Controllers\Mt5DisplayController::class, 'toggle'])->middleware('throttle:5,1')->name('admin.mt5.toggle');
+    Route::get('/admin/registration-email-otp-settings', [\App\Http\Controllers\Admin\RegistrationEmailOtpSettingsController::class, 'index'])->name('admin.registration-otp.index');
+    Route::post('/admin/registration-email-otp-settings', [\App\Http\Controllers\Admin\RegistrationEmailOtpSettingsController::class, 'update'])->middleware('throttle:5,1')->name('admin.registration-otp.update');
+    Route::post('/admin/members/{member}/soft-delete', [\App\Http\Controllers\Admin\MemberRetirementController::class, 'retire'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.soft-delete');
+    Route::post('/admin/members/{member}/restore', [\App\Http\Controllers\Admin\MemberRetirementController::class, 'restore'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.restore');
+    Route::post('/admin/members/{member}/safe-delete', [\App\Http\Controllers\Admin\MemberSafeDeleteController::class, 'destroy'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.safe-delete');
     Route::get('/admin/magic-matrix', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'index'])
         ->name('admin.magic.index');
     Route::post('/admin/magic-matrix/policy', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updatePolicy'])
@@ -346,4 +364,19 @@ Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMembe
         ->middleware('throttle:3,1')->name('member.withdrawals.store');
 });
 
+
+/* LumiFlowOn: authenticated read-only Magic Income Details */
+Route::middleware([
+    'auth',
+    'account.not_blocked',
+    \App\Http\Middleware\EnsureMemberPin::class
+])->get(
+    '/member/magic-income/details',
+    [\App\Http\Controllers\Member\MagicIncomeDetailsController::class, 'index']
+)->name('member.magic-income.details');
+Route::post('/registration-email-otp/send', [\App\Http\Controllers\Auth\RegistrationEmailOtpController::class, 'send'])->middleware(['web','throttle:5,1'])->name('registration-otp.send');
+Route::post('/registration-email-otp/verify', [\App\Http\Controllers\Auth\RegistrationEmailOtpController::class, 'verify'])->middleware(['web','throttle:10,1'])->name('registration-otp.verify');
+Route::middleware(['auth', 'account.not_blocked', \App\Http\Middleware\EnsureMemberPin::class])->group(function () {
+    Route::get('/member/mt5/view', [\App\Http\Controllers\Mt5DisplayController::class, 'member'])->name('member.mt5.view');
+});
 require __DIR__.'/leobot_financial_ui.php';

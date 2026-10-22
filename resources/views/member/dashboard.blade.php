@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Member Dashboard | LeoBot</title>
+    <title>Member Dashboard | LumiFlowOn</title>
     <style>
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
@@ -283,9 +283,48 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 </style>
 </head>
 <body>
+<!-- LUMIFLOWON_MT5_UI_FIXED -->
+@php
+$dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links')
+    ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')
+        ->where('enabled', true)
+        ->whereNotNull('url')
+        ->get()
+    : collect();
+@endphp
+
+@if($dashboardLinks->isNotEmpty())
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+<h2>LumiFlowOn Quick Links</h2>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+@foreach($dashboardLinks as $link)
+<a href="{{ $link->url }}" target="_blank" rel="noopener noreferrer"
+style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
+{{ ucfirst($link->platform) }}
+</a>
+@endforeach
+</div>
+</section>
+@endif
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+    <h2>MT5 Live Trading</h2>
+
+    @php
+        $mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
+    @endphp
+
+    @if($mt5Visible)
+        <p>MT5 Live Connection: Awaiting verified connection</p>
+        <p>Balance, Equity, Profit/Loss and Trades will appear only after a verified read-only feed is connected.</p>
+        <p><a href="{{ route('member.mt5.view') }}">View MT5 Status</a></p>
+    @endif
+</section>
+
+
 <main class="container">
     <header>
-        <div class="brand">LEOBOT <small>Member Dashboard</small></div>
+        <div class="brand">LumiFlowOn <small>Member Dashboard</small></div>
         <!-- LEOBOT_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
         <nav class="actions lb-nav-groups lb-hamburger-nav" aria-label="Member actions">
     <details class="lb-member-menu lb-nav-dropdown lb-hamburger" id="lb-hamburger-menu">
@@ -320,13 +359,13 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
     </details>
 </nav>
     </header>
-@if(!empty($magicIncomeSummary))
+@if(true)
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
   <h2>Magic Income (Settled)</h2>
   <div class="grid">
-    <div class="card"><div class="label">Weekly</div><div class="value">{{ $magicIncomeSummary['weekly_usdt'] }} USDT</div></div>
-    <div class="card"><div class="label">Monthly</div><div class="value">{{ $magicIncomeSummary['monthly_usdt'] }} USDT</div></div>
-    <div class="card"><div class="label">Lifetime</div><div class="value">{{ $magicIncomeSummary['lifetime_usdt'] }} USDT</div></div>
+    <div class="card"><div class="label">Weekly</div><div class="value">@if($magicIncomeSummary !== null){{ $magicIncomeSummary['weekly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
+    <div class="card"><div class="label">Monthly</div><div class="value">@if($magicIncomeSummary !== null){{ $magicIncomeSummary['monthly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
+    <div class="card"><div class="label">Lifetime</div><div class="value">@if($magicIncomeSummary !== null){{ $magicIncomeSummary['lifetime_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
   </div>
   <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
 </section>
@@ -345,15 +384,35 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
   <h2>Quick Actions</h2>
   <div class="lb-quick-grid">
     <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
-    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>Deposit evidence / review</small></a>
+    <button class="lb-quick-link" type="button" disabled title="Deposit is not enabled on this release"><strong>Deposit</strong><small>Unavailable until approved</small></button>
     <button class="lb-quick-link" type="button" disabled title="Stake route not available"><strong>Stake</strong><small>Coming soon</small></button>
-    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>Transfer request page</small></a>
+    <button class="lb-quick-link" type="button" disabled title="Fund Transfer is not enabled on this release"><strong>Fund Transfer</strong><small>Unavailable until approved</small></button>
   </div>
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
-<section class="lb-terminal" aria-label="LeoBot member financial dashboard">
+<section class="lb-quick-actions" aria-label="20-Level Magic Team Overview">
+  <h2>My 20-Level Magic Team (2×2 Matrix)</h2>
+  @if($magicTeam !== null)
+    <div class="lb-quick-grid">
+      <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
+      <div class="lb-quick-link"><strong>{{ $magicTeam['direct'] }}</strong><small>Direct Magic Members</small></div>
+      <div class="lb-quick-link"><strong>{{ $magicTeam['filled_levels'] }} / 20</strong><small>Filled Levels</small></div>
+      <div class="lb-quick-link"><strong>{{ $magicTeam['has_position'] ? 'Placed' : 'Not placed' }}</strong><small>My Matrix Position</small></div>
+    </div>
+    <details style="margin-top:14px"><summary>View 20-Level Magic Team Breakdown</summary>
+      <div class="lb-quick-grid" style="margin-top:12px">
+        @foreach($magicTeam['levels'] as $level => $count)
+          <div class="lb-quick-link"><strong>Level {{ $level }}</strong><small>{{ $count }} member(s)</small></div>
+        @endforeach
+      </div>
+    </details>
+  @else
+    <p>Magic Matrix data unavailable; no team count is being assumed.</p>
+  @endif
+</section>
+<section class="lb-terminal" aria-label="LumiFlowOn member financial dashboard">
   <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LEOBOT / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LeoBot account information is shown below.</p></div>
+    <div><div class="lb-terminal-eyebrow">LumiFlowOn / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LumiFlowOn account information is shown below.</p></div>
     <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Member account overview</div>
   </div>
   <div class="lb-terminal-grid">
@@ -361,7 +420,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
     <div class="lb-terminal-tile"><small>Financial records</small><strong class="accent">Verified records only</strong></div>
     <div class="lb-terminal-tile"><small>Trading feed</small><strong>Not connected</strong></div>
   </div>
-  <p class="lb-terminal-foot lb-terminal-note">International trading-inspired interface only. Income, wallet balances and history below are from LeoBot records, not MT5.</p>
+  <p class="lb-terminal-foot lb-terminal-note">International trading-inspired interface only. Income, wallet balances and history below are from LumiFlowOn records, not MT5.</p>
 </section>
 
 
@@ -470,7 +529,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <label class="label" for="member-referral-link">Share your personal registration link</label>
             <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; align-items:center">
                 <input id="member-referral-link" type="text" readonly
-                       value="{{ url('/join?ref=' . $member->username) }}"
+                       value="{{ 'https://lumiflowon.com/join?ref=' . rawurlencode($member->username) }}"
                        style="flex:1 1 280px; width:100%; min-width:0; padding:10px; border:1px solid #334155; border-radius:9px; background:#090d16; color:#e2e8f0; font:inherit"
                        aria-label="Your referral URL">
                 <button id="copy-referral-button" type="button" class="action">Copy Referral Link</button>
@@ -604,7 +663,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
         <div id="member-support" class="card lb-info-card">
             <span class="lb-eyebrow">MEMBER ASSISTANCE</span>
             <h2>Support</h2>
-            <p class="muted">For assistance, use the official LeoBot support contact provided by your administrator. No support channel is configured on this dashboard.</p>
+            <p class="muted">For assistance, use the official LumiFlowOn support contact provided by your administrator. No support channel is configured on this dashboard.</p>
         </div>
     </section>
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>

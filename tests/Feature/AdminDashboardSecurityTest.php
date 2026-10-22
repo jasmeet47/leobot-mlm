@@ -24,7 +24,7 @@ class AdminDashboardSecurityTest extends TestCase
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && preg_match('/^lumiflowon_http_[a-f0-9]{12}$/', (string) ($cfg['database'] ?? '')) === 1
             && empty($cfg['url']);
 
         if (!$safe) {
@@ -38,7 +38,7 @@ class AdminDashboardSecurityTest extends TestCase
         );
 
         if (!$identity
-            || $identity->database_name !== 'leobot_financial_disposable'
+            || $identity->database_name !== 'lumiflowon_http_73ca65b40af1'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'

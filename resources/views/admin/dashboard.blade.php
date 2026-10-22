@@ -233,6 +233,34 @@ main.container .card p {
 </head>
 
 <body>
+<!-- LUMIFLOWON_MT5_UI_FIXED -->
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+<h2>Dashboard Quick Links</h2>
+<p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
+<a href="{{ route('admin.quick-links.index') }}">Manage Quick Links</a>
+</section>
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+    <h2>MT5 Live Trading Display</h2>
+    <p>View-only. Trading and settlement actions are not available.</p>
+
+    @php
+        $mt5Enabled = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
+    @endphp
+
+    <p>Display: <strong>{{ $mt5Enabled ? 'ON' : 'OFF' }}</strong></p>
+    <p>Live connection: Not configured</p>
+
+    <form method="POST" action="{{ route('admin.mt5.toggle') }}">
+        @csrf
+        <input type="hidden" name="enabled" value="{{ $mt5Enabled ? 0 : 1 }}">
+        <button type="submit">{{ $mt5Enabled ? 'Turn OFF MT5 Display' : 'Turn ON MT5 Display' }}</button>
+    </form>
+
+    <p><a href="{{ route('admin.mt5.view') }}">View MT5 Status (JSON)</a></p>
+</section>
+
+
 
 <header class="header">
     <div class="header-inner">
