@@ -391,7 +391,7 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
 <section class="lb-quick-actions" aria-label="20-Level Magic Team Overview">
-  <h2>My 20-Level Magic Team (2├ù2 Matrix)</h2>
+  <h2>My 20-Level Magic Team (2×2 Matrix)</h2>
   @if(isset($magicTeam) && is_array($magicTeam))
     <div class="lb-quick-grid">
       <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
