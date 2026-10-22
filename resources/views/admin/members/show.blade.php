@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Member Details - LeoBot Admin</title>
+    <title>Member Details - LumiFlowOn Admin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -106,14 +106,14 @@
             @if (!$member->is_blocked)
                 <form method="POST" action="{{ route('admin.members.block', $member->id) }}">
                     @csrf
-                    <label for="block-reason">Reason for block (5–500 characters)</label>
+                    <label for="block-reason">Reason for block (5ΓÇô500 characters)</label>
                     <textarea id="block-reason" name="reason" required minlength="5" maxlength="500" rows="3" style="display:block;width:100%;box-sizing:border-box;">{{ old('reason') }}</textarea>
                     <button type="submit">Block Member ID</button>
                 </form>
             @else
                 <form method="POST" action="{{ route('admin.members.unblock', $member->id) }}">
                     @csrf
-                    <label for="unblock-reason">Reason for unblock (5–500 characters)</label>
+                    <label for="unblock-reason">Reason for unblock (5ΓÇô500 characters)</label>
                     <textarea id="unblock-reason" name="reason" required minlength="5" maxlength="500" rows="3" style="display:block;width:100%;box-sizing:border-box;">{{ old('reason') }}</textarea>
                     <button type="submit">Unblock Member ID</button>
                 </form>
@@ -127,7 +127,7 @@
                 <strong>{{ ucfirst($audit->action) }}</strong>
                 by {{ $audit->admin_username }}
                 at {{ $audit->created_at }}
-                <div>{{ $audit->previous_status }} → {{ $audit->new_status }}</div>
+                <div>{{ $audit->previous_status }} ΓåÆ {{ $audit->new_status }}</div>
                 <div>Reason: {{ $audit->reason }}</div>
             </div>
         @empty

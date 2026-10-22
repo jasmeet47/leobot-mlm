@@ -391,7 +391,7 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
 <section class="lb-quick-actions" aria-label="20-Level Magic Team Overview">
-  <h2>My 20-Level Magic Team (2×2 Matrix)</h2>
+  <h2>My 20-Level Magic Team (2├ù2 Matrix)</h2>
   @if($magicTeam !== null)
     <div class="lb-quick-grid">
       <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
@@ -480,7 +480,7 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
         <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>
         <h2>Financial Records</h2>
         <p class="muted">Your available balance and income reserves are shown above. Completed wallet entries appear in the transaction history below; held and reserved amounts are not paid income.</p>
-        <a class="action lb-inline-link" href="#wallet-history">View Wallet Transaction History →</a>
+        <a class="action lb-inline-link" href="#wallet-history">View Wallet Transaction History ΓåÆ</a>
     </section>
 
     <section id="wallet-history" aria-label="Member wallet transaction history">
@@ -658,7 +658,7 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
             <span class="lb-eyebrow">SECURITY CENTER</span>
             <h2>Account</h2>
             <p class="muted">Manage your security PIN and view your account status. Existing login and account controls remain unchanged.</p>
-            <a class="action lb-inline-link" href="{{ route('security-pin.form') }}">Security PIN Settings →</a>
+            <a class="action lb-inline-link" href="{{ route('security-pin.form') }}">Security PIN Settings ΓåÆ</a>
         </div>
         <div id="member-support" class="card lb-info-card">
             <span class="lb-eyebrow">MEMBER ASSISTANCE</span>

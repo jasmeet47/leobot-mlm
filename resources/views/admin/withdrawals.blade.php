@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LeoBot — Withdrawal Review</title></head>
-<body style="font:15px system-ui,sans-serif;max-width:940px;margin:auto;padding:2rem"><h1>Withdrawal Review</h1><p><a href="{{route('admin.dashboard')}}">← Admin</a></p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn ΓÇö Withdrawal Review</title></head>
+<body style="font:15px system-ui,sans-serif;max-width:940px;margin:auto;padding:2rem"><h1>Withdrawal Review</h1><p><a href="{{route('admin.dashboard')}}">ΓåÉ Admin</a></p>
 <p><strong>External USDT payment is NOT executed by this panel.</strong> Approval only sets status <code>approved_awaiting_payment</code>.</p>
 @if(session('status'))<p>{{session('status')}}</p>@endif
 @foreach($errors->all() as $error)<p style="color:#a11">{{$error}}</p>@endforeach

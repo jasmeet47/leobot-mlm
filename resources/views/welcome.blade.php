@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="LeoBot member and administration portal.">
-    <title>LeoBot | Member Portal</title>
+    <title>LumiFlowOn | Member Portal</title>
     <style>
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
@@ -85,15 +85,15 @@
 <body>
     <div class="wrap">
         <header>
-            <div class="brand">LEOBOT</div>
+            <div class="brand">LumiFlowOn</div>
             <a class="toplink" href="{{ route('register.form') }}">Member Access</a>
         </header>
 
         <main>
-            <div class="eyebrow">LeoBot Member Portal</div>
+            <div class="eyebrow">LumiFlowOn Member Portal</div>
             <h1>One place for your account, team and dashboard.</h1>
             <p class="lead">
-                Access your LeoBot account, view available team information,
+                Access your LumiFlowOn account, view available team information,
                 and manage your profile through protected member services.
             </p>
 
@@ -130,7 +130,7 @@
             </div>
         </main>
 
-        <footer>LeoBot &mdash; Secure member access portal.</footer>
+        <footer>LumiFlowOn &mdash; Secure member access portal.</footer>
     </div>
 </body>
 </html>

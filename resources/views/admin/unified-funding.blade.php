@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LeoBot | Unified Funding Audit</title>
+<title>LumiFlowOn | Unified Funding Audit</title>
 <style>
 body{font:16px Arial,sans-serif;max-width:1100px;margin:30px auto;padding:0 18px;color:#172b4d;background:#f5f7fb}
 main,section{background:white;border:1px solid #dce2ed;border-radius:10px;padding:22px;margin:18px 0}
@@ -13,7 +13,7 @@ button{padding:11px 18px}a{color:#185abc}.error{color:#b00020}label{display:bloc
 </head>
 <body><main>
 <a href="{{ route('admin.dashboard') }}">&larr; Admin Dashboard</a>
-<h1>Unified Trading Profit — Audit &amp; Reserves</h1>
+<h1>Unified Trading Profit ΓÇö Audit &amp; Reserves</h1>
 <p class="notice"><strong>Production HOLD.</strong> Member activation, withdrawals, payouts and generation distribution are not enabled by this page. Funding entry is disabled unless separately approved. Source-of-funds verification must be independently completed before approval.</p>
 <p><strong>Configured rates:</strong> Self {{ $settings->self_profit_percent ?? 'N/A' }}%, Generation {{ $generation->trading_profit_pool_percent ?? 'N/A' }}%, Magic {{ $magic->trading_profit_pool_percent ?? 'N/A' }}%.</p>
 <p><strong>Combined funding switch:</strong> {{ in_array(strtolower((string) ($settings->combined_funding_enabled ?? '')), ['1','t','true','yes','on'], true) ? 'ON' : 'OFF' }}. <strong>Admin entry gate:</strong> {{ $entryEnabled ? 'Approved for this environment' : 'OFF' }}.</p>
@@ -29,7 +29,7 @@ button{padding:11px 18px}a{color:#185abc}.error{color:#b00020}label{display:bloc
 <input id="profit_reference" name="profit_reference" maxlength="100" required value="{{ old('profit_reference') }}" autocomplete="off">
 <label for="company_profit">Company profit (USDT)</label>
 <input id="company_profit" name="company_profit" required value="{{ old('company_profit') }}" placeholder="1000.00000000" autocomplete="off">
-<label for="member_breakdown">Member profit breakdown — one user_id,amount per line</label>
+<label for="member_breakdown">Member profit breakdown ΓÇö one user_id,amount per line</label>
 <textarea id="member_breakdown" name="member_breakdown" rows="8" maxlength="200000" required placeholder="101,600.00000000&#10;102,400.00000000">{{ old('member_breakdown') }}</textarea>
 <label class="checkbox"><input type="checkbox" name="source_verified" value="1" required style="display:inline;width:auto"> I confirm independent source verification and that these funds are not previously allocated.</label>
 <button type="submit">Record internal reserves (NO PAYOUT)</button>

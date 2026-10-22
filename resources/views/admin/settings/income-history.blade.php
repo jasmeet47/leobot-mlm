@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Income Settings Audit History - LeoBot</title>
+    <title>Income Settings Audit History - LumiFlowOn</title>
     <style>
         * { box-sizing: border-box; }
         body {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Direct Referrals - LeoBot Admin</title>
+    <title>Direct Referrals - LumiFlowOn Admin</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; color: #222; margin: 0; padding: 24px; }
         .container { max-width: 1100px; margin: 0 auto; }

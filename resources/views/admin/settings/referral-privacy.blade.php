@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Referral Privacy Settings | LeoBot Admin</title>
+    <title>Referral Privacy Settings | LumiFlowOn Admin</title>
     <style>
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
@@ -58,7 +58,7 @@
 </head>
 <body>
 <main class="container">
-    <h1>LeoBot - Referral Privacy Settings</h1>
+    <h1>LumiFlowOn - Referral Privacy Settings</h1>
     <p class="notice">
         Control which details members can see about their
         direct referrals (Level 1 only).

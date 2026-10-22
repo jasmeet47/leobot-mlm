@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeoBot MLM - Admin Dashboard</title>
+    <title>LumiFlowOn - Admin Dashboard</title>
 
     <style>
         * {
@@ -265,7 +265,7 @@ main.container .card p {
 <header class="header">
     <div class="header-inner">
         <div>
-            <div class="brand">LEOBOT MLM</div>
+            <div class="brand">LumiFlowOn</div>
             <div class="subtitle">Secure Administration Panel</div>
         </div>
 
@@ -281,15 +281,15 @@ main.container .card p {
 <main class="container">
 <section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
   <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LEOBOT / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LeoBot records.</p></div>
+    <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>
     <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Protected admin session</div>
   </div>
   <div class="lb-terminal-grid">
-    <div class="lb-terminal-tile"><small>Platform</small><strong>LeoBot Control</strong></div>
+    <div class="lb-terminal-tile"><small>Platform</small><strong>LumiFlowOn Control</strong></div>
     <div class="lb-terminal-tile"><small>Financial operations</small><strong class="accent">Approval gated</strong></div>
     <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
   </div>
-  <p class="lb-terminal-foot lb-terminal-note">UI theme only Â· No MT5 feed Â· No simulated trading values Â· Existing financial permissions remain unchanged.</p>
+  <p class="lb-terminal-foot lb-terminal-note">UI theme only ├é┬╖ No MT5 feed ├é┬╖ No simulated trading values ├é┬╖ Existing financial permissions remain unchanged.</p>
 </section>
 <section class="welcome">
         <h1>Admin Dashboard</h1>
@@ -300,7 +300,7 @@ main.container .card p {
         </p>
 
         <p>
-            Manage LeoBot settings and review audit history.
+            Manage LumiFlowOn settings and review audit history.
         </p>
         <div class="card">
             <h2>Magic Matrix</h2>
@@ -416,7 +416,7 @@ main.container .card p {
 </main>
 
 <footer class="footer">
-    LeoBot MLM - Admin Dashboard
+    LumiFlowOn - Admin Dashboard
 </footer>
 
 </body>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>LeoBot - Verify USDT Wallet</title>
+<title>LumiFlowOn - Verify USDT Wallet</title>
 <style>
 body{font:15px system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:1rem;background:#f8fafc;color:#172033}
 section{background:white;padding:1.5rem;border-radius:12px;margin:1rem 0;border:1px solid #e2e8f0}

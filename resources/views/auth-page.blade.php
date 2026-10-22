@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>LEOBOT MLM</title>
+    <title>LumiFlowOn</title>
 
     <style>
 
@@ -298,7 +298,7 @@
 
     <div class="header">
 
-        <h1>LEOBOT MLM</h1>
+        <h1>LumiFlowOn</h1>
 
         <p>
             Secure Login & Registration
@@ -615,7 +615,7 @@
 
     <div class="footer">
 
-        © {{ date('Y') }} LEOBOT MLM
+        ┬⌐ {{ date('Y') }} LumiFlowOn
 
     </div>
 

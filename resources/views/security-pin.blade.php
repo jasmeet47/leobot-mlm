@@ -8,7 +8,7 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Security PIN | LeoBot</title>
+    <title>Security PIN | LumiFlowOn</title>
 
     <style>
         * {
@@ -155,7 +155,7 @@
     <main class="card">
 
         <div class="brand">
-            LEOBOT
+            LumiFlowOn
         </div>
 
         <h1>Security PIN</h1>
@@ -266,7 +266,7 @@
         @endauth
 
         <a href="{{ url('/join') }}" class="back-link">
-            Back to LeoBot
+            Back to LumiFlowOn
         </a>
 
     </main>

@@ -1,0 +1,14 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
+body, button, input, select, textarea {
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+h1, h2, h3, .lumiflowon-brand {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    letter-spacing: 0.015em;
+}
+
+.lumiflowon-brand {
+    font-weight: 800;
+}

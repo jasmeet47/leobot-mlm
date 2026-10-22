@@ -6,7 +6,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Income Settings - LeoBot Admin</title>
+    <title>Income Settings - LumiFlowOn Admin</title>
 
     <style>
         * {
@@ -177,7 +177,7 @@
 
     </div>
 
-    <h1>LeoBot Income Settings</h1>
+    <h1>LumiFlowOn Income Settings</h1>
 
     <p class="subtitle">
         Admin Control Panel - ROI, Magic Income,
@@ -516,7 +516,7 @@
 
         <!-- VERIFIED TRADING PROFIT SELF SHARE -->
         <div class="card">
-            <h2>SELF Trading Profit Share — Default 67%</h2>
+            <h2>SELF Trading Profit Share ΓÇö Default 67%</h2>
             <div class="field">
                 <label for="self_profit_percent">SELF Profit Percentage (%)</label>
                 <input type="number"
@@ -531,7 +531,7 @@
                 </p>
                 <p class="help">
                     Unified company-profit funding:
-                    <strong>{{ $safetySwitchStates['combined'] ? 'ENABLED (review required)' : 'OFF — testing only' }}</strong>.
+                    <strong>{{ $safetySwitchStates['combined'] ? 'ENABLED (review required)' : 'OFF ΓÇö testing only' }}</strong>.
                     This screen does NOT enable it.
                 </p>
             </div>

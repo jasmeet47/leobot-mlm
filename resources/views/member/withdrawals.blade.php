@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LeoBot — My Withdrawals</title></head>
-<body style="font:15px system-ui,sans-serif;max-width:760px;margin:auto;padding:2rem"><h1>Withdrawal Requests</h1><p><a href="{{route('member.dashboard')}}">← Member Dashboard</a></p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn ΓÇö My Withdrawals</title></head>
+<body style="font:15px system-ui,sans-serif;max-width:760px;margin:auto;padding:2rem"><h1>Withdrawal Requests</h1><p><a href="{{route('member.dashboard')}}">ΓåÉ Member Dashboard</a></p>
 <p>Available earnings wallet only. Requests hold the gross amount pending admin approval; no external transfer is performed automatically.</p>
 @if(session('status'))<p>{{session('status')}}</p>@endif
 @foreach($errors->all() as $error)<p style="color:#a11">{{$error}}</p>@endforeach

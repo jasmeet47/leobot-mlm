@@ -1,7 +1,7 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LeoBot — Magic Matrix</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn ΓÇö Magic Matrix</title>
 <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;color:#1b2835}section{border:1px solid #d1d5db;border-radius:8px;padding:18px;margin:16px 0}label{display:block;margin:9px 0}input,select{padding:8px;max-width:220px}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:7px;text-align:left}.err{color:#991b1b}button{padding:9px 15px}small{color:#576172}</style></head><body>
-<h1>Magic Matrix — 20 Levels</h1>
-<p><a href="{{ route('admin.dashboard') }}">← Admin dashboard</a></p>
+<h1>Magic Matrix ΓÇö 20 Levels</h1>
+<p><a href="{{ route('admin.dashboard') }}">ΓåÉ Admin dashboard</a></p>
 <p><strong>Default financial switches remain OFF.</strong> 20-level percentage preset is only a proposal and requires explicit administrator review.</p>
 @if(session('status'))<p role="status">{{session('status')}}</p>@endif
 @if($errors->any())<div class="err">@foreach($errors->all() as $error)<p>{{$error}}</p>@endforeach</div>@endif
@@ -10,7 +10,7 @@
 <p>Matrix Enrollment: {{($settings?->enrollment_enabled??false)?'ON':'OFF'}}; Re-Topup: {{($settings?->topup_enabled??false)?'ON':'OFF'}}; Settlement: {{($settings?->settlement_enabled??false)?'ON':'OFF'}}</p>
 <form method="post" action="{{route('admin.magic.policy')}}">@csrf
 <label>Minimum qualifying investment (USDT) <input name="minimum_usdt" value="{{old('minimum_usdt',$settings?->minimum_tier_usdt??'50')}}" required></label>
-<label>Magic earning cap <select name="earning_multiplier">@foreach([3,4,5] as $m)<option value="{{$m}}" @selected((int)($settings?->earning_cap_multiplier??3)===$m)>{{$m}}×</option>@endforeach</select></label>
+<label>Magic earning cap <select name="earning_multiplier">@foreach([3,4,5] as $m)<option value="{{$m}}" @selected((int)($settings?->earning_cap_multiplier??3)===$m)>{{$m}}├ù</option>@endforeach</select></label>
 <label>Distribution frequency (manual only until scheduler reviewed) <select name="frequency">@foreach(['manual','daily','weekly','monthly'] as $f)<option value="{{$f}}" @selected(($settings?->frequency??'manual')===$f)>{{$f}}</option>@endforeach</select></label>
 <button @disabled(!$canEdit)>Save policy</button></form>
 <form method="post" action="{{route('admin.magic.switches')}}">@csrf
@@ -20,7 +20,7 @@
 <form method="post" action="{{route('admin.magic.rates')}}">@csrf
 <table><thead><tr><th>Level</th><th>Percentage of source ID's Magic allocation</th></tr></thead><tbody>
 @foreach($rates as $rate)<tr><td>{{(int)$rate->level}}</td><td><input type="text" name="rates[{{(int)$rate->level}}]" value="{{old('rates.'.(int)$rate->level,(string)$rate->pool_percent)}}" required></td></tr>@endforeach</tbody></table>
-<button type="button" onclick="document.querySelectorAll('input[name^=\"rates[\"]').forEach(x=>x.value='5.000000000')" @disabled(!$canEditRates)>Fill proposed 5% × 20</button>
+<button type="button" onclick="document.querySelectorAll('input[name^=\"rates[\"]').forEach(x=>x.value='5.000000000')" @disabled(!$canEditRates)>Fill proposed 5% ├ù 20</button>
 <button @disabled(!$canEditRates)>Save audited rate table</button></form></section>
 <section><h2>Manual verified settlement (one source ID)</h2>
 <p>No automatic payout is triggered by funding. Requires verified existing funding, live eligibility, caps, 100% rate table and separate settlement approval.</p>
@@ -29,5 +29,5 @@
 <label>Profit source member ID <input type="number" min="1" name="source_user_id" required></label>
 <button @disabled(!$canSettle)>Settle checked source</button></form></section>
 <section><h2>Recent Magic Entitlements</h2><table><tr><th>Funding</th><th>Level</th><th>Beneficiary</th><th>Paid</th><th>Held</th><th>Status</th></tr>
-@foreach($recent as $entry)<tr><td>{{$entry->funding_id}}</td><td>{{$entry->level}}</td><td>{{$entry->beneficiary_user_id??'—'}}</td><td>{{$entry->paid_amount}}</td><td>{{$entry->held_amount}}</td><td>{{$entry->status}}</td></tr>@endforeach</table></section>
+@foreach($recent as $entry)<tr><td>{{$entry->funding_id}}</td><td>{{$entry->level}}</td><td>{{$entry->beneficiary_user_id??'ΓÇö'}}</td><td>{{$entry->paid_amount}}</td><td>{{$entry->held_amount}}</td><td>{{$entry->status}}</td></tr>@endforeach</table></section>
 </body></html>

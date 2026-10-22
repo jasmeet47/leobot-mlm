@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deposits &amp; Transfers | LeoBot</title>
+<title>Deposits &amp; Transfers | LumiFlowOn</title>
 <style>
 :root{color-scheme:dark;--bg:#080f1e;--panel:#101e32;--tile:#172a43;--border:#30445f;--text:#edf4ff;--muted:#a6bad0;--gold:#f2bf61;--green:#4ddbb1}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173455 0%,#0a1526 45%,#070d18 100%) fixed;color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}
@@ -10,7 +10,7 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 </style>
 </head>
 <body><main>
-<header class="top"><div><div class="brand">LEOBOT</div><div class="eyebrow">Member Portal / Financial Requests</div></div><a class="back" href="{{ url('/member/dashboard') }}">← Member Dashboard</a></header>
+<header class="top"><div><div class="brand">LumiFlowOn</div><div class="eyebrow">Member Portal / Financial Requests</div></div><a class="back" href="{{ url('/member/dashboard') }}">ΓåÉ Member Dashboard</a></header>
 <h1>Deposits &amp; Transfers</h1>
 <p class="lead">Submit deposit evidence for independent review and manage member-to-member transfers when authorized.</p>
 <div class="notice"><strong>Safety:</strong> External USDT payments require independent admin verification. Do not send funds without confirming the official destination. A submitted request is not an approved deposit.</div>
@@ -29,7 +29,7 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 <label class="field"><span>Amount (USDT)</span><input type="number" inputmode="decimal" step="0.00000001" min="0.00000001" name="amount" value="{{ old('amount') }}" placeholder="Transfer amount" required></label>
 <input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Request transfer</button></form></section>
 </div>
-<section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on LeoBot database records.</p>
+<section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on LumiFlowOn database records.</p>
 @if($deposits->isEmpty())<div class="empty">No deposit requests yet.</div>@else<div class="table-wrap"><table><thead><tr><th>ID</th><th>Amount (USDT)</th><th>Network</th><th>Status</th></tr></thead><tbody>@foreach($deposits as $d)<tr><td>{{ $d->id }}</td><td>{{ $d->amount }}</td><td>{{ $d->network }}</td><td><span class="tag">{{ ucfirst($d->status) }}</span></td></tr>@endforeach</tbody></table></div>@endif
-</section><p class="footer">LeoBot Demo · Financial transactions remain subject to backend controls and administrator approval.</p>
+</section><p class="footer">LumiFlowOn Demo ┬╖ Financial transactions remain subject to backend controls and administrator approval.</p>
 </main></body></html>

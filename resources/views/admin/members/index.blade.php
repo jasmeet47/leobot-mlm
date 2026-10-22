@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Member Management - LeoBot</title>
+    <title>Member Management - LumiFlowOn</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 30px; background: #f5f6fa; color: #222; }
         .container { max-width: 1100px; margin: auto; }
@@ -25,7 +25,7 @@
 <body>
 <div class="container">
     <div class="panel">
-        <p><a href="{{ route('admin.dashboard') }}">← Back to Admin Dashboard</a></p>
+        <p><a href="{{ route('admin.dashboard') }}">ΓåÉ Back to Admin Dashboard</a></p>
 
         <h1>Member Management</h1>
         <p>Read-only member directory</p>
@@ -59,13 +59,13 @@
                         <tr>
                             <td>{{ $member->username }}</td>
                             <td>{{ $member->name }}</td>
-                            <td>{{ $member->sponsor?->username ?? $member->sponsor_id ?? '—' }}</td>
+                            <td>{{ $member->sponsor?->username ?? $member->sponsor_id ?? 'ΓÇö' }}</td>
                             <td>
                                 <span class="{{ $member->status === 'active' ? 'active' : 'inactive' }}">
                                     {{ $member->is_blocked ? 'Blocked (' . ucfirst($member->status) . ')' : ucfirst($member->status) }}
                                 </span>
                             </td>
-                            <td>{{ $member->created_at?->format('d M Y') ?? '—' }}</td>
+                            <td>{{ $member->created_at?->format('d M Y') ?? 'ΓÇö' }}</td>
                             <td>
                                 <a href="{{ route('admin.members.show', $member->id) }}">
                                     View Details
