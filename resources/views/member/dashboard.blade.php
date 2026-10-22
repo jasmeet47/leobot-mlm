@@ -363,9 +363,9 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
   <h2>Magic Income (Settled)</h2>
   <div class="grid">
-    <div class="card"><div class="label">Weekly</div><div class="value">@if($magicIncomeSummary !== null){{ $magicIncomeSummary['weekly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
-    <div class="card"><div class="label">Monthly</div><div class="value">@if($magicIncomeSummary !== null){{ $magicIncomeSummary['monthly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
-    <div class="card"><div class="label">Lifetime</div><div class="value">@if($magicIncomeSummary !== null){{ $magicIncomeSummary['lifetime_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
+    <div class="card"><div class="label">Weekly</div><div class="value">@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary)){{ $magicIncomeSummary['weekly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
+    <div class="card"><div class="label">Monthly</div><div class="value">@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary)){{ $magicIncomeSummary['monthly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
+    <div class="card"><div class="label">Lifetime</div><div class="value">@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary)){{ $magicIncomeSummary['lifetime_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
   </div>
   <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
 </section>
