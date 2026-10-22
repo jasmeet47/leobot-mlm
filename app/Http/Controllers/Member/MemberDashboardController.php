@@ -268,6 +268,7 @@ class MemberDashboardController extends Controller
             ->paginate(10, ['*'], 'wallet_page');
         return view('member.dashboard', [
             'magicIncomeSummary' => null,
+            'magicTeam' => null,
             'member' => $member,
             'teamSummary' => $teamSummary,
             'levelRows' => $levelRows,
