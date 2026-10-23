@@ -283,43 +283,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 </style>
 </head>
 <body>
-<!-- LUMIFLOWON_MT5_UI_FIXED -->
-@php
-$dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links')
-    ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')
-        ->where('enabled', true)
-        ->whereNotNull('url')
-        ->get()
-    : collect();
-@endphp
 
-@if($dashboardLinks->isNotEmpty())
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-<h2>LumiFlowOn Quick Links</h2>
-<div style="display:flex;gap:12px;flex-wrap:wrap">
-@foreach($dashboardLinks as $link)
-<a href="{{ $link->url }}" target="_blank" rel="noopener noreferrer"
-style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
-{{ ucfirst($link->platform) }}
-</a>
-@endforeach
-</div>
-</section>
-@endif
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-    <h2>MT5 Live Trading</h2>
-
-    @php
-        $mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
-            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
-    @endphp
-
-    @if($mt5Visible)
-        <p>MT5 Live Connection: Awaiting verified connection</p>
-        <p>Balance, Equity, Profit/Loss and Trades will appear only after a verified read-only feed is connected.</p>
-        <p><a href="{{ route('member.mt5.view') }}">View MT5 Status</a></p>
-    @endif
-</section>
 
 
 <main class="container">
@@ -337,6 +301,7 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
             <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
+            <a class="action" href="#magic-team">My 20-Level Magic Team (2×2 Matrix)</a>
             <a class="action" href="#team-overview">Team / Referral</a>
             <a class="action" href="#direct-referrals">My Direct Referrals</a>
             <a class="action" href="#referral-link">Referral Link</a>
@@ -348,7 +313,7 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
             <a class="action" href="#financial-records">Financial Records</a>
             <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
             <a class="action" href="{{ route('member.withdrawals.index') }}">Withdrawals</a>
-            <button class="action" type="button" disabled title="Fund Transfer is not enabled" style="opacity:.55;cursor:not-allowed">Fund Transfer (Coming Soon)</button>
+            <a class="action" href="{{ route('member.deposit-transfer.index') }}">Deposit / Fund Transfer (status &amp; requests)</a>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Account</div>
             <a class="action" href="#member-profile">Profile / Settings</a>
@@ -359,6 +324,36 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
     </details>
 </nav>
     </header>
+<!-- LUMIFLOWON_MT5_UI_FIXED -->
+@php
+$dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links')
+    ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')
+        ->where('enabled', true)
+        ->whereNotNull('url')
+        ->get()
+    : collect();
+@endphp
+
+<section class="lb-quick-links" style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+<h2>LumiFlowOn Quick Links</h2>
+<p style="color:#9fb1c9">Admin-controlled official links. Unconfigured links are not clickable.</p>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+@php
+  $configuredLink = $dashboardLinks->firstWhere('platform', $platform);
+  $linkUrl = trim((string) ($configuredLink->url ?? ''));
+  $linkValid = filter_var($linkUrl, FILTER_VALIDATE_URL) && strtolower((string) parse_url($linkUrl, PHP_URL_SCHEME)) === 'https';
+@endphp
+@if($configuredLink && $linkValid)
+<a href="{{ $linkUrl }}" target="_blank" rel="noopener noreferrer" style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">{{ ucfirst($platform) }}</a>
+@else
+<span style="padding:12px 18px;background:#263449;color:#b8c4d5;border-radius:8px" title="Admin must configure and enable a valid HTTPS URL">{{ ucfirst($platform) }} · Not configured</span>
+@endif
+@endforeach
+</div>
+</section>
+
+
 @if(true)
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
   <h2>Magic Income (Settled)</h2>
@@ -384,13 +379,13 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
   <h2>Quick Actions</h2>
   <div class="lb-quick-grid">
     <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
-    <button class="lb-quick-link" type="button" disabled title="Deposit is not enabled on this release"><strong>Deposit</strong><small>Unavailable until approved</small></button>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>View deposit request page; financial approval required</small></a>
     <button class="lb-quick-link" type="button" disabled title="Stake route not available"><strong>Stake</strong><small>Coming soon</small></button>
-    <button class="lb-quick-link" type="button" disabled title="Fund Transfer is not enabled on this release"><strong>Fund Transfer</strong><small>Unavailable until approved</small></button>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>View transfer page; financial approval required</small></a>
   </div>
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
-<section class="lb-quick-actions" aria-label="20-Level Magic Team Overview">
+<section id="magic-team" class="lb-quick-actions" aria-label="20-Level Magic Team Overview">
   <h2>My 20-Level Magic Team (2×2 Matrix)</h2>
   @if(isset($magicTeam) && is_array($magicTeam))
     <div class="lb-quick-grid">
@@ -667,6 +662,22 @@ style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">
         </div>
     </section>
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
+
+<!-- MT5 display intentionally last on Member Dashboard; read-only and admin-controlled -->
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+    <h2>MT5 Live Trading</h2>
+
+    @php
+        $mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
+    @endphp
+
+    @if($mt5Visible)
+        <p>MT5 Live Connection: Awaiting verified connection</p>
+        <p>Balance, Equity, Profit/Loss and Trades will appear only after a verified read-only feed is connected.</p>
+        <p><a href="{{ route('member.mt5.view') }}">View MT5 Status</a></p>
+    @endif
+</section>
 </main>
 <script>
 (function () {

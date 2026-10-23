@@ -233,10 +233,37 @@ main.container .card p {
 </head>
 
 <body>
+
+
+
+
+<header class="header">
+    <div class="header-inner">
+        <div>
+            <div class="brand">LumiFlowOn</div>
+            <div class="subtitle">Secure Administration Panel</div>
+        </div>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button class="logout" type="submit">
+                Logout
+            </button>
+        </form>
+    </div>
+</header>
+
+<main class="container">
 <!-- LUMIFLOWON_MT5_UI_FIXED -->
 <section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
 <h2>Dashboard Quick Links</h2>
 <p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+<span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
+@endforeach
+</div>
+<p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>
 <a href="{{ route('admin.quick-links.index') }}">Manage Quick Links</a>
 </section>
 <section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
@@ -260,25 +287,6 @@ main.container .card p {
     <p><a href="{{ route('admin.mt5.view') }}">View MT5 Status (JSON)</a></p>
 </section>
 
-
-
-<header class="header">
-    <div class="header-inner">
-        <div>
-            <div class="brand">LumiFlowOn</div>
-            <div class="subtitle">Secure Administration Panel</div>
-        </div>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button class="logout" type="submit">
-                Logout
-            </button>
-        </form>
-    </div>
-</header>
-
-<main class="container">
 <section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
   <div class="lb-terminal-head">
     <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>

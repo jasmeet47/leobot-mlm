@@ -32,7 +32,7 @@ class LoginController extends Controller
         }
 
         // Only known member statuses can receive a token.
-        if ($user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
+        if ($user->deleted_at !== null || $user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Account is not available for login.',
