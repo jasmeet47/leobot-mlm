@@ -301,7 +301,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
             <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
-            @if(isset($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
+            @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
             <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
             @endif
             <a class="action" href="#team-overview">Team / Referral</a>
@@ -387,7 +387,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   </div>
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
-@if(isset($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
+@if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
   <h2>My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</h2>
   @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
