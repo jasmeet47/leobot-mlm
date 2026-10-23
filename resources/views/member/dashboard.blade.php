@@ -302,7 +302,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
             @if(isset($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-            <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My 20-Level Magic Team (2×2 Matrix)</a>
+            <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
             @endif
             <a class="action" href="#team-overview">Team / Referral</a>
             <a class="action" href="#direct-referrals">My Direct Referrals</a>
@@ -388,8 +388,8 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
 @if(isset($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-<section id="magic-team" class="lb-quick-actions" aria-label="20-Level Magic Team Overview">
-  <h2>My 20-Level Magic Team (2×2 Matrix)</h2>
+<section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
+  <h2>My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</h2>
   @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
     <div class="lb-quick-grid">
       <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
@@ -397,7 +397,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
       <div class="lb-quick-link"><strong>{{ $magicTeam['filled_levels'] }} / {{ $magicTeam['visible_levels'] }}</strong><small>Filled Levels</small></div>
       <div class="lb-quick-link"><strong>{{ $magicTeam['has_position'] ? 'Placed' : 'Not placed' }}</strong><small>My Matrix Position</small></div>
     </div>
-    <details style="margin-top:14px"><summary>View 20-Level Magic Team Breakdown</summary>
+    <details style="margin-top:14px"><summary>View {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Breakdown</summary>
       <div class="lb-quick-grid" style="margin-top:12px">
         @foreach($magicTeam['levels'] as $level => $count)
           <div class="lb-quick-link"><strong>Level {{ $level }}</strong><small>{{ $count }} member(s)</small></div>
