@@ -301,7 +301,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
             <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
-            <a class="action" href="#magic-team">My 20-Level Magic Team (2×2 Matrix)</a>
+            <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My 20-Level Magic Team (2×2 Matrix)</a>
             <a class="action" href="#team-overview">Team / Referral</a>
             <a class="action" href="#direct-referrals">My Direct Referrals</a>
             <a class="action" href="#referral-link">Referral Link</a>
@@ -849,7 +849,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                     copied = !!document.execCommand('copy');
                 } catch (error) { copied = false; }
             }
-            if (status) status.textContent = copied ? 'Your referral link copied successfully!' : 'Link selected. Press Ctrl+C to copy.';
+            if (status) { status.textContent = copied ? 'Your referral link copied successfully!' : 'Link selected. Press Ctrl+C to copy.'; status.style.setProperty('color', copied ? '#22c55e' : '#fbbf24', 'important'); status.style.fontWeight = copied ? '700' : '400'; }
             if (!copied) { input.focus(); input.select(); }
         }, true);
     }
