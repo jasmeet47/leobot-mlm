@@ -636,7 +636,9 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                 <thead><tr><th scope="col">Level</th><th scope="col">Active</th><th scope="col">Inactive</th><th scope="col">Team Business (USDT)</th></tr></thead>
                 <tbody>
                 @for ($level = 1; $level <= 51; $level++)
-                    @php($entry = $levelRows->get($level))
+                    @php
+    $entry = $levelRows->get($level);
+@endphp
                     <tr>
                         <td>Level {{ $level }}</td>
                         <td>{{ (int) ($entry->active_count ?? 0) }}</td>
