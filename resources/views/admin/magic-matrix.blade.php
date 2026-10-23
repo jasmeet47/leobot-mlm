@@ -5,6 +5,18 @@
 <p><strong>Default financial switches remain OFF.</strong> 20-level percentage preset is only a proposal and requires explicit administrator review.</p>
 @if(session('status'))<p role="status">{{session('status')}}</p>@endif
 @if($errors->any())<div class="err">@foreach($errors->all() as $error)<p>{{$error}}</p>@endforeach</div>@endif
+<section aria-label="Magic Team display levels">
+<h2>Member Magic Team — Visible Levels</h2>
+<p>Controls display only; does not change matrix depth, enrollment, settlement, level rates or payouts.</p>
+<form method="post" action="{{ route('admin.magic.display-levels') }}">@csrf
+<label>Show levels 1 through
+<select name="visible_levels" required>
+@for($n = 0; $n <= 20; $n++)
+<option value="{{ $n }}" @selected((int) old('visible_levels', $settings?->visible_levels ?? 20) === $n)>{{ $n === 0 ? '0 — Hide Magic Team' : $n . ' level(s)' }}</option>
+@endfor
+</select></label>
+<button type="submit">Save visible levels</button>
+</form></section>
 <section><h2>Magic Settings</h2>
 <p>Global Magic: <strong>{{ ($global?->magic_enabled ?? false) ? 'ON' : 'OFF' }}</strong> (controlled separately in Income Settings).</p>
 <p>Matrix Enrollment: {{($settings?->enrollment_enabled??false)?'ON':'OFF'}}; Re-Topup: {{($settings?->topup_enabled??false)?'ON':'OFF'}}; Settlement: {{($settings?->settlement_enabled??false)?'ON':'OFF'}}</p>

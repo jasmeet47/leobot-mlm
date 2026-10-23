@@ -326,6 +326,8 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
     Route::post('/admin/members/{member}/safe-delete', [\App\Http\Controllers\Admin\MemberSafeDeleteController::class, 'destroy'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.safe-delete');
     Route::get('/admin/magic-matrix', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'index'])
         ->name('admin.magic.index');
+    Route::post('/admin/magic-matrix/display-levels', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updateDisplayLevels'])
+        ->middleware('throttle:5,1')->name('admin.magic.display-levels');
     Route::post('/admin/magic-matrix/policy', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updatePolicy'])
         ->middleware('throttle:5,1')->name('admin.magic.policy');
     Route::post('/admin/magic-matrix/rates', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updateRates'])

@@ -24,10 +24,40 @@ final class MagicMatrixAdminController extends Controller
                 (!app()->environment('production') || config('leobot_magic.production_financial_approval',false)===true),
             'canEditRates'=>config('leobot_magic.magic_matrix_rates_write_enabled',false)===true &&
                 (!app()->environment('production') || config('leobot_magic.production_rates_approval',false)===true),
+            'canEditDisplay'=>true,
             'canSettle'=>config('leobot_magic.magic_matrix_settlement_enabled',false)===true &&
                 (!app()->environment('production') || config('leobot_magic.production_financial_approval',false)===true),
         ]);
     }
+    public function updateDisplayLevels(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['visible_levels' => ['required', 'integer', 'between:0,20']]);
+        DB::transaction(function () use ($request, $data): void {
+            $actor = DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
+            if (!$actor || !in_array($actor->role, ['admin', 'super_admin'], true) ||
+                $actor->status !== 'active' ||
+                in_array(strtolower((string) $actor->is_blocked), ['1', 't', 'true'], true)) {
+                throw new AuthorizationException('Active unblocked admin required.');
+            }
+            $settings = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
+            if (!$settings) throw new RuntimeException('Magic matrix settings missing.');
+            $before = (int) $settings->visible_levels;
+            $after = (int) $data['visible_levels'];
+            if ($before === $after) return;
+            DB::table('magic_matrix_settings')->where('id', 1)->update([
+                'visible_levels' => $after, 'updated_by' => $actor->id, 'updated_at' => now(),
+            ]);
+            DB::table('magic_matrix_settings_audits')->insert([
+                'admin_user_id' => $actor->id,
+                'action' => 'display_levels_update',
+                'before_json' => json_encode(['visible_levels' => $before], JSON_THROW_ON_ERROR),
+                'after_json' => json_encode(['visible_levels' => $after], JSON_THROW_ON_ERROR),
+                'created_at' => now(),
+            ]);
+        }, 3);
+        return back()->with('status', 'Magic Team visible levels saved. Financial switches unchanged.');
+    }
+
     public function updateRates(Request $request):RedirectResponse {
         abort_unless(config('leobot_magic.magic_matrix_rates_write_enabled',false)===true &&
             (!app()->environment('production') || config('leobot_magic.production_rates_approval',false)===true),404);
