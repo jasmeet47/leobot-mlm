@@ -380,7 +380,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   <div class="lb-quick-grid">
     <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>View deposit request page; financial approval required</small></a>
-    <button class="lb-quick-link" type="button" disabled title="Stake route not available"><strong>Stake</strong><small>Coming soon</small></button>
+    <button class="lb-quick-link" type="button" disabled aria-disabled="true" title="Staking is coming soon"><strong>Staking</strong><small>Coming Soon</small></button>
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>View transfer page; financial approval required</small></a>
   </div>
 </section>
@@ -693,7 +693,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                 throw new Error('Clipboard API unavailable');
             }
             await navigator.clipboard.writeText(input.value);
-            status.textContent = 'Referral link copied.';
+            status.textContent = 'Your referral link copied successfully!';
         } catch (error) {
             input.focus();
             input.select();
@@ -728,7 +728,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <script>
 /* LEOBOT_TOP_RIGHT_HAMBURGER_V1: visibility only, no data or financial changes */
 (function () {
-    var ids = ['team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','referral-link','account-settings','member-support'];
+    var ids = ['magic-team','team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','referral-link','account-settings','member-support'];
     var menu = document.getElementById('lb-hamburger-menu');
     var bottom = document.querySelector('section.lb-bottom-grid');
     ids.forEach(function(id) { var el=document.getElementById(id); if(el && el!==bottom) el.classList.add('lb-menu-detail'); });
@@ -800,11 +800,11 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
       field.value = value;
       function fallback() {
         field.focus(); field.select();
-        try { status.textContent = document.execCommand('copy') ? 'Referral link copied.' : 'Select and copy the link manually.'; }
+        try { status.textContent = document.execCommand('copy') ? 'Your referral link copied successfully!' : 'Select and copy the link manually.'; }
         catch (e) { status.textContent = 'Select and copy the link manually.'; }
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(value).then(function () { status.textContent = 'Referral link copied.'; }, fallback);
+        navigator.clipboard.writeText(value).then(function () { status.textContent = 'Your referral link copied successfully!'; }, fallback);
       } else { fallback(); }
     });
     row.appendChild(field); row.appendChild(button);
@@ -849,7 +849,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                     copied = !!document.execCommand('copy');
                 } catch (error) { copied = false; }
             }
-            if (status) status.textContent = copied ? 'Referral link copied!' : 'Link selected. Press Ctrl+C to copy.';
+            if (status) status.textContent = copied ? 'Your referral link copied successfully!' : 'Link selected. Press Ctrl+C to copy.';
             if (!copied) { input.focus(); input.select(); }
         }, true);
     }
