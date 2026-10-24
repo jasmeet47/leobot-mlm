@@ -37,7 +37,7 @@ class GenerationAllocationServiceTest extends TestCase
             $connection->getDriverName() === 'pgsql' &&
             ($config['host'] ?? '') === '127.0.0.1' &&
             (string) ($config['port'] ?? '') === '5433' &&
-            ($config['database'] ?? '') === 'leobot_financial_disposable' &&
+            ($config['database'] ?? '') === 'lumiflowon_final_regression_20261024' &&
             empty($config['url']);
 
         if ($safe) {
@@ -46,13 +46,13 @@ class GenerationAllocationServiceTest extends TestCase
             );
 
             $safe =
-                $identity->database_name === 'leobot_financial_disposable' &&
+                $identity->database_name === 'lumiflowon_final_regression_20261024' &&
                 (int) $identity->server_port === 5433;
         }
 
         if (! $safe) {
             throw new RuntimeException(
-                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
+                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/lumiflowon_final_regression_20261024.'
             );
         }
         \Tests\Support\FinancialSeedState::captureIfNeeded();
@@ -82,7 +82,7 @@ class GenerationAllocationServiceTest extends TestCase
             'username' => $username,
             'name' => 'Generation Test User',
             'email' => $uuid . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'sponsor_user_id' => $parent,
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,

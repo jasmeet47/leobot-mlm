@@ -25,7 +25,7 @@ class MemberDashboardSafetyTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($config['host'] ?? '') === '127.0.0.1'
             && (string) ($config['port'] ?? '') === '5433'
-            && ($config['database'] ?? '') === 'leobot_financial_disposable'
+            && ($config['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($config['url']);
 
         if ($safe) {
@@ -34,7 +34,7 @@ class MemberDashboardSafetyTest extends TestCase
             );
 
             $safe = $identity
-                && $identity->database_name === 'leobot_financial_disposable'
+                && $identity->database_name === 'lumiflowon_final_regression_20261024'
                 && (int) $identity->server_port === 5433;
         }
 
@@ -57,7 +57,7 @@ class MemberDashboardSafetyTest extends TestCase
             'username' => 'TX' . strtoupper(substr($unique, 0, 10)),
             'name' => 'Dashboard Test ' . $unique,
             'email' => $unique . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => $pin === null
                 ? null
@@ -175,7 +175,7 @@ class MemberDashboardSafetyTest extends TestCase
     {
         $member = $this->member();
 
-        $this->post('/login', [
+        $this->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
             'username' => $member->username,
             'password' => 'TestPassword123!',
         ])->assertRedirect(route('member.dashboard'));
@@ -187,7 +187,7 @@ class MemberDashboardSafetyTest extends TestCase
     {
         $member = $this->member(null);
 
-        $this->post('/login', [
+        $this->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
             'username' => $member->username,
             'password' => 'TestPassword123!',
         ])->assertRedirect(route('security-pin.form'));
@@ -202,7 +202,7 @@ class MemberDashboardSafetyTest extends TestCase
             'role' => 'admin',
         ])->save();
 
-        $this->post('/login', [
+        $this->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
             'username' => 'ADMIN',
             'password' => 'TestPassword123!',
         ])->assertRedirect(route('admin.dashboard'));

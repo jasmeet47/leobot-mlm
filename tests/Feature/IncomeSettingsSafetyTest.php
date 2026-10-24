@@ -26,7 +26,7 @@ class IncomeSettingsSafetyTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($config['host'] ?? '') === '127.0.0.1'
             && (string) ($config['port'] ?? '') === '5433'
-            && ($config['database'] ?? '') === 'leobot_financial_disposable'
+            && ($config['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($config['url']);
 
         if ($safe) {
@@ -35,7 +35,7 @@ class IncomeSettingsSafetyTest extends TestCase
             );
 
             $safe = $identity
-                && $identity->database_name === 'leobot_financial_disposable'
+                && $identity->database_name === 'lumiflowon_final_regression_20261024'
                 && (int) $identity->server_port === 5433;
         }
 
@@ -57,7 +57,7 @@ class IncomeSettingsSafetyTest extends TestCase
             'username' => $username,
             'name' => 'Test User',
             'email' => str_replace('-', '', (string) Str::uuid()).'@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
             'status' => $status,

@@ -301,7 +301,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
             <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
-            @if(isset($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
+            @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
             <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
             @endif
             <a class="action" href="#team-overview">Team / Referral</a>
@@ -356,7 +356,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 </section>
 
 
-@if(true)
+@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary) && !empty($magicIncomeSummary))
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
   <h2>Magic Income (Settled)</h2>
   <div class="grid">
@@ -387,7 +387,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   </div>
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
-@if(isset($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
+@if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
   <h2>My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</h2>
   @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
@@ -528,7 +528,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
             <label class="label" for="member-referral-link">Share your personal registration link</label>
             <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; align-items:center">
                 <input id="member-referral-link" type="text" readonly
-                       value="{{ 'https://lumiflowon.com/join?ref=' . rawurlencode($member->username) }}"
+                       value="{{ rtrim(config('app.url'), '/') . '/join?ref=' . rawurlencode($member->username) }}"
                        style="flex:1 1 280px; width:100%; min-width:0; padding:10px; border:1px solid #334155; border-radius:9px; background:#090d16; color:#e2e8f0; font:inherit"
                        aria-label="Your referral URL">
                 <button id="copy-referral-button" type="button" class="action">Copy Referral Link</button>
@@ -670,20 +670,17 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
 
 <!-- MT5 display intentionally last on Member Dashboard; read-only and admin-controlled -->
+@php$mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
+@endphp
+@if(\Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings') && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled'))
 <section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
     <h2>MT5 Live Trading</h2>
-
-    @php
-        $mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
-            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
-    @endphp
-
-    @if($mt5Visible)
-        <p>MT5 Live Connection: Awaiting verified connection</p>
+<p>MT5 Live Connection: Awaiting verified connection</p>
         <p>Balance, Equity, Profit/Loss and Trades will appear only after a verified read-only feed is connected.</p>
         <p><a href="{{ route('member.mt5.view') }}">View MT5 Status</a></p>
-    @endif
 </section>
+@endif
 </main>
 <script>
 (function () {

@@ -29,11 +29,11 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($cfg['host'] ?? null) === '127.0.0.1'
             && (string)($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? null) === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? null) === 'lumiflowon_final_regression_20261024'
             && empty($cfg['url']);
         if ($safe) {
             $identity = DB::selectOne('SELECT current_database() AS db, inet_server_port() AS port');
-            $safe = $identity && $identity->db === 'leobot_financial_disposable' && (int)$identity->port === 5433;
+            $safe = $identity && $identity->db === 'lumiflowon_final_regression_20261024' && (int)$identity->port === 5433;
         }
         if (!$safe) { throw new RuntimeException('SAFETY STOP: disposable PostgreSQL only.'); }
         \Tests\Support\FinancialSeedState::captureIfNeeded();
@@ -56,7 +56,7 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
             'username' => $name,
             'name' => 'Ledger Audit',
             'email' => Str::uuid().'@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('AuditOnlyNotProduction123!'),
             'security_pin' => null,
             'status' => 'active',

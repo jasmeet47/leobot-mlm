@@ -99,6 +99,7 @@ class MemberManagementController extends Controller
                 'sponsor_user_id',
                 'status',
                 'is_blocked',
+                'deleted_at',
                 'role',
                 'created_at',
             ])

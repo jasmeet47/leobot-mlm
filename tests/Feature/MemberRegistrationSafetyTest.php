@@ -24,7 +24,7 @@ class MemberRegistrationSafetyTest extends TestCase
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($cfg['url']);
 
         if (!$safe) {
@@ -38,7 +38,7 @@ class MemberRegistrationSafetyTest extends TestCase
         );
 
         if (!$identity
-            || $identity->database_name !== 'leobot_financial_disposable'
+            || $identity->database_name !== 'lumiflowon_final_regression_20261024'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'
@@ -48,6 +48,17 @@ class MemberRegistrationSafetyTest extends TestCase
         $this->leobotOriginalRefreshDatabase();
     }
 
+    // REGISTRATION_TEST_OTP_SCOPE: These tests cover registration/sponsor logic,
+    // while OTP-on behavior is covered by dedicated OTP tests.
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $updated = DB::table('registration_email_otp_settings')
+            ->where('id', 1)->update(['is_enabled' => false]);
+        if ($updated !== 1) {
+            throw new \RuntimeException('Missing disposable OTP setting');
+        }
+    }
     private function sponsor(string $username = 'ADMIN'): User
     {
         return User::create([
@@ -56,20 +67,20 @@ class MemberRegistrationSafetyTest extends TestCase
             'sponsor_user_id' => null,
             'name' => 'Test Sponsor',
             'email' => strtolower($username) . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('Password12345!'),
             'security_pin' => null,
             'status' => 'active',
         ]);
     }
 
-    private function data(string $sponsor = 'ADMIN', string $email = 'new-member@example.test'): array
+    private function data(string $sponsor = 'ADMIN', string $email = 'new-member@example.test', string $mobile = '+919876543210'): array
     {
         return [
             'sponsor_id' => $sponsor,
             'name' => 'New Member',
             'email' => $email,
-            'mobile' => '9876543210',
+            'mobile' => $mobile,
             'password' => 'A-Secure-Password123!',
             'password_confirmation' => 'A-Secure-Password123!',
         ];
@@ -161,7 +172,7 @@ class MemberRegistrationSafetyTest extends TestCase
     {
         $this->sponsor();
         $this->postJson('/api/register', $this->data())->assertCreated();
-        $this->postJson('/api/register', $this->data('ADMIN', 'another@example.test'))
+        $this->postJson('/api/register', $this->data('ADMIN', 'another@example.test', '+919876543211'))
             ->assertCreated();
         $names = User::where('username', 'like', 'TX%')->pluck('username')->all();
         $this->assertCount(2, $names);

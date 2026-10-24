@@ -27,7 +27,7 @@ class MemberDashboardMagicTeamContractTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            '@if(isset($magicTeam) && is_array($magicTeam))',
+            '@if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam[\'visible_levels\'] ?? 0) > 0)',
             $blade
         );
 

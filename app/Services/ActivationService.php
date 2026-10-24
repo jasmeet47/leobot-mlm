@@ -53,7 +53,7 @@ class ActivationService
         }
 
         if (
-            bccomp($amount, '1', self::SCALE) < 0 ||
+            bccomp($amount, (string) config('leobot.minimum_activation_usdt', '10'), self::SCALE) < 0 ||
             bccomp(
                 $amount,
                 self::MAX_AMOUNT,

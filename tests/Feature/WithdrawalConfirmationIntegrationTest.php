@@ -24,13 +24,13 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
         $this->assertSame('pgsql', $c->getDriverName());
         $this->assertSame('127.0.0.1', $cfg['host']);
         $this->assertSame('5433', (string) $cfg['port']);
-        $this->assertSame('leobot_financial_disposable', $c->getDatabaseName());
+        $this->assertSame('lumiflowon_final_regression_20261024', $c->getDatabaseName());
         $this->assertEmpty($cfg['url'] ?? null);
 
         $identity = DB::selectOne(
             'SELECT current_database() AS db, inet_server_port() AS port'
         );
-        $this->assertSame('leobot_financial_disposable', $identity->db);
+        $this->assertSame('lumiflowon_final_regression_20261024', $identity->db);
         $this->assertSame(5433, (int) $identity->port);
     }
 
@@ -53,7 +53,7 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
             'username' => 'PC' . $id,
             'name' => 'Confirmation Test',
             'email' => $id . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => bcrypt(Str::random(32)),
             'status' => 'active',
             'role' => $role,

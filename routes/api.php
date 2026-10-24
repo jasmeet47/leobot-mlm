@@ -20,6 +20,9 @@ Route::post('/verify-sponsor', [
     'verifySponsor',
 ]);
 
+Route::post('/registration-email-otp/send', [\App\Http\Controllers\Auth\RegistrationEmailOtpController::class, 'send'])->middleware('throttle:5,1');
+Route::post('/registration-email-otp/verify', [\App\Http\Controllers\Auth\RegistrationEmailOtpController::class, 'verify'])->middleware('throttle:10,1');
+
 Route::post('/register', [
     RegisterController::class,
     'register',

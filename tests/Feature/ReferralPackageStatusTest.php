@@ -24,7 +24,7 @@ class ReferralPackageStatusTest extends TestCase
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($cfg['url']);
 
         if (!$safe) {
@@ -38,7 +38,7 @@ class ReferralPackageStatusTest extends TestCase
         );
 
         if (!$identity
-            || $identity->database_name !== 'leobot_financial_disposable'
+            || $identity->database_name !== 'lumiflowon_final_regression_20261024'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'

@@ -31,6 +31,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'is_blocked' => 'boolean',
+        'deleted_at' => 'datetime',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];

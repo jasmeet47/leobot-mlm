@@ -27,13 +27,13 @@ final class OptionAIntegrationFinancialTest extends TestCase
         $c=DB::connection();$cfg=$c->getConfig();
         $safe=app()->environment('testing') && $c->getDriverName()==='pgsql' &&
               ($cfg['host']??'')==='127.0.0.1' && (string)($cfg['port']??'')==='5433' &&
-              ($cfg['database']??'')==='leobot_financial_disposable' && empty($cfg['url']);
+              ($cfg['database']??'')==='lumiflowon_final_regression_20261024' && empty($cfg['url']);
         if ($safe) {
             $identity=DB::selectOne('SELECT current_database() AS database_name, inet_server_port() AS server_port');
-            $safe=$identity && $identity->database_name==='leobot_financial_disposable' &&
+            $safe=$identity && $identity->database_name==='lumiflowon_final_regression_20261024' &&
                   (int)$identity->server_port===5433;
         }
-        if (!$safe) throw new RuntimeException('SAFETY STOP: disposable 127.0.0.1:5433/leobot_financial_disposable only.');
+        if (!$safe) throw new RuntimeException('SAFETY STOP: disposable 127.0.0.1:5433/lumiflowon_final_regression_20261024 only.');
         \Tests\Support\FinancialSeedState::captureIfNeeded();
     }
     protected function afterTruncatingDatabase(): void { \Tests\Support\FinancialSeedState::restoreOrCapture(); }
@@ -42,7 +42,7 @@ final class OptionAIntegrationFinancialTest extends TestCase
         $uid=Str::random(13);
         $id=DB::table('users')->insertGetId([
             'username'=>'OA'.$uid,'name'=>'Option A','email'=>$uid.'@example.test',
-            'phone'=>'9000000000','password'=>Hash::make('ExamplePassword1!'),
+            'phone'=>(string) random_int(1000000000, 9999999999),'password'=>Hash::make('ExamplePassword1!'),
             'security_pin'=>null,'status'=>'active','role'=>$role,
             'activation_balance'=>'0.00000000','available_balance'=>'0.00000000',
             'total_investment'=>'0.00000000','lifetime_income'=>'0.00000000',
@@ -75,6 +75,7 @@ final class OptionAIntegrationFinancialTest extends TestCase
         config()->set('leobot_magic.magic_matrix_enrollment_enabled',true);
         $this->enroll($root,'OA-ROOT-001');$this->enroll($source,'OA-SOURCE-001');
         config()->set('leobot_magic.magic_matrix_settings_write_enabled',true);
+        config()->set('leobot_magic.magic_matrix_rates_write_enabled',true);
         MagicMatrixSettingsService::updateLevelRates($admin,array_fill_keys(range(1,20),'5.000000000'));
         $fid=$this->fundAndReadyMagic($admin,$source);
         $this->assertSame('30.00000000',(string)DB::table('profit_sharing_fundings')->find($fid)->magic_amount);
@@ -96,6 +97,7 @@ final class OptionAIntegrationFinancialTest extends TestCase
         $cid=$this->enroll($root,'OA-CAP-ROOT');$this->enroll($source,'OA-CAP-SOURCE');
         DB::table('magic_matrix_cycles')->where('id',$cid)->update(['magic_paid_usdt'=>'179.75000000']);
         config()->set('leobot_magic.magic_matrix_settings_write_enabled',true);
+        config()->set('leobot_magic.magic_matrix_rates_write_enabled',true);
         MagicMatrixSettingsService::updateLevelRates($admin,array_fill_keys(range(1,20),'5.000000000'));
         $fid=$this->fundAndReadyMagic($admin,$source);
         $result=MagicIncomeSettlementService::settleSource($admin,$fid,$source->id);

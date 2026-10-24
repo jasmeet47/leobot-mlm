@@ -13,7 +13,7 @@ use RuntimeException;
 use Tests\TestCase;
 
 /**
- * Run ONLY with phpunit.postgres.xml against isolated leobot_financial_disposable.
+ * Run ONLY with phpunit.postgres.xml against isolated lumiflowon_final_regression_20261024.
  * DatabaseTruncation is destructive to its selected database.
  */
 class MagicPoolFundingServiceTest extends TestCase
@@ -39,7 +39,7 @@ class MagicPoolFundingServiceTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($settings['host'] ?? '') === '127.0.0.1'
             && (string) ($settings['port'] ?? '') === '5433'
-            && ($settings['database'] ?? '') === 'leobot_financial_disposable'
+            && ($settings['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($settings['url']);
 
         if ($safe) {
@@ -48,13 +48,13 @@ class MagicPoolFundingServiceTest extends TestCase
             );
 
             $safe = $identity
-                && $identity->database_name === 'leobot_financial_disposable'
+                && $identity->database_name === 'lumiflowon_final_regression_20261024'
                 && (int) $identity->server_port === 5433;
         }
 
         if (! $safe) {
             throw new RuntimeException(
-                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
+                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/lumiflowon_final_regression_20261024.'
             );
         }
         \Tests\Support\FinancialSeedState::captureIfNeeded();
@@ -83,7 +83,7 @@ class MagicPoolFundingServiceTest extends TestCase
             'username' => $username,
             'name' => 'Test User',
             'email' => str_replace('-', '', (string) Str::uuid()) . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
             'status' => $status,

@@ -27,7 +27,7 @@ class TeamCounterServiceTest extends TestCase
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($cfg['url']);
 
         if (!$safe) {
@@ -41,7 +41,7 @@ class TeamCounterServiceTest extends TestCase
         );
 
         if (!$identity
-            || $identity->database_name !== 'leobot_financial_disposable'
+            || $identity->database_name !== 'lumiflowon_final_regression_20261024'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'
@@ -54,6 +54,13 @@ class TeamCounterServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // TEAM_TEST_OTP_SCOPE: Team registration tests run without OTP;
+        // OTP-on registration must remain protected in application code.
+        $updated = DB::table('registration_email_otp_settings')
+            ->where('id', 1)->update(['is_enabled' => false]);
+        if ($updated !== 1) {
+            throw new \RuntimeException('Missing disposable OTP setting');
+        }
         // Positive-path activation tests only; live configuration remains OFF.
         config()->set('leobot.member_activation_enabled', true);
     }
@@ -69,7 +76,7 @@ class TeamCounterServiceTest extends TestCase
             'sponsor_user_id' => $sponsor?->id,
             'name' => 'Test team user ' . $n,
             'email' => 'team' . $n . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
             'status' => $status,
@@ -133,7 +140,7 @@ class TeamCounterServiceTest extends TestCase
             'sponsor_id' => $sponsor->username,
             'name' => 'Registered Member',
             'email' => $email,
-            'mobile' => '9000000000',
+            'mobile' => '+919000000000',
             'password' => 'TestPassword123!',
             'password_confirmation' => 'TestPassword123!',
         ])->assertSessionHasNoErrors();

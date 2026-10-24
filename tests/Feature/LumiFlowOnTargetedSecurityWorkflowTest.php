@@ -19,11 +19,11 @@ final class LumiFlowOnTargetedSecurityWorkflowTest extends TestCase
         $cfg = config('database.connections.pgsql', []);
         if (!app()->environment('testing') || config('database.default') !== 'pgsql'
             || ($cfg['host'] ?? '') !== '127.0.0.1' || (string)($cfg['port'] ?? '') !== '5433'
-            || ($cfg['database'] ?? '') !== 'leobot_financial_disposable' || !empty($cfg['url'])) {
+            || ($cfg['database'] ?? '') !== 'lumiflowon_final_regression_20261024' || !empty($cfg['url'])) {
             throw new \RuntimeException('SAFETY STOP: Wrong disposable DB config.');
         }
         $r = DB::selectOne('SELECT current_database() AS db, inet_server_port() AS port');
-        if (!$r || $r->db !== 'leobot_financial_disposable' || (int)$r->port !== 5433) {
+        if (!$r || $r->db !== 'lumiflowon_final_regression_20261024' || (int)$r->port !== 5433) {
             throw new \RuntimeException('SAFETY STOP: Wrong physical database.');
         }
         $this->originalRefreshDatabase();
@@ -31,7 +31,7 @@ final class LumiFlowOnTargetedSecurityWorkflowTest extends TestCase
     private function member(string $username, string $role='member'): User
     {
         return User::create(['username'=>$username,'name'=>'Security Test','email'=>strtolower($username).'@example.test',
-            'phone'=>'9000000000','password'=>Hash::make('Password12345!'),'status'=>'active',
+            'phone'=>substr('9'.sprintf('%09u', crc32($username)), 0, 10),'password'=>Hash::make('Password12345!'),'status'=>'active',
             'security_pin'=>null] + []);
     }
     public function test_retired_member_cannot_login_via_web_or_api(): void

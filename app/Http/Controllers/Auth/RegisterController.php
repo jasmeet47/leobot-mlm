@@ -56,9 +56,9 @@ class RegisterController extends Controller
 
         $sponsor = User::query()
             ->where('username', $data['sponsor_id'])
-            ->first(['username', 'name']);
+            ->first(['username', 'name', 'is_blocked', 'deleted_at']);
 
-        if (!$sponsor) {
+        if (!$sponsor || $sponsor->is_blocked || $sponsor->deleted_at !== null) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Sponsor ID not found.',
@@ -79,6 +79,11 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         self::limitPublicRequest($request, 'register', 10);
+
+        // Normalize email before uniqueness validation and OTP verification.
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email', ''))),
+        ]);
 
         $validated = $request->validate([
             'sponsor_id' => ['required', 'string', 'max:255'],
@@ -124,7 +129,7 @@ class RegisterController extends Controller
                         $validated['sponsor_id']
                     )->lockForUpdate()->first();
 
-                    if (!$sponsor) {
+                    if (!$sponsor || $sponsor->is_blocked || $sponsor->deleted_at !== null) {
                         throw ValidationException::withMessages([
                             'sponsor_id' => 'Invalid Sponsor ID. Please enter a valid Sponsor ID.',
                         ]);

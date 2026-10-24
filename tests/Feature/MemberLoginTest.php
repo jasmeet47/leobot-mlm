@@ -24,7 +24,7 @@ class MemberLoginTest extends TestCase
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? '') === 'lumiflowon_final_regression_20261024'
             && empty($cfg['url']);
 
         if (!$safe) {
@@ -38,7 +38,7 @@ class MemberLoginTest extends TestCase
         );
 
         if (!$identity
-            || $identity->database_name !== 'leobot_financial_disposable'
+            || $identity->database_name !== 'lumiflowon_final_regression_20261024'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'
@@ -58,7 +58,7 @@ class MemberLoginTest extends TestCase
             'username' => 'TX987654',
             'name' => 'Login Test Member',
             'email' => 'login-test@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
             'status' => 'inactive',
@@ -78,7 +78,7 @@ class MemberLoginTest extends TestCase
     {
         $member = $this->createMember();
 
-        $response = $this->post('/login', [
+        $response = $this->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
             'username' => 'TX987654',
             'password' => 'TestPassword123!',
         ]);
@@ -102,7 +102,7 @@ class MemberLoginTest extends TestCase
 
         $response = $this
             ->from('/join')
-            ->post('/login', [
+            ->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
                 'username' => 'TX987654',
                 'password' => 'WrongPassword123!',
             ]);
@@ -124,7 +124,7 @@ class MemberLoginTest extends TestCase
     {
         $response = $this
             ->from('/join')
-            ->post('/login', [
+            ->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
                 'username' => 'TX000000',
                 'password' => 'TestPassword123!',
             ]);
@@ -142,7 +142,7 @@ class MemberLoginTest extends TestCase
         $member = $this->createMember();
         DB::table('users')->where('id', $member->id)->update(['status' => 'active', 'is_blocked' => true]);
 
-        $this->from('/join')->post('/login', [
+        $this->from('/join')->withSession(['lb_login_captcha' => ['a' => 2, 'b' => 3, 'answer' => 5]])->post('/login', ['captcha_answer' => '5',
             'username' => $member->username,
             'password' => 'TestPassword123!',
         ])->assertRedirect('/join')->assertSessionHasErrors('username');

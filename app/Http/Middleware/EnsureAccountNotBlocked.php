@@ -16,7 +16,7 @@ class EnsureAccountNotBlocked
         if ($member === null) {
             abort(401, 'Authentication required.');
         }
-        if ($member->deleted_at !== null || $member->is_blocked) {
+        if ($member->is_blocked || $member->deleted_at !== null) {
             abort(403, 'Account is blocked.');
         }
 

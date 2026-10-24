@@ -18,7 +18,7 @@ final class WithdrawalPaymentEvidenceUniqueTest extends TestCase
         $this->assertSame('pgsql', DB::connection()->getDriverName());
         $this->assertSame('127.0.0.1', DB::connection()->getConfig('host'));
         $this->assertSame('5433', (string) DB::connection()->getConfig('port'));
-        $this->assertSame('leobot_financial_disposable', DB::connection()->getDatabaseName());
+        $this->assertSame('lumiflowon_final_regression_20261024', DB::connection()->getDatabaseName());
 
         $admin = $this->person('admin');
         $member = $this->person('member');
@@ -50,7 +50,7 @@ final class WithdrawalPaymentEvidenceUniqueTest extends TestCase
             'username' => 'P4' . $id,
             'name' => 'Phase 4 Test',
             'email' => $id . '@example.test',
-            'phone' => '9000000000',
+            'phone' => (string) random_int(1000000000, 9999999999),
             'password' => bcrypt(Str::random(32)),
             'status' => 'active',
             'role' => $role,

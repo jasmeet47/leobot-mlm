@@ -29,9 +29,10 @@ class MemberBlockController extends Controller
 
         DB::transaction(function () use ($member, $request, $action, $validated): void {
             $target = DB::table('users')->where('id', $member->id)
-                ->lockForUpdate()->first(['id', 'role', 'status', 'is_blocked', 'member_login_version']);
+                ->lockForUpdate()->first(['id', 'role', 'status', 'is_blocked', 'member_login_version', 'deleted_at']);
             abort_unless($target && (string) $target->role === 'member', 403);
             abort_if((int) $target->id === (int) $request->user()->id, 403);
+            abort_if($target->deleted_at !== null, 409, 'Retired member must be restored before access changes.');
 
             $blocked = in_array($target->is_blocked, [true, 1, '1', 't', 'true'], true);
             if ($action === 'blocked') {
