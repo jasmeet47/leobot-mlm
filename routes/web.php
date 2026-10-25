@@ -382,3 +382,35 @@ Route::middleware(['auth', 'account.not_blocked', \App\Http\Middleware\EnsureMem
     Route::get('/member/mt5/view', [\App\Http\Controllers\Mt5DisplayController::class, 'member'])->name('member.mt5.view');
 });
 require __DIR__.'/leobot_financial_ui.php';
+
+/* LUMIFLOWON_DEMO_RUNTIME_DIAGNOSTIC_TEMPORARY_V2 */
+Route::middleware(['auth', 'account.not_blocked', 'admin', 'throttle:5,1'])
+    ->get('/admin/demo-runtime-identity', function (\Illuminate\Http\Request $request) {
+        // Temporary, read-only and demo-host-only. Never return credentials or hosts.
+        if ($request->getHost() !== 'leobot-demo.onrender.com' ||
+            !filter_var(getenv('LUMIFLOWON_DEMO_DIAGNOSTIC_ENABLED') ?: '', FILTER_VALIDATE_BOOLEAN)) {
+            abort(404);
+        }
+        $expectedHost = strtolower(trim((string) (getenv('LUMIFLOWON_DEMO_EXPECTED_DB_HOST') ?: '')));
+        $expectedDb = trim((string) (getenv('LUMIFLOWON_DEMO_EXPECTED_DB_NAME') ?: ''));
+        if ($expectedHost === '' || $expectedDb === '' || !str_ends_with($expectedHost, '.neon.tech')) {
+            abort(503);
+        }
+        $connection = \Illuminate\Support\Facades\DB::connection('pgsql');
+        $url = (string) ($connection->getConfig('url') ?: '');
+        $host = $url !== '' ? (string) (parse_url($url, PHP_URL_HOST) ?: '') : '';
+        if ($host === '') {
+            $host = (string) ($connection->getConfig('host') ?: '');
+        }
+        $actualDb = (string) ($connection->selectOne('SELECT current_database() AS db')->db ?? '');
+        $hostMatch = hash_equals($expectedHost, strtolower(trim($host)));
+        $dbMatch = hash_equals($expectedDb, $actualDb);
+        return response()->json([
+            'diagnostic' => 'temporary-demo-runtime-v2',
+            'connected' => true,
+            'configured_demo_host_matches' => $hostMatch,
+            'queried_database_matches' => $dbMatch,
+            'checks_passed' => $hostMatch && $dbMatch,
+            'note' => 'Host comparison verifies configured endpoint, not independently the remote server identity.',
+        ])->header('Cache-Control', 'no-store, private');
+    })->name('admin.demo-runtime-identity');
