@@ -192,7 +192,7 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
         ));
 
         abort_unless(
-            config('app.env') !== 'production'
+            config('app.env') === 'production'
             && $host === 'ep-shy-thunder-b4edgbov.c-6.us-east-2.aws.neon.tech',
             503
         );
