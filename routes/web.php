@@ -385,3 +385,6 @@ Route::middleware(['auth', 'account.not_blocked', \App\Http\Middleware\EnsureMem
 });
 require __DIR__.'/leobot_financial_ui.php';
 
+
+// Isolated demo-only simulated USDT routes; guarded at runtime.
+require __DIR__.'/demo_simulation.php';
