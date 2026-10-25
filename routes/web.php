@@ -170,6 +170,49 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
 */
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
+    // TEMPORARY DEMO-ONLY DATABASE IDENTITY DIAGNOSTIC
+    Route::get('/admin/demo-db-identity', function () {
+        abort_unless(
+            rtrim((string) config('app.url'), '/') ===
+                'https://leobot-demo.onrender.com',
+            404
+        );
+
+        $connection = \Illuminate\Support\Facades\DB::connection();
+
+        abort_unless(
+            $connection->getDriverName() === 'pgsql',
+            503
+        );
+
+        $connection->getPdo();
+
+        $host = strtolower(trim(
+            (string) $connection->getConfig('host')
+        ));
+
+        abort_unless(
+            config('app.env') !== 'production'
+            && $host === 'ep-shy-thunder-b4edgbov.c-6.us-east-2.aws.neon.tech',
+            503
+        );
+
+        $db = $connection->selectOne(
+            'SELECT current_database() AS database_name'
+        );
+
+        return response()->json([
+            'audit' => 'LUMIFLOWON_DEMO_DB_V1',
+            'driver' => 'pgsql',
+            'query' => $db ? 'PASS' : 'FAIL',
+            'host_sha256' => hash('sha256', $host),
+            'database_sha256' => hash(
+                'sha256',
+                (string) $db->database_name
+            ),
+        ])->header('Cache-Control', 'no-store');
+    })->middleware('throttle:5,1');
+
     Route::get('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'index'])->name('admin.quick-links.index');
     Route::post('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'update'])->middleware('throttle:10,1')->name('admin.quick-links.update');
     Route::get('/admin/mt5/view', [\App\Http\Controllers\Mt5DisplayController::class, 'admin'])->name('admin.mt5.view');
@@ -315,6 +358,7 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
+
     Route::get('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'index'])->name('admin.quick-links.index');
     Route::post('/admin/dashboard-quick-links', [\App\Http\Controllers\DashboardQuickLinksController::class, 'update'])->middleware('throttle:10,1')->name('admin.quick-links.update');
     Route::get('/admin/mt5/view', [\App\Http\Controllers\Mt5DisplayController::class, 'admin'])->name('admin.mt5.view');
