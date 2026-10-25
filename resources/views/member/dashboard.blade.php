@@ -670,7 +670,8 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
 
 <!-- MT5 display intentionally last on Member Dashboard; read-only and admin-controlled -->
-@php$mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+@php
+    $mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
             && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
 @endphp
 @if(\Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings') && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled'))
