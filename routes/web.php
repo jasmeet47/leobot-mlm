@@ -412,6 +412,7 @@ require __DIR__.'/demo_simulation.php';
 // LUMIFLOWON_ADMIN_LOGO_V1 - demo-only logo management
 \Illuminate\Support\Facades\Route::get('/lumiflowon-brand-logo', function () {
     $path = storage_path('app/lumiflowon-branding/current-logo');
+    if (!is_file($path)) { $path = public_path('branding/lumiflowon-original-logo'); }
     if (!is_file($path)) { abort(404); }
     $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path);
     if (!in_array($mime, ['image/png', 'image/jpeg', 'image/webp'], true)) { abort(404); }
