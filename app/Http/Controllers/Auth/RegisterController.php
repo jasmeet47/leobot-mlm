@@ -107,6 +107,7 @@ class RegisterController extends Controller
 
         $validated = $request->validate([
             'sponsor_id' => ['required', 'string', 'max:255'],
+            'beta_invite_code' => ['required', 'string', 'regex:/\A[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}\z/'],
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -132,6 +133,10 @@ class RegisterController extends Controller
             throw ValidationException::withMessages(['challenge_token' => 'Email verification is required.']);
         }
 
+        // BETA_INVITE_ONLY_V1: both web and API registration require a single-use invite.
+        $validated['beta_invite_hash'] = hash('sha256', $validated['beta_invite_code']);
+        unset($validated['beta_invite_code']);
+
         $user = null;
 
         // Each retry uses a new transaction.
@@ -144,6 +149,16 @@ class RegisterController extends Controller
                     $candidate,
                     $requireRegistrationOtp
                 ) {
+                    // Lock the invitation inside the same transaction as member creation.
+                    $invite = DB::table('beta_registration_invites')
+                        ->where('code_hash', $validated['beta_invite_hash'])
+                        ->lockForUpdate()->first();
+                    if (!$invite || $invite->used_at !== null) {
+                        throw ValidationException::withMessages([
+                            'beta_invite_code' => 'Invalid or already used invitation code.',
+                        ]);
+                    }
+
                     $sponsor = User::where(
                         'username',
                         $validated['sponsor_id']
@@ -172,6 +187,10 @@ class RegisterController extends Controller
                         'security_pin' => null,
                         'status' => 'inactive',
                     ]);
+
+                    DB::table('beta_registration_invites')
+                        ->where('id', $invite->id)
+                        ->update(['used_at' => now(), 'used_by_user_id' => $newMember->id]);
 
                     \App\Services\TeamCounterService::synchronize(
                         (int) $newMember->id

@@ -1009,6 +1009,30 @@ document.addEventListener('DOMContentLoaded', function () {
 .lfo-password-toggle:focus-visible{outline:2px solid #ffe2a0!important;outline-offset:2px!important}
 #lfoSendOtp:disabled,#lfoVerifyOtp:disabled{opacity:.45!important;cursor:not-allowed!important}
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const sponsor = document.querySelector('input[name="sponsor_id"]');
+  if (!sponsor) return;
+  const form = sponsor.closest('form');
+  if (!form || form.querySelector('[name="beta_invite_code"]')) return;
+  const wrapper = document.createElement('div');
+  wrapper.style.margin = '12px 0';
+  const label = document.createElement('label');
+  label.textContent = 'Beta Invitation Code (required)';
+  label.style.display = 'block';
+  label.style.marginBottom = '6px';
+  const field = document.createElement('input');
+  field.name = 'beta_invite_code';
+  field.type = 'text';
+  field.required = true;
+  field.maxLength = 19;
+  field.placeholder = 'XXXX-XXXX-XXXX-XXXX';
+  field.autocomplete = 'off';
+  field.style.cssText = 'display:block;width:100%;box-sizing:border-box;padding:12px;border:1px solid #c3a766;border-radius:8px;background:#fff;color:#142544';
+  wrapper.append(label, field);
+  sponsor.parentElement.insertAdjacentElement('afterend', wrapper);
+});
+</script>
 </body>
 
 </html>
