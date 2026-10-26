@@ -3,6 +3,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -47,9 +48,29 @@ final class RegistrationEmailOtpService
             ]);
         });
         try {
-            Mail::raw('Your LumiFlowOn registration OTP is ' . $otp . '. It expires in 5 minutes. Do not share it.', function ($message) use ($email) {
-                $message->to($email)->subject('LumiFlowOn Registration Email Verification');
-            });
+            $body = 'Your LumiFlowOn registration OTP is ' . $otp . '. It expires in 5 minutes. Do not share it.';
+            if (config('mail.registration_otp_transport') === 'brevo_api') {
+                $key = config('mail.brevo_api_key');
+                $sender = config('mail.from.address');
+                if (!is_string($key) || $key === '' || !is_string($sender) || !filter_var($sender, FILTER_VALIDATE_EMAIL)) {
+                    throw new \RuntimeException('Brevo registration OTP configuration is incomplete.');
+                }
+                $response = Http::timeout(12)->connectTimeout(5)
+                    ->withHeaders(['api-key' => $key, 'accept' => 'application/json'])
+                    ->post('https://api.brevo.com/v3/smtp/email', [
+                        'sender' => ['email' => $sender, 'name' => config('mail.from.name', 'LumiFlowOn')],
+                        'to' => [['email' => $email]],
+                        'subject' => 'LumiFlowOn Registration Email Verification',
+                        'textContent' => $body,
+                    ]);
+                if (!$response->successful() || !is_string($response->json('messageId'))) {
+                    throw new \RuntimeException('Brevo API did not accept the registration OTP email. HTTP ' . $response->status());
+                }
+            } else {
+                Mail::raw($body, function ($message) use ($email) {
+                    $message->to($email)->subject('LumiFlowOn Registration Email Verification');
+                });
+            }
         } catch (\Throwable $e) {
             DB::table('registration_email_otp_challenges')->where('id', $id)->delete();
             report($e);

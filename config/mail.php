@@ -15,6 +15,8 @@ return [
     */
 
     'default' => env('MAIL_MAILER', 'log'),
+    'registration_otp_transport' => env('REGISTRATION_OTP_TRANSPORT', 'smtp'),
+    'brevo_api_key' => env('BREVO_API_KEY'),
 
     /*
     |--------------------------------------------------------------------------
