@@ -299,33 +299,51 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <a class="action" href="{{ route('member.dashboard') }}">Dashboard Overview</a>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
-            <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'team-breakdown']) }}">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
             @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-            <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'magic-team']) }}" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
             @endif
-            <a class="action" href="#team-overview">Team / Referral</a>
-            <a class="action" href="#direct-referrals">My Direct Referrals</a>
-            <a class="action" href="#referral-link">Referral Link</a>
-            <a class="action" href="#referral-privacy">Referral Contact Privacy</a>
+
+            <a class="action" href="{{ route('member.detail', ['panel' => 'direct-referrals']) }}">My Direct Referrals</a>
+
+            <a class="action" href="{{ route('member.detail', ['panel' => 'referral-privacy']) }}">Referral Contact Privacy</a>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Finance</div>
-            <a class="action" href="#income-summary">Income Details</a>
-            <a class="action" href="#wallet-history">My Wallet Transaction History</a>
-            <a class="action" href="#financial-records">Financial Records</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'income-summary']) }}">Income Details</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'wallet-history']) }}">My Wallet Transaction History</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'financial-records']) }}">Financial Records</a>
             <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
             <a class="action" href="{{ route('member.withdrawals.index') }}">Withdrawals</a>
             <a class="action" href="{{ route('member.deposit-transfer.index') }}">Deposit / Fund Transfer (status &amp; requests)</a>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Account</div>
-            <a class="action" href="#member-profile">Profile / Settings</a>
-            <a class="action" href="#account-settings">Account / Security PIN</a>
-            <a class="action" href="#member-support">Support</a>
+            <a class="action" href="{{ route('member.profile') }}">Profile</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'account-settings']) }}">Account / Security PIN</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'member-support']) }}">Support</a>
             <form method="POST" action="{{ route('logout') }}">@csrf<button class="action" type="submit">Logout</button></form>
         </div>
     </details>
 </nav>
     </header>
+<!-- LUMIFLOWON_BETA_LANDING_FIVE_SECTIONS_V1 -->
+<style id="LUMIFLOWON_BETA_LANDING_FIVE_SECTIONS_V1">
+/* Landing-only presentation. Existing financial data, menu detail panels and backend remain intact. */
+body.lb-menu-ready section.lb-terminal,
+body.lb-menu-ready section#account-summary {display:none!important}
+body.lb-menu-ready section#referral-link {display:block!important}
+</style>
+@php($lbPanel = request()->route('panel'))
+@if($lbPanel)
+<style id="LUMIFLOWON_DETAIL_PAGE_VISIBILITY_V1">
+body main section,
+body main .lb-terminal,
+body main .lb-profile-strip {display:none!important}
+body main #{{ $lbPanel }} {display:block!important}
+body main #{{ $lbPanel }}.lb-bottom-grid {display:grid!important}
+body main #referral-link {display:none!important}
+</style>
+@endif
 <!-- LUMIFLOWON_MT5_UI_FIXED -->
 @php
 $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links')
@@ -479,7 +497,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>
         <h2>Financial Records</h2>
         <p class="muted">Your available balance and income reserves are shown above. Completed wallet entries appear in the transaction history below; held and reserved amounts are not paid income.</p>
-        <a class="action lb-inline-link" href="#wallet-history">View Wallet Transaction History ΓåÆ</a>
+        <a class="action lb-inline-link" href="{{ route('member.detail', ['panel' => 'wallet-history']) }}">View Wallet Transaction History ΓåÆ</a>
     </section>
 
     <section id="wallet-history" aria-label="Member wallet transaction history">
@@ -730,7 +748,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <script>
 /* LEOBOT_TOP_RIGHT_HAMBURGER_V1: visibility only, no data or financial changes */
 (function () {
-    var ids = ['magic-team','team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','referral-link','account-settings','member-support'];
+    var ids = ['magic-team','team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','account-settings','member-support'];
     var menu = document.getElementById('lb-hamburger-menu');
     var bottom = document.querySelector('section.lb-bottom-grid');
     ids.forEach(function(id) { var el=document.getElementById(id); if(el && el!==bottom) el.classList.add('lb-menu-detail'); });

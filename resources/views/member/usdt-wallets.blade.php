@@ -12,7 +12,15 @@ button{padding:.8rem;cursor:pointer;background:#1646a0;color:white;border:0;bord
 button:disabled{opacity:.5}
 #status{font-weight:600;overflow-wrap:anywhere}
 </style>
-</head>
+<style id="LUMIFLOWON_MEMBER_GOLD_THEME_V1">
+body{background:#090d16!important;color:#e2e8f0!important}
+section,.card,table{background:#101e31!important;color:#e2e8f0!important;border-color:#b68b41!important}
+h1,h2,h3{color:#f4c66b!important}
+a{color:#f4c66b!important}
+input,select,textarea{background:#0a1626!important;color:#fff!important;border-color:#826c48!important}
+button{background:#b68b41!important;color:#08111e!important;border-radius:8px}
+th,td{border-color:#41546c!important}
+</style></head>
 <body>
 <h1>Verify BEP20 Wallet</h1>
 <p><a href="{{ route('member.withdrawals.index') }}">Back to Withdrawals</a></p>

@@ -99,6 +99,26 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
+    // LUMIFLOWON_DETAIL_ROUTES_V1: Protected member pages using existing dashboard data.
+    Route::get('/member/page/{panel}', [MemberDashboardController::class, 'index'])
+        ->where('panel', 'team-breakdown|magic-team|direct-referrals|referral-privacy|income-summary|wallet-history|financial-records|member-profile|account-settings|member-support')
+        ->middleware(EnsureMemberPin::class)
+        ->name('member.detail');
+    // LUMIFLOWON_SECURE_PROFILE_V1
+    Route::get('/member/profile', function (\Illuminate\Http\Request $request) {
+        return view('member.profile', ['member' => $request->user()]);
+    })->middleware(EnsureMemberPin::class)->name('member.profile');
+
+    Route::post('/member/profile/password', function (\Illuminate\Http\Request $request) {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:12', 'confirmed'],
+        ]);
+        $member = $request->user();
+        $member->forceFill(['password' => \Illuminate\Support\Facades\Hash::make($data['password'])])->save();
+        $request->session()->regenerate();
+        return redirect()->route('member.profile')->with('success', 'Password changed successfully.');
+    })->middleware([EnsureMemberPin::class, 'throttle:5,1'])->name('member.profile.password');
     Route::get('/member/dashboard', [
         MemberDashboardController::class,
         'index',

@@ -1,4 +1,12 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn ΓÇö My Withdrawals</title></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn ΓÇö My Withdrawals</title><style id="LUMIFLOWON_MEMBER_GOLD_THEME_V1">
+body{background:#090d16!important;color:#e2e8f0!important}
+section,.card,table{background:#101e31!important;color:#e2e8f0!important;border-color:#b68b41!important}
+h1,h2,h3{color:#f4c66b!important}
+a{color:#f4c66b!important}
+input,select,textarea{background:#0a1626!important;color:#fff!important;border-color:#826c48!important}
+button{background:#b68b41!important;color:#08111e!important;border-radius:8px}
+th,td{border-color:#41546c!important}
+</style></head>
 <body style="font:15px system-ui,sans-serif;max-width:760px;margin:auto;padding:2rem"><h1>Withdrawal Requests</h1><p><a href="{{route('member.dashboard')}}">ΓåÉ Member Dashboard</a></p>
 <p>Available earnings wallet only. Requests hold the gross amount pending admin approval; no external transfer is performed automatically.</p>
 @if(session('status'))<p>{{session('status')}}</p>@endif
