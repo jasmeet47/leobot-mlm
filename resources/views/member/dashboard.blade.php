@@ -333,7 +333,9 @@ body.lb-menu-ready section.lb-terminal,
 body.lb-menu-ready section#account-summary {display:none!important}
 body.lb-menu-ready section#referral-link {display:block!important}
 </style>
-@php($lbPanel = request()->route('panel'))
+@php
+    $lbPanel = request()->route('panel');
+@endphp
 @if($lbPanel)
 <style id="LUMIFLOWON_DETAIL_PAGE_VISIBILITY_V1">
 body main section,
