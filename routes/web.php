@@ -408,3 +408,44 @@ require __DIR__.'/leobot_financial_ui.php';
 
 // Isolated demo-only simulated USDT routes; guarded at runtime.
 require __DIR__.'/demo_simulation.php';
+
+// LUMIFLOWON_ADMIN_LOGO_V1 - demo-only logo management
+\Illuminate\Support\Facades\Route::get('/lumiflowon-brand-logo', function () {
+    $path = storage_path('app/lumiflowon-branding/current-logo');
+    if (!is_file($path)) { abort(404); }
+    $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path);
+    if (!in_array($mime, ['image/png', 'image/jpeg', 'image/webp'], true)) { abort(404); }
+    return response()->file($path, ['Content-Type' => $mime, 'Cache-Control' => 'no-store, max-age=0', 'X-Content-Type-Options' => 'nosniff']);
+})->name('lumiflowon.brand.logo');
+\Illuminate\Support\Facades\Route::middleware([
+    \Illuminate\Auth\Middleware\Authenticate::class,
+    \App\Http\Middleware\EnsureAccountNotBlocked::class,
+    \App\Http\Middleware\AdminOnly::class,
+])->group(function () {
+    \Illuminate\Support\Facades\Route::get('/admin/logo-settings', function () {
+        return view('admin.logo-settings');
+    })->name('admin.lumiflowon.logo.index');
+    \Illuminate\Support\Facades\Route::post('/admin/logo-settings', function (\Illuminate\Http\Request $request) {
+        $request->validate(['logo' => ['required', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048']]);
+        $file = $request->file('logo');
+        if (!$file->isValid()) { abort(422); }
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file->getRealPath());
+        if (!in_array($mime, ['image/png','image/jpeg','image/webp'], true)) { abort(422); }
+        $info = @getimagesize($file->getRealPath());
+        if (!$info || $info[0] < 1 || $info[1] < 1 || $info[0] > 5000 || $info[1] > 5000) { abort(422); }
+        $folder = storage_path('app/lumiflowon-branding');
+        if (!is_dir($folder) && !mkdir($folder, 0750, true) && !is_dir($folder)) { abort(500); }
+        $target = $folder . DIRECTORY_SEPARATOR . 'current-logo';
+        $temp = $folder . DIRECTORY_SEPARATOR . 'upload-' . bin2hex(random_bytes(12));
+        if (!copy($file->getRealPath(), $temp)) { abort(500); }
+        if (is_file($target)) {
+            $backup = $folder . DIRECTORY_SEPARATOR . 'backup-' . date('Ymd-His') . '-' . bin2hex(random_bytes(3));
+            if (!copy($target, $backup)) { @unlink($temp); abort(500); }
+        }
+        if (!@rename($temp, $target)) {
+            if (!@copy($temp, $target)) { @unlink($temp); abort(500); }
+            @unlink($temp);
+        }
+        return redirect()->route('admin.lumiflowon.logo.index')->with('logo_status', 'Logo updated successfully.');
+    })->middleware('throttle:10,1')->name('admin.lumiflowon.logo.save');
+});

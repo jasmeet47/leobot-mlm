@@ -39,7 +39,14 @@ class RegisterController extends Controller
             $referralCode = null;
         }
 
-        return view('auth-page', compact('referralCode', 'sponsorName'));
+        $registrationOtpEnabled = app(RegistrationEmailOtpService::class)->enabled();
+        $captchaA = random_int(2, 9);
+        $captchaB = random_int(1, 9);
+        $request->session()->put('lumiflowon_registration_captcha', $captchaA + $captchaB);
+        $loginCaptchaA = random_int(2, 9);
+        $loginCaptchaB = random_int(1, 9);
+        $request->session()->put('lumiflowon_login_captcha', $loginCaptchaA + $loginCaptchaB);
+        return view('auth-page', compact('referralCode', 'sponsorName', 'registrationOtpEnabled', 'captchaA', 'captchaB', 'loginCaptchaA', 'loginCaptchaB'));
     }
 
     /**
@@ -79,6 +86,19 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         self::limitPublicRequest($request, 'register', 10);
+
+        // Web-only session challenge. API clients remain on the existing separate flow.
+        if (!$request->is('api/*')) {
+            $expected = $request->session()->get('lumiflowon_registration_captcha');
+            $answer = $request->input('registration_captcha');
+            if (!is_int($expected) || !is_string($answer) || !ctype_digit($answer)
+                || !hash_equals((string) $expected, $answer)) {
+                throw ValidationException::withMessages([
+                    'registration_captcha' => 'Incorrect security answer. Refresh the page and try again.',
+                ]);
+            }
+            $request->session()->forget('lumiflowon_registration_captcha');
+        }
 
         // Normalize email before uniqueness validation and OTP verification.
         $request->merge([
@@ -248,6 +268,17 @@ class RegisterController extends Controller
      */
     public function login(Request $request)
     {
+        // LUMIFLOWON_LOGIN_CAPTCHA_V1: one-time session challenge before Auth::attempt.
+        $expected = $request->session()->get('lumiflowon_login_captcha');
+        $answer = $request->input('login_captcha');
+        $request->session()->forget('lumiflowon_login_captcha');
+        if (!is_int($expected) || !is_string($answer) || !ctype_digit($answer)
+            || !hash_equals((string) $expected, $answer)) {
+            throw ValidationException::withMessages([
+                'login_captcha' => 'Incorrect login security answer. Reload the page and try again.',
+            ]);
+        }
+
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],

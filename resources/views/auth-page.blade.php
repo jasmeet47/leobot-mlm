@@ -288,6 +288,145 @@
 
     </style>
 
+<!-- LUMIFLOWON_PREMIUM_GOLD_V1 -->
+<style id="lumiflowon-premium-gold-v1">
+:root {
+    --lumi-navy: #06152b;
+    --lumi-deep: #020915;
+    --lumi-gold: #f2cc78;
+    --lumi-gold-light: #ffe6a4;
+    --lumi-text: #f9f6ed;
+}
+
+html {
+    background: var(--lumi-deep);
+}
+
+body {
+    color: var(--lumi-text);
+    background:
+        radial-gradient(ellipse at 92% 35%,
+            rgba(15, 91, 169, .34), transparent 42%),
+        radial-gradient(ellipse at 5% 78%,
+            rgba(188, 131, 43, .16), transparent 38%),
+        linear-gradient(135deg,
+            #081d3d 0%, #041126 52%, #010713 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+h1, h2, h3 {
+    color: #fff4d5;
+}
+
+h1 {
+    color: var(--lumi-gold-light);
+    text-shadow: 0 2px 22px rgba(237, 190, 91, .2);
+}
+
+.forms {
+    gap: 28px;
+    align-items: start;
+}
+
+.forms > div,
+.forms > section,
+.forms > article {
+    background: linear-gradient(
+        145deg,
+        rgba(5, 17, 38, .96),
+        rgba(1, 8, 20, .98)
+    );
+    border: 1px solid rgba(245, 202, 112, .78);
+    border-radius: 16px;
+    box-shadow:
+        0 16px 48px rgba(0, 0, 0, .35),
+        0 0 24px rgba(236, 190, 91, .08);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+    background: rgba(3, 17, 37, .93);
+    color: #fff;
+    border: 1px solid rgba(231, 194, 122, .5);
+    border-radius: 9px;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #b5bbca;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid rgba(246, 206, 124, .7);
+    outline-offset: 1px;
+    border-color: var(--lumi-gold);
+}
+
+button[type="submit"],
+input[type="submit"] {
+    background: linear-gradient(
+        135deg,
+        #fff0b8 0%,
+        #f0cb78 45%,
+        #b88b43 100%
+    );
+    color: #11100c;
+    border: 1px solid #ffdfa0;
+    border-radius: 9px;
+    font-weight: 750;
+    box-shadow: 0 4px 18px rgba(238, 192, 93, .16);
+    cursor: pointer;
+}
+
+button[type="submit"]:hover,
+input[type="submit"]:hover {
+    filter: brightness(1.08);
+}
+
+a {
+    color: #ffe2a0;
+}
+
+a:hover {
+    color: #fff3ce;
+}
+
+@media (max-width: 760px) {
+    .forms {
+        gap: 18px;
+    }
+}
+</style>
+<!-- LUMIFLOWON_DYNAMIC_LOGO_V1 -->
+<style>.lumi-dynamic-brand{display:flex;justify-content:center;margin:0 auto 12px}.lumi-dynamic-brand img{max-width:min(320px,70vw);max-height:170px;object-fit:contain}.forms h2,.forms h3,.forms label,.forms p,.forms legend{color:#f7eedb!important}</style>
+
+<!-- LUMIFLOWON_FULL_NAVY_GOLD_V2 -->
+<style id="lumiflowon-full-navy-gold-v2">
+html,body{background:#041023!important;color:#f8eed9!important;min-height:100vh!important}
+body{align-items:flex-start!important;padding:22px 14px!important}
+.container{background:#07152b!important;border:1px solid rgba(224,179,90,.65)!important;box-shadow:0 20px 60px rgba(0,0,0,.55)!important;max-width:1040px!important;overflow:hidden!important}
+.header{background:linear-gradient(135deg,#06152b 0%,#0a2444 58%,#091a31 100%)!important;color:#ffe4a1!important;border-bottom:1px solid #bd9650!important;padding:24px 20px!important}
+.header h1{color:#ffe3a0!important}.header p{color:#e4dfd2!important}
+.forms{background:#07152b!important;gap:20px!important;padding:20px!important;align-items:stretch!important}
+.forms>.box{background:linear-gradient(145deg,#0c1b32,#040c1b)!important;border:1px solid #bc9655!important;border-radius:15px!important;box-shadow:none!important;padding:28px!important}
+.forms>.box+.box{border-left:1px solid #bc9655!important}
+.forms h2,.forms label,.forms p,.forms legend{color:#f8eed9!important}
+.forms input:not([type=checkbox]):not([type=radio]){background:#0b1a31!important;color:#fff6e3!important;border:1px solid #9d824f!important}
+.forms input::placeholder{color:#bac3d0!important}
+.forms input:focus{border-color:#f5d38d!important;box-shadow:0 0 0 2px rgba(244,199,111,.22)!important}
+.forms button[type=submit]{background:linear-gradient(100deg,#ffe8a5,#c49a50)!important;color:#16100a!important}
+.footer{background:#07152b!important;color:#c5c9d0!important;border-top:1px solid rgba(224,179,90,.3)!important}
+.sponsor{background:#0b2a27!important;color:#b5f0d4!important;border-color:#31745c!important}
+.success{background:#12392b!important;color:#d8ffe7!important;border-color:#397c5c!important}
+.error,.lumi-captcha-error{background:#3b1b20!important;color:#ffe3e3!important;border:1px solid #a85e64!important}
+.ref-link{background:#0c1d36!important;color:#ffe3a0!important;border-color:#9d824f!important}
+.lumi-dynamic-brand img{max-height:125px!important}
+@media(max-width:750px){body{padding:8px!important}.forms{grid-template-columns:1fr!important;padding:12px!important;gap:12px!important}.forms>.box{padding:20px!important}.forms>.box+.box{border-left:1px solid #bc9655!important;border-top:1px solid #bc9655!important}.header{padding:18px 12px!important}}
+</style>
 </head>
 
 <body>
@@ -298,7 +437,8 @@
 
     <div class="header">
 
-        <h1>LumiFlowOn</h1>
+        <div class="lumi-dynamic-brand"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn logo"></div>
+<h1>LumiFlowOn</h1>
 
         <p>
             Secure Login & Registration
@@ -433,21 +573,34 @@
 
                     <input
                         type="password"
+                        id="lfoLoginPassword"
                         name="password"
                         placeholder="Enter Password"
                         required
                     >
+                    <button type="button" class="lfo-password-toggle" data-target="lfoLoginPassword" aria-controls="lfoLoginPassword" aria-pressed="false">Show password</button>
 
                 </div>
 
 
+                <!-- LUMIFLOWON_LOGIN_CAPTCHA_V1 -->
+                <div class="form-group">
+                    <label for="lumiLoginCaptcha">Login security check: {{ $loginCaptchaA }} + {{ $loginCaptchaB }} = ?</label>
+                    <input id="lumiLoginCaptcha" name="login_captcha" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="3" autocomplete="off" placeholder="Enter the answer" required>
+                    @error('login_captcha') <p class="lumi-captcha-error" role="alert">{{ $message }}</p> @enderror
+                </div>
                 <button type="submit">
 
                     Login
 
                 </button>
 
-            </form>
+            <div style="margin-top:12px;text-align:right">
+    <a href="{{ route('password.otp.request') }}" style="color:#d8b878;text-decoration:underline">
+        Forgot Password?
+    </a>
+</div>
+</form>
 
             @if(session('status'))
                 <p class="success" role="status">{{ session('status') }}</p>
@@ -551,6 +704,32 @@
                 </div>
 
 
+                <div class="form-group" id="lfoOtpPanel">
+                    <label for="lfoOtpCode">Verify your email</label>
+                    @if($registrationOtpEnabled)
+                    <p style="margin:8px 0;color:#f3dfb2">Send a six-digit code to the email above, then verify it before registration.</p>
+                    @else
+                    <p role="status" style="margin:8px 0;color:#f5d28e">Email verification is currently disabled by the administrator. Enable Registration Email OTP in Admin Settings to activate these buttons.</p>
+                    @endif
+                    <input type="hidden" name="challenge_token" id="lfoOtpToken" value="">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                        <button type="button" id="lfoSendOtp" @unless($registrationOtpEnabled) disabled title="Enable Email OTP in Admin Settings" @endunless style="width:auto">Send OTP</button>
+                        <input id="lfoOtpCode" @unless($registrationOtpEnabled) disabled @endunless type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit OTP" style="flex:1;min-width:110px">
+                        <button type="button" id="lfoVerifyOtp" @unless($registrationOtpEnabled) disabled title="Enable Email OTP in Admin Settings" @endunless style="width:auto">Verify OTP</button>
+                    </div>
+                    <p id="lfoOtpStatus" role="status" aria-live="polite" style="margin-top:9px;color:#f3dfb2"></p>
+                </div>
+                <div class="form-group">
+                    <label for="lfoCaptcha">Security check: {{ $captchaA }} + {{ $captchaB }} = ?</label>
+                    <input id="lfoCaptcha" name="registration_captcha" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="3" required autocomplete="off" placeholder="Enter the answer">
+                    <p style="color:#f3dfb2;margin-top:6px">This is a basic session check, not a replacement for production bot protection.</p>
+                </div>
+                @if($errors->any())
+                    <div role="alert" style="color:#ffb4a9;margin:10px 0">
+                        @foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach
+                    </div>
+                @endif
+
                 <div class="form-group">
 
                     <label>
@@ -576,10 +755,12 @@
 
                     <input
                         type="password"
+                        id="lfoRegisterPassword"
                         name="password"
                         placeholder="Minimum 8 characters"
                         required
                     >
+                    <button type="button" class="lfo-password-toggle" data-target="lfoRegisterPassword" aria-controls="lfoRegisterPassword" aria-pressed="false">Show password</button>
 
                 </div>
 
@@ -592,10 +773,12 @@
 
                     <input
                         type="password"
+                        id="lfoConfirmPassword"
                         name="password_confirmation"
                         placeholder="Confirm Password"
                         required
                     >
+                    <button type="button" class="lfo-password-toggle" data-target="lfoConfirmPassword" aria-controls="lfoConfirmPassword" aria-pressed="false">Show password</button>
 
                 </div>
 
@@ -667,6 +850,57 @@
             });
     }
 
+
+    // LUMIFLOWON_REGISTRATION_OTP_UI_V1
+    (function () {
+        const panel = document.getElementById('lfoOtpPanel');
+        if (!panel || !@json((bool) $registrationOtpEnabled)) return;
+        const email = document.querySelector('form[action="{{ route('register.submit') }}"] input[name="email"]');
+        const token = document.getElementById('lfoOtpToken');
+        const code = document.getElementById('lfoOtpCode');
+        const status = document.getElementById('lfoOtpStatus');
+        const send = document.getElementById('lfoSendOtp');
+        const verify = document.getElementById('lfoVerifyOtp');
+        const form = panel.closest('form');
+        let sentEmail = '';
+        let verified = false;
+        const csrf = form.querySelector('input[name="_token"]').value;
+        function message(s, ok) { status.textContent = s; status.style.color = ok ? '#a7f3d0' : '#ffb4a9'; }
+        email.addEventListener('input', function () { token.value=''; verified=false; sentEmail=''; message('Email changed. Please request a new OTP.', false); });
+        async function post(url, payload) {
+            const r = await fetch(url, {method:'POST', credentials:'same-origin', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':csrf}, body:JSON.stringify(payload)});
+            const data = await r.json().catch(()=>({}));
+            if (!r.ok) throw new Error(data.message || (data.errors && Object.values(data.errors).flat()[0]) || 'Request failed ('+r.status+')');
+            return data;
+        }
+        send.addEventListener('click', async function () {
+            const value = email.value.trim().toLowerCase();
+            if (!value || !email.checkValidity()) { message('Enter a valid email first.', false); return; }
+            send.disabled=true; token.value=''; verified=false;
+            try {
+                const d = await post(@json(route('registration-otp.send')), {email:value});
+                if (!d.challenge_token) throw new Error('OTP service did not return a challenge.');
+                token.value=d.challenge_token; sentEmail=value;
+                message('OTP sent. Check your email, then enter the code.', true);
+            } catch(e) { message(e.message, false); }
+            finally { send.disabled=false; }
+        });
+        verify.addEventListener('click', async function () {
+            if (!token.value || !sentEmail) { message('Send OTP first.', false); return; }
+            if (!/^[0-9]{6}$/.test(code.value.trim())) { message('Enter the six-digit OTP.', false); return; }
+            verify.disabled=true;
+            try {
+                await post(@json(route('registration-otp.verify')), {email:sentEmail,otp:code.value.trim(),challenge_token:token.value});
+                verified=true; message('Email verified successfully.', true);
+            } catch(e) { verified=false; message(e.message, false); }
+            finally { verify.disabled=false; }
+        });
+        form.addEventListener('submit', function(e) {
+            if (!verified || sentEmail !== email.value.trim().toLowerCase()) {
+                e.preventDefault(); message('Verify your email OTP before creating the account.', false);
+            }
+        });
+    }());
 
     // LEOBOT_SPONSOR_VERIFY_V1: read-only lookup; server validates again on registration.
     (function () {
@@ -754,6 +988,27 @@
     }());
 </script>
 
+
+<!-- LUMIFLOWON_PASSWORD_VISIBILITY_V1 -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+ document.querySelectorAll('.lfo-password-toggle').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+   var input=document.getElementById(btn.getAttribute('data-target'));
+   if(!input) return;
+   var show=input.type==='password';
+   input.type=show?'text':'password';
+   btn.textContent=show?'Hide password':'Show password';
+   btn.setAttribute('aria-pressed',show?'true':'false');
+  });
+ });
+});
+</script>
+<style id="lfo-password-toggle-style">
+.lfo-password-toggle{display:inline-block!important;width:auto!important;margin:8px 0 0!important;padding:6px 12px!important;background:transparent!important;color:#ffe2a0!important;border:1px solid #ae8b52!important;border-radius:7px!important;cursor:pointer!important;font-size:13px!important}
+.lfo-password-toggle:focus-visible{outline:2px solid #ffe2a0!important;outline-offset:2px!important}
+#lfoSendOtp:disabled,#lfoVerifyOtp:disabled{opacity:.45!important;cursor:not-allowed!important}
+</style>
 </body>
 
 </html>
