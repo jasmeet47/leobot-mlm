@@ -52,7 +52,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 </style>
 </head>
 <body>
-<div class="lf2-shell"><div class="lf2-overlay" id="lf2Overlay" onclick="lf2Toggle(false)"></div><aside class="lf2-sidebar" id="lf2Sidebar" aria-label="Admin navigation"><a class="lf2-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"><span>LumiFlowOn</span></a><nav class="lf2-nav">
+<div class="lf2-shell"><div class="lf2-overlay" id="lf2Overlay" onclick="lf2Toggle(false)"></div><aside class="lf2-sidebar" id="lf2Sidebar" aria-label="Admin navigation"><a class="lf2-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="" onerror="this.style.display='none'"><span>LumiFlowOn</span></a><nav class="lf2-nav">
 <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'lf2-active' : '' }}">▦ &nbsp; Dashboard</a>
 <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'lf2-active' : '' }}">♙ &nbsp; Members</a>
 <a href="{{ route('admin.magic.index') }}" class="{{ request()->routeIs('admin.magic.*') ? 'lf2-active' : '' }}">◇ &nbsp; Magic Matrix</a>
@@ -102,13 +102,13 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
                         <tr>
                             <td>{{ $member->username }}</td>
                             <td>{{ $member->name }}</td>
-                            <td>{{ $member->sponsor?->username ?? $member->sponsor_id ?? 'ΓÇö' }}</td>
+                            <td>{{ $member->sponsor?->username ?? $member->sponsor_id ?? ' - ' }}</td>
                             <td>
                                 <span class="{{ $member->status === 'active' ? 'active' : 'inactive' }}">
                                     {{ $member->is_blocked ? 'Blocked (' . ucfirst($member->status) . ')' : ucfirst($member->status) }}
                                 </span>
                             </td>
-                            <td>{{ $member->created_at?->format('d M Y') ?? 'ΓÇö' }}</td>
+                            <td>{{ $member->created_at?->format('d M Y') ?? ' - ' }}</td>
                             <td>
                                 <a href="{{ route('admin.members.show', $member->id) }}">
                                     View Details

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn ΓÇö Magic Matrix</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn  -  Magic Matrix</title>
 <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;color:#1b2835}section{border:1px solid #d1d5db;border-radius:8px;padding:18px;margin:16px 0}label{display:block;margin:9px 0}input,select{padding:8px;max-width:220px}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:7px;text-align:left}.err{color:#991b1b}button{padding:9px 15px}small{color:#576172}</style><style id="lumiflowon-shared-admin-sidebar-v2">
 html,body{min-height:100%;}body{margin:0!important;background:#061327!important;color:#edf3ff!important}.lf2-shell{display:flex;min-height:100vh;width:100%;align-items:stretch}.lf2-sidebar{box-sizing:border-box;flex:0 0 252px;width:252px;height:100vh;position:sticky;top:0;overflow-y:auto;background:linear-gradient(180deg,#061327,#071b37);border-right:1px solid #8c713c;padding:16px 11px;z-index:9991;font:14px/1.5 system-ui,Arial,sans-serif}.lf2-brand{display:flex;gap:10px;align-items:center;padding:8px 10px 20px;color:#f5cf7c!important;font-size:21px;font-weight:800;text-decoration:none!important}.lf2-brand img{width:42px;height:42px;object-fit:contain}.lf2-nav{display:flex;flex-direction:column;gap:4px}.lf2-nav a,.lf2-back{display:block;padding:11px 12px;color:#f2f4fa!important;text-decoration:none!important;border:1px solid transparent;border-radius:10px}.lf2-nav a:hover,.lf2-nav a.lf2-active{background:#183555!important;border-color:#d2a64f!important;color:#ffe19b!important}.lf2-back{margin-top:14px;border-top:1px solid #34425c;border-radius:0}.lf2-content{min-width:0;flex:1;padding:18px 22px;box-sizing:border-box;overflow-x:auto}.lf2-content :is(a){color:#f3c86f}.lf2-toggle{display:none;background:#d5a64d;color:#08152a;border:0;border-radius:9px;padding:10px 16px;font-weight:700;margin-bottom:14px;cursor:pointer}.lf2-overlay{display:none}@media(max-width:850px){.lf2-sidebar{position:fixed;transform:translateX(-110%);transition:transform .2s ease;box-shadow:0 0 30px #0008}.lf2-sidebar.lf2-open{transform:translateX(0)}.lf2-toggle{display:block}.lf2-overlay.lf2-open{display:block;position:fixed;inset:0;background:#0009;z-index:9990}.lf2-content{padding:14px;max-width:100vw}}
 </style><style id="lf-current-admin-gold-v4">
@@ -29,7 +29,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 @media(max-width:760px){.lf2-content{padding:12px!important}.lf2-content :is(main,section,.card,.panel){padding:14px!important}}
 </style>
 </head><body>
-<div class="lf2-shell"><div class="lf2-overlay" id="lf2Overlay" onclick="lf2Toggle(false)"></div><aside class="lf2-sidebar" id="lf2Sidebar" aria-label="Admin navigation"><a class="lf2-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"><span>LumiFlowOn</span></a><nav class="lf2-nav">
+<div class="lf2-shell"><div class="lf2-overlay" id="lf2Overlay" onclick="lf2Toggle(false)"></div><aside class="lf2-sidebar" id="lf2Sidebar" aria-label="Admin navigation"><a class="lf2-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="" onerror="this.style.display='none'"><span>LumiFlowOn</span></a><nav class="lf2-nav">
 <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'lf2-active' : '' }}">▦ &nbsp; Dashboard</a>
 <a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'lf2-active' : '' }}">♙ &nbsp; Members</a>
 <a href="{{ route('admin.magic.index') }}" class="{{ request()->routeIs('admin.magic.*') ? 'lf2-active' : '' }}">◇ &nbsp; Magic Matrix</a>
@@ -43,7 +43,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">↗ &nbsp; Quick Links</a>
 </nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
 
-<h1>Magic Matrix ΓÇö 20 Levels</h1>
+<h1>Magic Matrix  -  20 Levels</h1>
 <p><a href="{{ route('admin.dashboard') }}">ΓåÉ Admin dashboard</a></p>
 <p><strong>Default financial switches remain OFF.</strong> 20-level percentage preset is only a proposal and requires explicit administrator review.</p>
 @if(session('status'))<p role="status">{{session('status')}}</p>@endif
@@ -84,5 +84,5 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <label>Profit source member ID <input type="number" min="1" name="source_user_id" required></label>
 <button @disabled(!$canSettle)>Settle checked source</button></form></section>
 <section><h2>Recent Magic Entitlements</h2><table><tr><th>Funding</th><th>Level</th><th>Beneficiary</th><th>Paid</th><th>Held</th><th>Status</th></tr>
-@foreach($recent as $entry)<tr><td>{{$entry->funding_id}}</td><td>{{$entry->level}}</td><td>{{$entry->beneficiary_user_id??'ΓÇö'}}</td><td>{{$entry->paid_amount}}</td><td>{{$entry->held_amount}}</td><td>{{$entry->status}}</td></tr>@endforeach</table></section>
+@foreach($recent as $entry)<tr><td>{{$entry->funding_id}}</td><td>{{$entry->level}}</td><td>{{$entry->beneficiary_user_id??' - '}}</td><td>{{$entry->paid_amount}}</td><td>{{$entry->held_amount}}</td><td>{{$entry->status}}</td></tr>@endforeach</table></section>
 </main></div><script>function lf2Toggle(open){document.getElementById('lf2Sidebar')?.classList.toggle('lf2-open',!!open);document.getElementById('lf2Overlay')?.classList.toggle('lf2-open',!!open)}</script></body></html>
