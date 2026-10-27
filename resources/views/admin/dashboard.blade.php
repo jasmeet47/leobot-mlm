@@ -248,6 +248,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
   <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
   <a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
+  <a href="{{ route('admin.deposit-review.index') }}">Deposit Management (Review Only)</a>
   <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
   <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
   <div class="lf-nav-title">Settings</div>
