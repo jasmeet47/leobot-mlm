@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use RuntimeException;
 
-/** Manual evidence submission and dual-party verified wallet credit. No chain verification is claimed. */
+/** Manual evidence submission; independent on-chain verification required before credit. */
 final class VerifiedDepositService
 {
     private static function gate(): void
@@ -48,6 +48,12 @@ final class VerifiedDepositService
                 }
                 return (int)$existing->id;
             }
+            // Defense in depth; the database UNIQUE(network, tx_hash) index is the
+            // authoritative concurrency guard against duplicate transaction credit.
+            if (DB::table('member_deposit_requests')->where('network', $network)
+                ->where('tx_hash', $txHash)->exists()) {
+                throw new RuntimeException('Blockchain transaction already submitted.');
+            }
             return (int)DB::table('member_deposit_requests')->insertGetId([
                 'user_id'=>$memberId, 'request_key'=>$requestKey, 'amount'=>$amount,
                 'network'=>$network, 'tx_hash'=>$txHash, 'status'=>'pending',
@@ -79,6 +85,25 @@ final class VerifiedDepositService
             if (!$member || $member->status !== 'active' || self::blocked($member)) {
                 throw new RuntimeException('Member is inactive or blocked.');
             }
+            // Do not approve a transaction hash that appears on another request.
+            if (DB::table('member_deposit_requests')->where('network', $deposit->network)
+                ->where('tx_hash', $deposit->tx_hash)->where('id', '<>', $depositId)->exists()) {
+                throw new RuntimeException('Duplicate blockchain transaction evidence.');
+            }
+            // Fail closed: admin reference is NOT payment proof. Independent RPC confirmation
+            // must match the locked company recipient, network, amount and tx hash.
+            if (config('leobot_deposit_chain.enforce_on_chain', false) !== true) {
+                throw new RuntimeException('Independent on-chain deposit verification is disabled.');
+            }
+            $recipient = (string) config('leobot_deposit_chain.recipients.'.$deposit->network, '');
+            if ($recipient === '') {
+                throw new RuntimeException('Company receiving wallet is not configured for this network.');
+            }
+            $chain = app(\App\Contracts\UsdtChainVerifier::class);
+            (new UsdtPaymentVerificationPolicy($chain))->assertVerified(
+                (string)$deposit->network, (string)$deposit->tx_hash,
+                $recipient, $recipient, (string)$deposit->amount
+            );
             WalletService::credit((int)$deposit->user_id, 'activation_balance', (string)$deposit->amount,
                 'verified_deposit', 'deposit:credit:'.$deposit->id,
                 ['reference_type'=>'member_deposit_request', 'reference_id'=>$deposit->id,

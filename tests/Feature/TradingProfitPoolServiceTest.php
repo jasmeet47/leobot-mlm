@@ -31,7 +31,7 @@ class TradingProfitPoolServiceTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($config['host'] ?? '') === '127.0.0.1'
             && (string) ($config['port'] ?? '') === '5433'
-            && ($config['database'] ?? '') === 'lumiflowon_final_regression_20261024'
+            && ($config['database'] ?? '') === 'leobot_financial_disposable'
             && empty($config['url']);
 
         if ($safe) {
@@ -40,7 +40,7 @@ class TradingProfitPoolServiceTest extends TestCase
             );
 
             $safe = $identity
-                && $identity->database_name === 'lumiflowon_final_regression_20261024'
+                && $identity->database_name === 'leobot_financial_disposable'
                 && (int) $identity->server_port === 5433;
         }
 

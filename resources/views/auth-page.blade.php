@@ -551,13 +551,13 @@ body{align-items:flex-start!important;padding:22px 14px!important}
                 <div class="form-group">
 
                     <label>
-                        Username
+                        Username or Email
                     </label>
 
                     <input
                         type="text"
                         name="username"
-                        placeholder="Enter Username"
+                        placeholder="Enter Username or Email"
                         value="{{ old('username') }}"
                         required
                     >

@@ -54,5 +54,22 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 @foreach($withdrawals as $w)<tr><td>{{$w->id}}</td><td>{{$w->user_id}}</td><td>{{$w->gross_amount}} USDT</td><td>{{$w->status}}</td><td>
 @if(in_array($w->status,['requested','approved_awaiting_payment'],true))
 @if($w->status==='requested')<form method="post" action="{{route('admin.withdrawals.approve',$w->id)}}" style="display:inline">@csrf<button @disabled(!$writeEnabled)>Approve</button></form>@endif
+{{-- LUMIFLOWON_ADMIN_EXTERNAL_PAYMENT_FORM_V1: records only independently verified external transfer; never broadcasts funds. --}}
+@if($w->status==='approved_awaiting_payment')
+<form method="post" action="{{ route('admin.withdrawals.confirm-external-payment', $w->id) }}" style="display:block;margin:10px 0;padding:12px;border:1px solid #b58d49;border-radius:10px" onsubmit="return confirm('Confirm only after the external USDT payment has actually been sent. The server must independently verify the transaction, recipient, amount and confirmations. Continue?')">
+@csrf
+<p><strong>Verify completed external USDT payment</strong></p>
+<label>Network
+<select name="network" required @disabled(!$writeEnabled)>
+<option value="">Select network</option>
+<option value="TRC20" @selected(old('network')==='TRC20')>TRC20 (TRON)</option>
+<option value="BEP20" @selected(old('network')==='BEP20')>BEP20 (BSC)</option>
+</select></label>
+<label>Transaction hash
+<input type="text" name="tx_hash" value="{{ old('tx_hash') }}" minlength="32" maxlength="66" autocomplete="off" spellcheck="false" placeholder="Verified on-chain transaction hash" required @disabled(!$writeEnabled)></label>
+<p><small>Enter the transaction hash only after paying manually outside this panel. Submission does not send USDT. The backend must verify before marking paid.</small></p>
+<button type="submit" @disabled(!$writeEnabled)>Verify transaction and record payment</button>
+</form>
+@endif
 <form method="post" action="{{route('admin.withdrawals.reject',$w->id)}}" style="display:inline">@csrf<button @disabled(!$writeEnabled)>Reject/refund</button></form>
 @endif</td></tr>@endforeach</table>{{$withdrawals->links()}}</main></div><script>function lf2Toggle(open){document.getElementById('lf2Sidebar')?.classList.toggle('lf2-open',!!open);document.getElementById('lf2Overlay')?.classList.toggle('lf2-open',!!open)}</script></body></html>

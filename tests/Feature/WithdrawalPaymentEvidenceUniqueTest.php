@@ -18,7 +18,7 @@ final class WithdrawalPaymentEvidenceUniqueTest extends TestCase
         $this->assertSame('pgsql', DB::connection()->getDriverName());
         $this->assertSame('127.0.0.1', DB::connection()->getConfig('host'));
         $this->assertSame('5433', (string) DB::connection()->getConfig('port'));
-        $this->assertSame('lumiflowon_final_regression_20261024', DB::connection()->getDatabaseName());
+        $this->assertSame('leobot_financial_disposable', DB::connection()->getDatabaseName());
 
         $admin = $this->person('admin');
         $member = $this->person('member');

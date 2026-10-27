@@ -38,7 +38,7 @@ class UnifiedProfitSharingServiceTest extends TestCase
             $connection->getDriverName() === 'pgsql' &&
             ($config['host'] ?? '') === '127.0.0.1' &&
             (string) ($config['port'] ?? '') === '5433' &&
-            ($config['database'] ?? '') === 'lumiflowon_final_regression_20261024' &&
+            ($config['database'] ?? '') === 'leobot_financial_disposable' &&
             empty($config['url']);
 
         if ($safe) {
@@ -47,13 +47,13 @@ class UnifiedProfitSharingServiceTest extends TestCase
             );
 
             $safe =
-                $identity->database_name === 'lumiflowon_final_regression_20261024' &&
+                $identity->database_name === 'leobot_financial_disposable' &&
                 (int) $identity->server_port === 5433;
         }
 
         if (! $safe) {
             throw new RuntimeException(
-                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/lumiflowon_final_regression_20261024.'
+                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
             );
         }
         \Tests\Support\FinancialSeedState::captureIfNeeded();

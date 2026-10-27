@@ -362,6 +362,8 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
         ->name('admin.withdrawals.index');
     Route::post('/admin/withdrawals/{id}/approve', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'approve'])
         ->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.approve');
+    Route::post('/admin/withdrawals/{id}/confirm-external-payment', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'confirmExternalPayment'])
+        ->whereNumber('id')->middleware('throttle:3,1')->name('admin.withdrawals.confirm-external-payment');
     Route::post('/admin/withdrawals/{id}/reject', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'reject'])
         ->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.reject');
     Route::post('/admin/withdrawals/fee', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'updateFee'])

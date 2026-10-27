@@ -27,13 +27,13 @@ final class OptionAIntegrationFinancialTest extends TestCase
         $c=DB::connection();$cfg=$c->getConfig();
         $safe=app()->environment('testing') && $c->getDriverName()==='pgsql' &&
               ($cfg['host']??'')==='127.0.0.1' && (string)($cfg['port']??'')==='5433' &&
-              ($cfg['database']??'')==='lumiflowon_final_regression_20261024' && empty($cfg['url']);
+              ($cfg['database']??'')==='leobot_financial_disposable' && empty($cfg['url']);
         if ($safe) {
             $identity=DB::selectOne('SELECT current_database() AS database_name, inet_server_port() AS server_port');
-            $safe=$identity && $identity->database_name==='lumiflowon_final_regression_20261024' &&
+            $safe=$identity && $identity->database_name==='leobot_financial_disposable' &&
                   (int)$identity->server_port===5433;
         }
-        if (!$safe) throw new RuntimeException('SAFETY STOP: disposable 127.0.0.1:5433/lumiflowon_final_regression_20261024 only.');
+        if (!$safe) throw new RuntimeException('SAFETY STOP: disposable 127.0.0.1:5433/leobot_financial_disposable only.');
         \Tests\Support\FinancialSeedState::captureIfNeeded();
     }
     protected function afterTruncatingDatabase(): void { \Tests\Support\FinancialSeedState::restoreOrCapture(); }

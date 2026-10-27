@@ -299,24 +299,34 @@ class RegisterController extends Controller
         }
 
         $credentials = $request->validate([
-            'username' => ['required', 'string'],
+            'username' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        // LEOBOT_LOGIN_TIMING_V1 - temporary diagnostic, no personal data
-        $lbLoginStart = hrtime(true);
+        // LUMIFLOWON_BETA_DUAL_LOGIN_V10: normalize input, resolve one account,
+        // and authenticate through the existing Laravel guard and password provider.
+        // CAPTCHA, throttling, account blocking and role redirects remain unchanged.
+        $loginId = trim($credentials['username']);
+        $loginIsEmail = filter_var($loginId, FILTER_VALIDATE_EMAIL) !== false;
+        $candidate = $loginIsEmail
+            ? \App\Models\User::query()->whereRaw('LOWER(email) = ?', [strtolower($loginId)])->first()
+            : \App\Models\User::query()->where('username', $loginId)->first();
 
-        $loginSuccess = Auth::attempt([
-            'username' => $credentials['username'],
-            'password' => $credentials['password'],
+        $loginSuccess = false;
+        if ($candidate !== null) {
+            $loginSuccess = Auth::attempt([
+                'username' => $candidate->username,
+                'password' => $credentials['password'],
+            ]);
+        }
+
+        // No password, identifier or personal information is written to logs.
+        \Illuminate\Support\Facades\Log::info('lumiflowon.beta.login_v10', [
+            'identifier_type' => $loginIsEmail ? 'email' : 'username',
+            'account_found' => $candidate !== null,
+            'auth_success' => $loginSuccess,
         ]);
-
-        \Illuminate\Support\Facades\Log::info('leobot.login.auth_timing', [
-            'auth_ms' => round((hrtime(true) - $lbLoginStart) / 1000000, 2),
-            'success' => $loginSuccess,
-        ]);
-
-        if ($loginSuccess) {
+if ($loginSuccess) {
             $user = $request->user();
             if ($user->deleted_at !== null || $user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
                 Auth::logout();
