@@ -448,6 +448,14 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
         </div>
     </section>
 
+
+<!-- LUMIFLOWON_ADMIN_PASSWORD_OTP_BUTTON_V1 -->
+<div style="margin:16px 0">
+    <a href="{{ route('admin.password-otp.index') }}"
+       style="display:inline-block;padding:12px 18px;background:#243b80;color:#fff;border-radius:9px;text-decoration:none;font-weight:700">
+        Password OTP Settings
+    </a>
+</div>
 </main>
 
 <footer class="footer">
