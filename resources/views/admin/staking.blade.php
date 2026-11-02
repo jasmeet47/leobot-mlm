@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LUMIFLOWON Admin Staking Control</title>
+<title>LUMIFLOWON Admin Staking</title>
 <style>
 body{font:16px system-ui;max-width:760px;margin:35px auto;padding:20px;background:#101d30;color:#f1f7ff}
 section{border:1px solid #38516b;border-radius:14px;padding:22px}
@@ -16,19 +16,42 @@ a{color:#8ccaff}
 <h1>Admin Staking Control</h1>
 <p><a href="{{ route('admin.dashboard') }}">Back to Dashboard</a></p>
 <section>
-<p>Database schema: <strong>{{ $ready ? 'Available' : 'Not Ready' }}</strong></p>
-<p>Current Staking Status: <strong>{{ $enabled ? 'ON' : 'OFF' }}</strong></p>
-<form method="post" action="{{ route('admin.staking.toggle') }}">
-@csrf
-<input type="hidden" name="enabled" value="1">
-<button type="submit" disabled>Turn Staking ON — Pending Approval</button>
-</form>
-<form method="post" action="{{ route('admin.staking.toggle') }}">
+<p>Database: <strong>{{ $ready ? 'Available' : 'Not Ready' }}</strong></p>
+<p>Staking: <strong>{{ $enabled ? 'ON' : 'OFF' }}</strong></p>
+<form id="offForm" method="post" action="{{ route('admin.staking.toggle') }}">
 @csrf
 <input type="hidden" name="enabled" value="0">
-<button type="submit" @disabled(!$ready)>Turn Staking OFF</button>
+<button id="offButton" type="submit" @disabled(!$ready || !$enabled)>
+Turn Staking OFF
+</button>
 </form>
-<p>ON remains unavailable until production financial readiness is verified.</p>
+<button type="button" disabled>
+Turn Staking ON - Financial Certification Pending
+</button>
+<p id="result" role="status"></p>
 </section>
+<script>
+document.getElementById('offForm').addEventListener('submit',async function(e){
+ e.preventDefault();
+ const button=document.getElementById('offButton');
+ const result=document.getElementById('result');
+ if(button.disabled)return;
+ button.disabled=true;
+ try {
+   const response=await fetch(this.action,{
+     method:'POST',
+     credentials:'same-origin',
+     headers:{'Accept':'application/json'},
+     body:new FormData(this)
+   });
+   if(!response.ok)throw new Error('Rejected');
+   result.textContent='Staking disabled successfully';
+   location.reload();
+ } catch(e) {
+   result.textContent='Unable to disable staking';
+   button.disabled=false;
+ }
+});
+</script>
 </body>
 </html>

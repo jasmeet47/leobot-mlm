@@ -7,8 +7,7 @@
 <style>
 body{font:16px system-ui;max-width:760px;margin:35px auto;padding:20px;background:#101d30;color:#f1f7ff}
 section{border:1px solid #38516b;border-radius:14px;padding:22px}
-input,button{padding:12px;margin:8px 0;border-radius:8px}
-button{cursor:pointer}
+input,button{padding:12px;margin:8px;border-radius:8px}
 button:disabled{opacity:.5;cursor:not-allowed}
 a{color:#8ccaff}
 </style>
@@ -18,21 +17,26 @@ a{color:#8ccaff}
 <p><a href="{{ route('member.dashboard') }}">Back to Dashboard</a></p>
 <section>
 <p>Status: <strong>{{ $enabled ? 'ON' : 'OFF' }}</strong></p>
-@if(!$enabled)
-<p>New staking is disabled by administration.</p>
-@endif
 <form method="post" action="{{ route('member.staking.store') }}">
 @csrf
-<label>Stake Amount (USDT)</label>
-<input type="number" name="amount" min="0.00000001" step="0.00000001"
-       value="{{ old('amount') }}" required @disabled(!$enabled)>
-<input type="hidden" name="request_key" id="staking_request_key">
-<p>Available balance and staking eligibility are verified by the server.</p>
-<button type="submit" disabled title="Pending financial safety approval">
-Submit Stake — Pending Approval
+<label for="amount">Stake Amount (USDT)</label>
+<input id="amount" name="amount" type="number"
+ min="0.00000001" step="0.00000001" required disabled>
+<input type="hidden" name="request_key" id="request_key">
+<button type="submit" disabled>
+Submit Stake - Financial Certification Pending
 </button>
 </form>
-<p id="staking-notice">Financial staking submission is not yet activated.</p>
+<p>Real staking is unavailable until financial safety approval.</p>
 </section>
+<script>
+(function(){
+ const key=document.getElementById('request_key');
+ if(!window.crypto || !crypto.getRandomValues)return;
+ const bytes=new Uint8Array(24);
+ crypto.getRandomValues(bytes);
+ key.value=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+})();
+</script>
 </body>
 </html>
