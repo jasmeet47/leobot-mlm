@@ -452,3 +452,5 @@ require __DIR__.'/demo_simulation.php';
         return redirect()->route('admin.lumiflowon.logo.index')->with('logo_status', 'Logo updated successfully.');
     })->middleware('throttle:10,1')->name('admin.lumiflowon.logo.save');
 });
+
+require __DIR__.'/staking_routes.php';
