@@ -22,6 +22,10 @@ a{color:#8ccaff}
 <label for="amount">Stake Amount (USDT)</label>
 <input id="amount" name="amount" type="number"
  min="0.00000001" step="0.00000001" required disabled>
+<label for="security_pin">Security PIN</label>
+<input id="security_pin" name="security_pin"
+ type="password" autocomplete="off"
+ inputmode="numeric" required disabled>
 <input type="hidden" name="request_key" id="request_key">
 <button type="submit" disabled>
 Submit Stake - Financial Certification Pending
