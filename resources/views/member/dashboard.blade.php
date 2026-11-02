@@ -402,7 +402,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   <div class="lb-quick-grid">
     <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>View deposit request page; financial approval required</small></a>
-    <button class="lb-quick-link" type="button" disabled aria-disabled="true" title="Staking is coming soon"><strong>Staking</strong><small>Coming Soon</small></button>
+    <a class="lb-quick-link" href="{{ route('member.staking.index') }}"><strong>Staking</strong><small>View staking status</small></a>
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>View transfer page; financial approval required</small></a>
   </div>
 </section>

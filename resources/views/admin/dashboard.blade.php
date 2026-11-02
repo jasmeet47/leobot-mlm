@@ -247,7 +247,8 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.dashboard') }}" class="lf-current">▦ &nbsp; Dashboard</a>
   <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
   <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
-  <a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
+  <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
   <a href="{{ route('admin.deposit-review.index') }}">Deposit Management (Review Only)</a>
   <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
   <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
@@ -346,7 +347,8 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
         <div class="card">
             <h2>Admin Withdrawals</h2>
             <p>Review withdrawal requests, approval controls and principal withdrawal fees. Payouts remain disabled.</p>
-            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+            <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
         </div>
     </section>
 
@@ -444,7 +446,8 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
         <div class="card">
             <h2>Admin Withdrawals</h2>
             <p>Review withdrawal requests, approval controls and principal withdrawal fees. Payouts remain disabled.</p>
-            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+            <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
         </div>
     </section>
 
