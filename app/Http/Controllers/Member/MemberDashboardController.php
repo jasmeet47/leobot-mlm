@@ -267,8 +267,6 @@ class MemberDashboardController extends Controller
             ->orderByDesc('id')
             ->paginate(10, ['*'], 'wallet_page');
         return view('member.dashboard', [
-            'magicIncomeSummary' => null,
-            'magicTeam' => \App\Services\MagicMatrixTeamReadService::forMember((int) $member->id),
             'member' => $member,
             'teamSummary' => $teamSummary,
             'levelRows' => $levelRows,

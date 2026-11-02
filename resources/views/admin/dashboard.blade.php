@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LumiFlowOn - Admin Dashboard</title>
+    <title>LeoBot MLM - Admin Dashboard</title>
 
     <style>
         * {
@@ -234,13 +234,10 @@ main.container .card p {
 
 <body>
 
-
-
-
 <header class="header">
     <div class="header-inner">
         <div>
-            <div class="brand">LumiFlowOn</div>
+            <div class="brand">LEOBOT MLM</div>
             <div class="subtitle">Secure Administration Panel</div>
         </div>
 
@@ -254,51 +251,41 @@ main.container .card p {
 </header>
 
 <main class="container">
-<!-- LUMIFLOWON_MT5_UI_FIXED -->
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-<h2>Dashboard Quick Links</h2>
-<p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
-@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
-<span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
-@endforeach
-</div>
-<p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>
-<a href="{{ route('admin.quick-links.index') }}">Manage Quick Links</a>
-</section>
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-    <h2>MT5 Live Trading Display</h2>
-    <p>View-only. Trading and settlement actions are not available.</p>
-
-    @php
-        $mt5Enabled = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
-            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
-    @endphp
-
-    <p>Display: <strong>{{ $mt5Enabled ? 'ON' : 'OFF' }}</strong></p>
-    <p>Live connection: Not configured</p>
-
-    <form method="POST" action="{{ route('admin.mt5.toggle') }}">
-        @csrf
-        <input type="hidden" name="enabled" value="{{ $mt5Enabled ? 0 : 1 }}">
-        <button type="submit">{{ $mt5Enabled ? 'Turn OFF MT5 Display' : 'Turn ON MT5 Display' }}</button>
-    </form>
-
-    <p><a href="{{ route('admin.mt5.view') }}">View MT5 Status (JSON)</a></p>
-</section>
-
 <section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
   <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>
+    <div><div class="lb-terminal-eyebrow">LEOBOT / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LeoBot records.</p></div>
     <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Protected admin session</div>
   </div>
   <div class="lb-terminal-grid">
-    <div class="lb-terminal-tile"><small>Platform</small><strong>LumiFlowOn Control</strong></div>
+    <div class="lb-terminal-tile"><small>Platform</small><strong>LeoBot Control</strong></div>
     <div class="lb-terminal-tile"><small>Financial operations</small><strong class="accent">Approval gated</strong></div>
     <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
   </div>
-  <p class="lb-terminal-foot lb-terminal-note">UI theme only ├é┬╖ No MT5 feed ├é┬╖ No simulated trading values ├é┬╖ Existing financial permissions remain unchanged.</p>
+  <p class="lb-terminal-foot lb-terminal-note">UI theme only Â· No MT5 feed Â· No simulated trading values Â· Existing financial permissions remain unchanged.</p>
 </section>
+<!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
+<section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
+  <h2>Staking Control</h2>
+  @php
+    $stakingControlReady = \Illuminate\Support\Facades\Schema::hasTable('staking_controls');
+    $stakingEnabled = $stakingControlReady && (bool) \Illuminate\Support\Facades\DB::table('staking_controls')->orderBy('id')->value('enabled');
+  @endphp
+  <p>Current staking status: <strong>{{ $stakingEnabled ? 'ON' : 'OFF' }}</strong></p>
+  @if(!$stakingControlReady)
+    <p>Staking control table unavailable. No changes permitted.</p>
+  @elseif($stakingEnabled)
+    <form method="POST" action="{{ route('admin.staking.toggle') }}">
+      @csrf
+      <input type="hidden" name="enabled" value="0">
+      <button type="submit">Turn Staking OFF</button>
+    </form>
+    <p>Disabling prevents new stakes; existing positions and history remain unchanged.</p>
+  @else
+    <p>Staking is OFF. Activation is withheld until financial tests and separate production approval.</p>
+    <button type="button" disabled title="Requires financial verification and separate approval">Turn Staking ON (locked)</button>
+  @endif
+</section>
+<section class="card" style="margin:16px 0;padding:18px"><h2>Password Recovery Settings</h2><p>Password OTP Settings page not installed; link withheld until view is present.</p></section>
 <section class="welcome">
         <h1>Admin Dashboard</h1>
 
@@ -308,7 +295,7 @@ main.container .card p {
         </p>
 
         <p>
-            Manage LumiFlowOn settings and review audit history.
+            Manage LeoBot settings and review audit history.
         </p>
         <div class="card">
             <h2>Magic Matrix</h2>
@@ -424,7 +411,7 @@ main.container .card p {
 </main>
 
 <footer class="footer">
-    LumiFlowOn - Admin Dashboard
+    LeoBot MLM - Admin Dashboard
 </footer>
 
 </body>

@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Services\RegistrationEmailOtpService;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -90,7 +89,6 @@ class RegisterController extends Controller
                 'max:255',
                 'unique:users,email',
             ],
-            'challenge_token' => ['nullable', 'string', 'size:64', 'regex:/\A[a-f0-9]{64}\z/'],
             'mobile' => ['required', 'string', 'max:20'],
             'password' => [
                 'required',
@@ -99,13 +97,6 @@ class RegisterController extends Controller
                 'confirmed',
             ],
         ]);
-
-        // Fail closed when admin enables registration email OTP.
-        $registrationOtp = app(RegistrationEmailOtpService::class);
-        $requireRegistrationOtp = $registrationOtp->enabled();
-        if ($requireRegistrationOtp && empty($validated['challenge_token'])) {
-            throw ValidationException::withMessages(['challenge_token' => 'Email verification is required.']);
-        }
 
         $user = null;
 
@@ -116,8 +107,7 @@ class RegisterController extends Controller
             try {
                 $user = DB::transaction(function () use (
                     $validated,
-                    $candidate,
-                    $requireRegistrationOtp
+                    $candidate
                 ) {
                     $sponsor = User::where(
                         'username',
@@ -128,10 +118,6 @@ class RegisterController extends Controller
                         throw ValidationException::withMessages([
                             'sponsor_id' => 'Invalid Sponsor ID. Please enter a valid Sponsor ID.',
                         ]);
-                    }
-
-                    if ($requireRegistrationOtp) {
-                        app(RegistrationEmailOtpService::class)->consumeVerified($validated['email'], $validated['challenge_token']);
                     }
 
                     $newMember = User::create([
@@ -263,7 +249,7 @@ class RegisterController extends Controller
 
         if ($loginSuccess) {
             $user = $request->user();
-            if ($user->deleted_at !== null || $user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
+            if ($user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();

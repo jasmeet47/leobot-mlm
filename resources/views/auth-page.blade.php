@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>LumiFlowOn</title>
+    <title>LEOBOT MLM</title>
 
     <style>
 
@@ -298,7 +298,7 @@
 
     <div class="header">
 
-        <h1>LumiFlowOn</h1>
+        <h1>LEOBOT MLM</h1>
 
         <p>
             Secure Login & Registration
@@ -448,6 +448,8 @@
                 </button>
 
             </form>
+<!-- LUMIFLOWON_FORGOT_PASSWORD_UI_V1 -->
+<p style="margin-top:12px;text-align:center"><a href="{{ route('password.otp.request') }}">Forgot Password?</a></p>
 
             @if(session('status'))
                 <p class="success" role="status">{{ session('status') }}</p>
@@ -615,7 +617,7 @@
 
     <div class="footer">
 
-        ┬⌐ {{ date('Y') }} LumiFlowOn
+        © {{ date('Y') }} LEOBOT MLM
 
     </div>
 

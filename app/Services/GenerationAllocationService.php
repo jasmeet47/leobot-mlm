@@ -52,14 +52,16 @@ final class GenerationAllocationService
                     $disposableTest = app()->environment('testing')
                         && ($config['host'] ?? null) === '127.0.0.1'
                         && (string) ($config['port'] ?? '') === '5433'
-                        && ($config['database'] ?? null) === 'leobot_financial_disposable'
+                        && ($config['database'] ?? null) === 'leobot_fullsuite_20261031_121634_525c1a23'
                         && empty($config['url']);
                     if ($disposableTest) {
                         $identity = DB::selectOne(
                             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
                         );
                         $disposableTest = $identity
-                            && $identity->database_name === 'leobot_financial_disposable'
+                            && $identity->database_name === 'leobot_fullsuite_20261031_121634_525c1a23'
+                            && app()->environment('testing')
+                            && (string) \Illuminate\Support\Facades\DB::selectOne('SELECT current_user AS role')->role === 'lumiflowon_staking_test'
                             && (int) $identity->server_port === 5433;
                     }
                     if (! $disposableTest) {

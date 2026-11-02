@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Member Dashboard | LumiFlowOn</title>
+    <title>Member Dashboard | LeoBot</title>
     <style>
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
@@ -283,12 +283,9 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 </style>
 </head>
 <body>
-
-
-
 <main class="container">
     <header>
-        <div class="brand">LumiFlowOn <small>Member Dashboard</small></div>
+        <div class="brand">LEOBOT <small>Member Dashboard</small></div>
         <!-- LEOBOT_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
         <nav class="actions lb-nav-groups lb-hamburger-nav" aria-label="Member actions">
     <details class="lb-member-menu lb-nav-dropdown lb-hamburger" id="lb-hamburger-menu">
@@ -301,9 +298,6 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Team</div>
             <a class="action" href="#team-breakdown">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
-            @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-            <a class="action" href="#magic-team" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
-            @endif
             <a class="action" href="#team-overview">Team / Referral</a>
             <a class="action" href="#direct-referrals">My Direct Referrals</a>
             <a class="action" href="#referral-link">Referral Link</a>
@@ -315,7 +309,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
             <a class="action" href="#financial-records">Financial Records</a>
             <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
             <a class="action" href="{{ route('member.withdrawals.index') }}">Withdrawals</a>
-            <a class="action" href="{{ route('member.deposit-transfer.index') }}">Deposit / Fund Transfer (status &amp; requests)</a>
+            <button class="action" type="button" disabled title="Fund Transfer is not enabled" style="opacity:.55;cursor:not-allowed">Fund Transfer (Coming Soon)</button>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Account</div>
             <a class="action" href="#member-profile">Profile / Settings</a>
@@ -326,43 +320,13 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
     </details>
 </nav>
     </header>
-<!-- LUMIFLOWON_MT5_UI_FIXED -->
-@php
-$dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links')
-    ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')
-        ->where('enabled', true)
-        ->whereNotNull('url')
-        ->get()
-    : collect();
-@endphp
-
-<section class="lb-quick-links" style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-<h2>LumiFlowOn Quick Links</h2>
-<p style="color:#9fb1c9">Admin-controlled official links. Unconfigured links are not clickable.</p>
-<div style="display:flex;gap:12px;flex-wrap:wrap">
-@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
-@php
-  $configuredLink = $dashboardLinks->firstWhere('platform', $platform);
-  $linkUrl = trim((string) ($configuredLink->url ?? ''));
-  $linkValid = filter_var($linkUrl, FILTER_VALIDATE_URL) && strtolower((string) parse_url($linkUrl, PHP_URL_SCHEME)) === 'https';
-@endphp
-@if($configuredLink && $linkValid)
-<a href="{{ $linkUrl }}" target="_blank" rel="noopener noreferrer" style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">{{ ucfirst($platform) }}</a>
-@else
-<span style="padding:12px 18px;background:#263449;color:#b8c4d5;border-radius:8px" title="Admin must configure and enable a valid HTTPS URL">{{ ucfirst($platform) }} · Not configured</span>
-@endif
-@endforeach
-</div>
-</section>
-
-
-@if(true)
+@if(!empty($magicIncomeSummary))
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
   <h2>Magic Income (Settled)</h2>
   <div class="grid">
-    <div class="card"><div class="label">Weekly</div><div class="value">@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary)){{ $magicIncomeSummary['weekly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
-    <div class="card"><div class="label">Monthly</div><div class="value">@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary)){{ $magicIncomeSummary['monthly_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
-    <div class="card"><div class="label">Lifetime</div><div class="value">@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary)){{ $magicIncomeSummary['lifetime_usdt'] ?? 'Unavailable' }} USDT @else Unavailable @endif</div></div>
+    <div class="card"><div class="label">Weekly</div><div class="value">{{ $magicIncomeSummary['weekly_usdt'] }} USDT</div></div>
+    <div class="card"><div class="label">Monthly</div><div class="value">{{ $magicIncomeSummary['monthly_usdt'] }} USDT</div></div>
+    <div class="card"><div class="label">Lifetime</div><div class="value">{{ $magicIncomeSummary['lifetime_usdt'] }} USDT</div></div>
   </div>
   <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
 </section>
@@ -381,37 +345,15 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   <h2>Quick Actions</h2>
   <div class="lb-quick-grid">
     <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
-    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>View deposit request page; financial approval required</small></a>
-    <button class="lb-quick-link" type="button" disabled aria-disabled="true" title="Staking is coming soon"><strong>Staking</strong><small>Coming Soon</small></button>
-    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>View transfer page; financial approval required</small></a>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>Deposit evidence / review</small></a>
+    <button class="lb-quick-link" type="button" disabled title="Stake route not available"><strong>Stake</strong><small>Coming soon</small></button>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>Transfer request page</small></a>
   </div>
 </section>
 <!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
-@if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-<section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
-  <h2>My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</h2>
-  @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
-    <div class="lb-quick-grid">
-      <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
-      <div class="lb-quick-link"><strong>{{ $magicTeam['direct'] }}</strong><small>Direct Magic Members</small></div>
-      <div class="lb-quick-link"><strong>{{ $magicTeam['filled_levels'] }} / {{ $magicTeam['visible_levels'] }}</strong><small>Filled Levels</small></div>
-      <div class="lb-quick-link"><strong>{{ $magicTeam['has_position'] ? 'Placed' : 'Not placed' }}</strong><small>My Matrix Position</small></div>
-    </div>
-    <details style="margin-top:14px"><summary>View {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Breakdown</summary>
-      <div class="lb-quick-grid" style="margin-top:12px">
-        @foreach($magicTeam['levels'] as $level => $count)
-          <div class="lb-quick-link"><strong>Level {{ $level }}</strong><small>{{ $count }} member(s)</small></div>
-        @endforeach
-      </div>
-    </details>
-  @else
-    <p>Magic Matrix data unavailable; no team count is being assumed.</p>
-  @endif
-</section>
-@endif
-<section class="lb-terminal" aria-label="LumiFlowOn member financial dashboard">
+<section class="lb-terminal" aria-label="LeoBot member financial dashboard">
   <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LumiFlowOn / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LumiFlowOn account information is shown below.</p></div>
+    <div><div class="lb-terminal-eyebrow">LEOBOT / MEMBER PORTAL</div><h2>Portfolio Overview</h2><p>Welcome, {{ $member->name }}. Your LeoBot account information is shown below.</p></div>
     <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Member account overview</div>
   </div>
   <div class="lb-terminal-grid">
@@ -419,7 +361,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     <div class="lb-terminal-tile"><small>Financial records</small><strong class="accent">Verified records only</strong></div>
     <div class="lb-terminal-tile"><small>Trading feed</small><strong>Not connected</strong></div>
   </div>
-  <p class="lb-terminal-foot lb-terminal-note">International trading-inspired interface only. Income, wallet balances and history below are from LumiFlowOn records, not MT5.</p>
+  <p class="lb-terminal-foot lb-terminal-note">International trading-inspired interface only. Income, wallet balances and history below are from LeoBot records, not MT5.</p>
 </section>
 
 
@@ -479,7 +421,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>
         <h2>Financial Records</h2>
         <p class="muted">Your available balance and income reserves are shown above. Completed wallet entries appear in the transaction history below; held and reserved amounts are not paid income.</p>
-        <a class="action lb-inline-link" href="#wallet-history">View Wallet Transaction History ΓåÆ</a>
+        <a class="action lb-inline-link" href="#wallet-history">View Wallet Transaction History →</a>
     </section>
 
     <section id="wallet-history" aria-label="Member wallet transaction history">
@@ -528,7 +470,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
             <label class="label" for="member-referral-link">Share your personal registration link</label>
             <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; align-items:center">
                 <input id="member-referral-link" type="text" readonly
-                       value="{{ 'https://lumiflowon.com/join?ref=' . rawurlencode($member->username) }}"
+                       value="{{ url('/join?ref=' . $member->username) }}"
                        style="flex:1 1 280px; width:100%; min-width:0; padding:10px; border:1px solid #334155; border-radius:9px; background:#090d16; color:#e2e8f0; font:inherit"
                        aria-label="Your referral URL">
                 <button id="copy-referral-button" type="button" class="action">Copy Referral Link</button>
@@ -640,9 +582,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                 <thead><tr><th scope="col">Level</th><th scope="col">Active</th><th scope="col">Inactive</th><th scope="col">Team Business (USDT)</th></tr></thead>
                 <tbody>
                 @for ($level = 1; $level <= 51; $level++)
-                    @php
-    $entry = $levelRows->get($level);
-@endphp
+                    @php($entry = $levelRows->get($level))
                     <tr>
                         <td>Level {{ $level }}</td>
                         <td>{{ (int) ($entry->active_count ?? 0) }}</td>
@@ -659,31 +599,15 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
             <span class="lb-eyebrow">SECURITY CENTER</span>
             <h2>Account</h2>
             <p class="muted">Manage your security PIN and view your account status. Existing login and account controls remain unchanged.</p>
-            <a class="action lb-inline-link" href="{{ route('security-pin.form') }}">Security PIN Settings ΓåÆ</a>
+            <a class="action lb-inline-link" href="{{ route('security-pin.form') }}">Security PIN Settings →</a>
         </div>
         <div id="member-support" class="card lb-info-card">
             <span class="lb-eyebrow">MEMBER ASSISTANCE</span>
             <h2>Support</h2>
-            <p class="muted">For assistance, use the official LumiFlowOn support contact provided by your administrator. No support channel is configured on this dashboard.</p>
+            <p class="muted">For assistance, use the official LeoBot support contact provided by your administrator. No support channel is configured on this dashboard.</p>
         </div>
     </section>
     <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
-
-<!-- MT5 display intentionally last on Member Dashboard; read-only and admin-controlled -->
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-    <h2>MT5 Live Trading</h2>
-
-    @php
-        $mt5Visible = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
-            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
-    @endphp
-
-    @if($mt5Visible)
-        <p>MT5 Live Connection: Awaiting verified connection</p>
-        <p>Balance, Equity, Profit/Loss and Trades will appear only after a verified read-only feed is connected.</p>
-        <p><a href="{{ route('member.mt5.view') }}">View MT5 Status</a></p>
-    @endif
-</section>
 </main>
 <script>
 (function () {
@@ -697,7 +621,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                 throw new Error('Clipboard API unavailable');
             }
             await navigator.clipboard.writeText(input.value);
-            status.textContent = 'Your referral link copied successfully!';
+            status.textContent = 'Referral link copied.';
         } catch (error) {
             input.focus();
             input.select();
@@ -732,7 +656,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <script>
 /* LEOBOT_TOP_RIGHT_HAMBURGER_V1: visibility only, no data or financial changes */
 (function () {
-    var ids = ['magic-team','team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','referral-link','account-settings','member-support'];
+    var ids = ['team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','referral-link','account-settings','member-support'];
     var menu = document.getElementById('lb-hamburger-menu');
     var bottom = document.querySelector('section.lb-bottom-grid');
     ids.forEach(function(id) { var el=document.getElementById(id); if(el && el!==bottom) el.classList.add('lb-menu-detail'); });
@@ -804,11 +728,11 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
       field.value = value;
       function fallback() {
         field.focus(); field.select();
-        try { status.textContent = document.execCommand('copy') ? 'Your referral link copied successfully!' : 'Select and copy the link manually.'; }
+        try { status.textContent = document.execCommand('copy') ? 'Referral link copied.' : 'Select and copy the link manually.'; }
         catch (e) { status.textContent = 'Select and copy the link manually.'; }
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(value).then(function () { status.textContent = 'Your referral link copied successfully!'; }, fallback);
+        navigator.clipboard.writeText(value).then(function () { status.textContent = 'Referral link copied.'; }, fallback);
       } else { fallback(); }
     });
     row.appendChild(field); row.appendChild(button);
@@ -853,7 +777,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                     copied = !!document.execCommand('copy');
                 } catch (error) { copied = false; }
             }
-            if (status) { status.textContent = copied ? 'Your referral link copied successfully!' : 'Link selected. Press Ctrl+C to copy.'; status.style.setProperty('color', copied ? '#22c55e' : '#fbbf24', 'important'); status.style.fontWeight = copied ? '700' : '400'; }
+            if (status) status.textContent = copied ? 'Referral link copied!' : 'Link selected. Press Ctrl+C to copy.';
             if (!copied) { input.focus(); input.select(); }
         }, true);
     }
