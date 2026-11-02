@@ -60,36 +60,115 @@ final class VerifiedDepositService
     public static function approve(int $adminId, int $depositId, string $verificationReference): void
     {
         self::gate();
-        if ($adminId < 1 || $depositId < 1 || !preg_match('/\A[A-Za-z0-9._:-]{8,150}\z/D', $verificationReference)) {
+
+        if ($adminId < 1 || $depositId < 1 ||
+            !preg_match('/\A[A-Za-z0-9._:-]{8,150}\z/D', $verificationReference)) {
             throw new InvalidArgumentException('Invalid approval reference.');
         }
-        DB::transaction(function () use ($adminId, $depositId, $verificationReference): void {
-            $admin = DB::table('users')->where('id', $adminId)->lockForUpdate()->first();
-            if (!$admin || !in_array(strtolower((string)($admin->role ?? '')), ['admin','super_admin'], true) || self::blocked($admin)) {
+
+        $admin = DB::table('users')->where('id', $adminId)->first();
+
+        if (!$admin ||
+            !in_array(strtolower((string)($admin->role ?? '')), ['admin', 'super_admin'], true) ||
+            self::blocked($admin)) {
+            throw new RuntimeException('Administrator authorization required.');
+        }
+
+        $proof = DB::table('member_deposit_requests')
+            ->where('id', $depositId)->first();
+
+        if (!$proof || $proof->status !== 'pending') {
+            throw new RuntimeException('Deposit is not pending.');
+        }
+
+        if ((int)$proof->user_id === $adminId) {
+            throw new RuntimeException('Self-approval denied.');
+        }
+
+        if (config('leobot_deposit_verification.enabled', false) !== true) {
+            throw new RuntimeException('Independent deposit verification is disabled.');
+        }
+
+        $network = (string)$proof->network;
+        $hash = (string)$proof->tx_hash;
+        $amount = (string)$proof->amount;
+        $memberId = (int)$proof->user_id;
+
+        $destination = (string)config(
+            'leobot_deposit_verification.receiving_addresses.'.$network, ''
+        );
+
+        if ($destination === '') {
+            throw new RuntimeException('Official deposit receiving address is missing.');
+        }
+
+        (new UsdtPaymentVerificationPolicy(
+            new ReadOnlyUsdtChainVerifier()
+        ))->assertVerified(
+            $network, $hash, $destination, $destination, $amount
+        );
+
+        DB::transaction(function () use (
+            $adminId, $depositId, $verificationReference,
+            $network, $hash, $amount, $memberId, $destination
+        ): void {
+            self::gate();
+
+            if (config('leobot_deposit_verification.enabled', false) !== true ||
+                (string)config(
+                    'leobot_deposit_verification.receiving_addresses.'.$network, ''
+                ) !== $destination ||
+                !config('leobot_usdt_rpc.enabled', false)) {
+                throw new RuntimeException('Verification configuration changed.');
+            }
+
+            $admin = DB::table('users')->where('id', $adminId)
+                ->lockForUpdate()->first();
+
+            if (!$admin ||
+                !in_array(strtolower((string)($admin->role ?? '')), ['admin', 'super_admin'], true) ||
+                self::blocked($admin)) {
                 throw new RuntimeException('Administrator authorization required.');
             }
-            $deposit = DB::table('member_deposit_requests')->where('id', $depositId)->lockForUpdate()->first();
-            if (!$deposit || $deposit->status !== 'pending') {
-                throw new RuntimeException('Deposit is not pending.');
+
+            $deposit = DB::table('member_deposit_requests')
+                ->where('id', $depositId)->lockForUpdate()->first();
+
+            if (!$deposit || $deposit->status !== 'pending' ||
+                (int)$deposit->user_id !== $memberId ||
+                (string)$deposit->network !== $network ||
+                (string)$deposit->tx_hash !== $hash ||
+                bccomp((string)$deposit->amount, $amount, 8) !== 0) {
+                throw new RuntimeException('Deposit evidence changed or already reviewed.');
             }
-            if ((int)$deposit->user_id === $adminId) {
-                throw new RuntimeException('Self-approval denied.');
-            }
-            $member = DB::table('users')->where('id', $deposit->user_id)->lockForUpdate()->first();
+
+            $member = DB::table('users')->where('id', $memberId)
+                ->lockForUpdate()->first();
+
             if (!$member || $member->status !== 'active' || self::blocked($member)) {
                 throw new RuntimeException('Member is inactive or blocked.');
             }
-            WalletService::credit((int)$deposit->user_id, 'activation_balance', (string)$deposit->amount,
-                'verified_deposit', 'deposit:credit:'.$deposit->id,
-                ['reference_type'=>'member_deposit_request', 'reference_id'=>$deposit->id,
-                 'description'=>'Admin-verified external USDT deposit']);
-            DB::table('member_deposit_requests')->where('id', $depositId)->update([
-                'status'=>'approved', 'reviewed_by'=>$adminId, 'reviewed_at'=>now(),
-                'verification_reference'=>$verificationReference, 'updated_at'=>now(),
-            ]);
+
+            WalletService::credit(
+                $memberId, 'activation_balance', $amount,
+                'verified_deposit', 'deposit:credit:'.$depositId,
+                [
+                    'reference_type' => 'member_deposit_request',
+                    'reference_id' => $depositId,
+                    'description' => 'Independently verified external USDT deposit'
+                ]
+            );
+
+            DB::table('member_deposit_requests')
+                ->where('id', $depositId)->update([
+                    'status' => 'approved',
+                    'reviewed_by' => $adminId,
+                    'reviewed_at' => now(),
+                    'verification_reference' => $verificationReference,
+                    'updated_at' => now(),
+                ]);
         }, 3);
     }
-
     public static function reject(int $adminId, int $depositId): void
     {
         self::gate();
