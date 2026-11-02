@@ -53,5 +53,12 @@ document.getElementById('offForm').addEventListener('submit',async function(e){
  }
 });
 </script>
+<!-- LUMIFLOWON_FLEX_UI_V1: PREVIEW ONLY. No approval actions enabled. -->
+<section aria-label="Flexible unstake administration">
+<h2>Flexible Unstake Approval - Pending Financial Certification</h2>
+<p>Approval must atomically credit principal, reduce locked balance, and audit the reviewer.</p>
+<button type="button" disabled>Approve Principal Return - Certification Pending</button>
+<button type="button" disabled>Reject Unstake - Certification Pending</button>
+</section>
 </body>
 </html>

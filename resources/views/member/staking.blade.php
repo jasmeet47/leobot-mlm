@@ -19,9 +19,9 @@ a{color:#8ccaff}
 <p>Status: <strong>{{ $enabled ? 'ON' : 'OFF' }}</strong></p>
 <form method="post" action="{{ route('member.staking.store') }}">
 @csrf
-<label for="amount">Stake Amount (USDT)</label>
+<label for="amount">Enter Stake Amount (USDT) - Minimum 10</label>
 <input id="amount" name="amount" type="number"
- min="0.00000001" step="0.00000001" required disabled>
+ min="10" step="0.00000001" required disabled>
 <label for="security_pin">Security PIN</label>
 <input id="security_pin" name="security_pin"
  type="password" autocomplete="off"
@@ -42,5 +42,19 @@ Submit Stake - Financial Certification Pending
  key.value=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
 })();
 </script>
+<!-- LUMIFLOWON_FLEX_UI_V1: PREVIEW ONLY. Financial submission stays disabled. -->
+<section aria-label="Flexible unstake preview">
+<h2>Flexible Unstake - Pending Financial Certification</h2>
+<p>Minimum new stake: 10 USDT. Profit: 0%. Principal returns only after Admin approval.</p>
+<form id="flexUnstakePreview" onsubmit="return false">
+<label for="flex_position">Stake Position ID</label>
+<input id="flex_position" type="number" min="1" step="1" required disabled>
+<label for="flex_amount">Manual Partial Unstake Amount (USDT)</label>
+<input id="flex_amount" type="number" min="0.00000001" step="0.00000001" required disabled>
+<button type="button" disabled>Request Partial Unstake - Certification Pending</button>
+<button type="button" disabled>Request Full Unstake - Certification Pending</button>
+</form>
+<p>Available principal and pending requests will be displayed after verified integration.</p>
+</section>
 </body>
 </html>
