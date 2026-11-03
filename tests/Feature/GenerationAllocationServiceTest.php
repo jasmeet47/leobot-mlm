@@ -37,7 +37,7 @@ class GenerationAllocationServiceTest extends TestCase
             $connection->getDriverName() === 'pgsql' &&
             ($config['host'] ?? '') === '127.0.0.1' &&
             (string) ($config['port'] ?? '') === '5433' &&
-            ($config['database'] ?? '') === 'leobot_financial_disposable' &&
+            ($config['database'] ?? '') === 'leobot_fullsuite_20261031_121634_525c1a23' &&
             empty($config['url']);
 
         if ($safe) {
@@ -46,13 +46,13 @@ class GenerationAllocationServiceTest extends TestCase
             );
 
             $safe =
-                $identity->database_name === 'leobot_financial_disposable' &&
+                $identity->database_name === 'leobot_fullsuite_20261031_121634_525c1a23' &&
                 (int) $identity->server_port === 5433;
         }
 
         if (! $safe) {
             throw new RuntimeException(
-                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
+                'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_fullsuite_20261031_121634_525c1a23.'
             );
         }
         \Tests\Support\FinancialSeedState::captureIfNeeded();

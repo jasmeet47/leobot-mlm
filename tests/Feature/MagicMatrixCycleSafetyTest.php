@@ -34,11 +34,11 @@ final class MagicMatrixCycleSafetyTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($cfg['host'] ?? null) === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? '') === 'leobot_fullsuite_20261031_121634_525c1a23'
             && empty($cfg['url']);
         if ($safe) {
             $identity = DB::selectOne('SELECT current_database() AS database_name, inet_server_port() AS server_port');
-            $safe = $identity && $identity->database_name === 'leobot_financial_disposable'
+            $safe = $identity && $identity->database_name === 'leobot_fullsuite_20261031_121634_525c1a23'
                 && (int) $identity->server_port === 5433;
         }
         if (!$safe) {

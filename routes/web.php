@@ -347,3 +347,6 @@ Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMembe
 });
 
 require __DIR__.'/leobot_financial_ui.php';
+
+// Beta-only staking HTTP routes
+require_once __DIR__ . '/staking_routes.php';

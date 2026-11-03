@@ -18,7 +18,11 @@ final class WithdrawalPaymentEvidenceUniqueTest extends TestCase
         $this->assertSame('pgsql', DB::connection()->getDriverName());
         $this->assertSame('127.0.0.1', DB::connection()->getConfig('host'));
         $this->assertSame('5433', (string) DB::connection()->getConfig('port'));
-        $this->assertSame('leobot_financial_disposable', DB::connection()->getDatabaseName());
+        $this->assertSame('leobot_fullsuite_20261031_121634_525c1a23', DB::connection()->getDatabaseName());
+        $identity = DB::selectOne('SELECT current_database() AS db, inet_server_port() AS port, current_user AS role');
+        $this->assertSame('leobot_fullsuite_20261031_121634_525c1a23', $identity->db);
+        $this->assertSame(5433, (int) $identity->port);
+        $this->assertSame('lumiflowon_staking_test', $identity->role);
 
         $admin = $this->person('admin');
         $member = $this->person('member');

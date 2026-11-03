@@ -448,6 +448,8 @@
                 </button>
 
             </form>
+<!-- LUMIFLOWON_FORGOT_PASSWORD_UI_V1 -->
+<p style="margin-top:12px;text-align:center"><a href="{{ route('password.otp.request') }}">Forgot Password?</a></p>
 
             @if(session('status'))
                 <p class="success" role="status">{{ session('status') }}</p>

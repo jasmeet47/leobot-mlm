@@ -263,6 +263,29 @@ main.container .card p {
   </div>
   <p class="lb-terminal-foot lb-terminal-note">UI theme only Â· No MT5 feed Â· No simulated trading values Â· Existing financial permissions remain unchanged.</p>
 </section>
+<!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
+<section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
+  <h2>Staking Control</h2>
+  @php
+    $stakingControlReady = \Illuminate\Support\Facades\Schema::hasTable('staking_controls');
+    $stakingEnabled = $stakingControlReady && (bool) \Illuminate\Support\Facades\DB::table('staking_controls')->orderBy('id')->value('enabled');
+  @endphp
+  <p>Current staking status: <strong>{{ $stakingEnabled ? 'ON' : 'OFF' }}</strong></p>
+  @if(!$stakingControlReady)
+    <p>Staking control table unavailable. No changes permitted.</p>
+  @elseif($stakingEnabled)
+    <form method="POST" action="{{ route('admin.staking.toggle') }}">
+      @csrf
+      <input type="hidden" name="enabled" value="0">
+      <button type="submit">Turn Staking OFF</button>
+    </form>
+    <p>Disabling prevents new stakes; existing positions and history remain unchanged.</p>
+  @else
+    <p>Staking is OFF. Activation is withheld until financial tests and separate production approval.</p>
+    <button type="button" disabled title="Requires financial verification and separate approval">Turn Staking ON (locked)</button>
+  @endif
+</section>
+<section class="card" style="margin:16px 0;padding:18px"><h2>Password Recovery Settings</h2><p>Password OTP Settings page not installed; link withheld until view is present.</p></section>
 <section class="welcome">
         <h1>Admin Dashboard</h1>
 

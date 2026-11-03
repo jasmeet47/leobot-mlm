@@ -25,7 +25,7 @@ class ReferralContactConsentTest extends TestCase
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
+            && ($cfg['database'] ?? '') === 'leobot_fullsuite_20261031_121634_525c1a23'
             && empty($cfg['url']);
 
         if (!$safe) {
@@ -39,7 +39,7 @@ class ReferralContactConsentTest extends TestCase
         );
 
         if (!$identity
-            || $identity->database_name !== 'leobot_financial_disposable'
+            || $identity->database_name !== 'leobot_fullsuite_20261031_121634_525c1a23'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'

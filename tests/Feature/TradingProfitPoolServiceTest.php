@@ -31,7 +31,7 @@ class TradingProfitPoolServiceTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($config['host'] ?? '') === '127.0.0.1'
             && (string) ($config['port'] ?? '') === '5433'
-            && ($config['database'] ?? '') === 'leobot_financial_disposable'
+            && ($config['database'] ?? '') === 'leobot_fullsuite_20261031_121634_525c1a23'
             && empty($config['url']);
 
         if ($safe) {
@@ -40,7 +40,7 @@ class TradingProfitPoolServiceTest extends TestCase
             );
 
             $safe = $identity
-                && $identity->database_name === 'leobot_financial_disposable'
+                && $identity->database_name === 'leobot_fullsuite_20261031_121634_525c1a23'
                 && (int) $identity->server_port === 5433;
         }
 
