@@ -29,11 +29,11 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
             && $connection->getDriverName() === 'pgsql'
             && ($cfg['host'] ?? null) === '127.0.0.1'
             && (string)($cfg['port'] ?? '') === '5433'
-            && ($cfg['database'] ?? null) === 'lumiflowon_final_regression_20261024'
+            && ($cfg['database'] ?? null) === 'leobot_financial_disposable'
             && empty($cfg['url']);
         if ($safe) {
             $identity = DB::selectOne('SELECT current_database() AS db, inet_server_port() AS port');
-            $safe = $identity && $identity->db === 'lumiflowon_final_regression_20261024' && (int)$identity->port === 5433;
+            $safe = $identity && $identity->db === 'leobot_financial_disposable' && (int)$identity->port === 5433;
         }
         if (!$safe) { throw new RuntimeException('SAFETY STOP: disposable PostgreSQL only.'); }
         \Tests\Support\FinancialSeedState::captureIfNeeded();
