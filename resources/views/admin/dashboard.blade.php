@@ -265,7 +265,7 @@ main.container .card p {
 </section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
-  <h2>Staking Control</h2>
+  <h2>Staking Control</h2><p><a href="{{ route('admin.staking.profit.index') }}">Trading-profit statements and verification</a> · <a href="{{ route('admin.withdrawals.index') }}">Principal fee, withdrawal controls and payment review</a></p>
   @php
     $stakingControlReady = \Illuminate\Support\Facades\Schema::hasTable('staking_controls');
     $stakingEnabled = $stakingControlReady && (bool) \Illuminate\Support\Facades\DB::table('staking_controls')->orderBy('id')->value('enabled');
@@ -280,6 +280,12 @@ main.container .card p {
       <button type="submit">Turn Staking OFF</button>
     </form>
     <p>Disabling prevents new stakes; existing positions and history remain unchanged.</p>
+  @elseif(config('leobot.staking_enabled', false) === true && config('leobot.production_financial_approval', false) === true)
+    <form method="POST" action="{{ route('admin.staking.toggle') }}">
+      @csrf
+      <input type="hidden" name="enabled" value="1">
+      <button type="submit">Turn Staking ON</button>
+    </form>
   @else
     <p>Staking is OFF. Activation is withheld until financial tests and separate production approval.</p>
     <button type="button" disabled title="Requires financial verification and separate approval">Turn Staking ON (locked)</button>

@@ -320,15 +320,21 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
     </details>
 </nav>
     </header>
-@if(!empty($magicIncomeSummary))
+@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary))
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
   <h2>Magic Income (Settled)</h2>
   <div class="grid">
-    <div class="card"><div class="label">Weekly</div><div class="value">{{ $magicIncomeSummary['weekly_usdt'] }} USDT</div></div>
-    <div class="card"><div class="label">Monthly</div><div class="value">{{ $magicIncomeSummary['monthly_usdt'] }} USDT</div></div>
-    <div class="card"><div class="label">Lifetime</div><div class="value">{{ $magicIncomeSummary['lifetime_usdt'] }} USDT</div></div>
+    <div class="card"><div class="label">Weekly</div><div class="value">{{ $magicIncomeSummary['weekly_usdt'] ?? '0.00000000' }} USDT</div></div>
+    <div class="card"><div class="label">Monthly</div><div class="value">{{ $magicIncomeSummary['monthly_usdt'] ?? '0.00000000' }} USDT</div></div>
+    <div class="card"><div class="label">Lifetime</div><div class="value">{{ $magicIncomeSummary['lifetime_usdt'] ?? '0.00000000' }} USDT</div></div>
   </div>
   <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
+</section>
+@endif
+@if(isset($magicTeam) && is_array($magicTeam))
+<section aria-label="Magic Team" class="card"><h2>Magic Team — 2×2 Matrix</h2>
+<p>Visible levels: {{ $magicTeam['visible_levels'] ?? 0 }} · Team members: {{ $magicTeam['total'] ?? 0 }}</p>
+@foreach(($magicTeam['levels'] ?? []) as $level => $count)<p>Level {{ $level }}: {{ $count }}</p>@endforeach
 </section>
 @endif
 <!-- LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
@@ -346,7 +352,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
   <div class="lb-quick-grid">
     <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>Deposit evidence / review</small></a>
-    <button class="lb-quick-link" type="button" disabled title="Stake route not available"><strong>Stake</strong><small>Coming soon</small></button>
+    <a class="lb-quick-link" href="{{ route('member.staking.index') }}"><strong>Stake</strong><small>Flexible principal and variable trading profit</small></a>
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>Transfer request page</small></a>
   </div>
 </section>

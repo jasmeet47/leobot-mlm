@@ -1,53 +1,51 @@
 <?php
+
 namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\GenerationAllocationService;
 use App\Services\UnifiedProfitSharingService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Tests\Support\FinancialSeedState;
 use Tests\TestCase;
 
 final class FinancialLedgerReconciliationAuditTest extends TestCase
 {
-    use RefreshDatabase { refreshDatabase as private laravelRefreshDatabase; }
+    use DatabaseTruncation;
 
-    public function refreshDatabase()
-    {
-        $this->guardDisposable();
-        $this->laravelRefreshDatabase();
-    }
-
-    private function guardDisposable(): void
+    protected function beforeTruncatingDatabase(): void
     {
         $connection = DB::connection();
         $cfg = $connection->getConfig();
         $safe = app()->environment('testing')
             && $connection->getDriverName() === 'pgsql'
             && ($cfg['host'] ?? null) === '127.0.0.1'
-            && (string)($cfg['port'] ?? '') === '5433'
+            && (string) ($cfg['port'] ?? '') === '5433'
             && ($cfg['database'] ?? null) === 'leobot_financial_disposable'
             && empty($cfg['url']);
         if ($safe) {
             $identity = DB::selectOne('SELECT current_database() AS db, inet_server_port() AS port');
-            $safe = $identity && $identity->db === 'leobot_financial_disposable' && (int)$identity->port === 5433;
+            $safe = $identity && $identity->db === 'leobot_financial_disposable' && (int) $identity->port === 5433;
         }
-        if (!$safe) { throw new RuntimeException('SAFETY STOP: disposable PostgreSQL only.'); }
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        if (! $safe) {
+            throw new RuntimeException('SAFETY STOP: disposable PostgreSQL only.');
+        }
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function afterTruncatingDatabase(): void
     {
-        \Tests\Support\FinancialSeedState::restoreOrCapture();
+        FinancialSeedState::restoreOrCapture();
     }
 
     private function user(string $name, string $role = 'member'): User
@@ -67,13 +65,14 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
             'lifetime_income' => '0.00000000',
             'created_at' => now(), 'updated_at' => now(),
         ]);
+
         return User::findOrFail($id);
     }
 
     private function eq(string $expected, mixed $actual): void
     {
-        $this->assertSame(0, bccomp($expected, (string)$actual, 8),
-            'Expected '.$expected.', received '.(string)$actual);
+        $this->assertSame(0, bccomp($expected, (string) $actual, 8),
+            'Expected '.$expected.', received '.(string) $actual);
     }
 
     private function add(string $a, string $b): string
@@ -97,24 +96,29 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
         ]);
         $fundings = DB::table('profit_sharing_fundings')->whereIn('id', $ids)->orderBy('id')->get();
         $this->assertCount(2, $fundings);
-        $totalSelf = '0'; $totalGen = '0'; $totalMagic = '0'; $totalFunded = '0';
-        $totalProfit = '0'; $totalRemainder = '0';
+        $totalSelf = '0';
+        $totalGen = '0';
+        $totalMagic = '0';
+        $totalFunded = '0';
+        $totalProfit = '0';
+        $totalRemainder = '0';
         foreach ($fundings as $fund) {
-            $parts = $this->add($this->add((string)$fund->self_amount, (string)$fund->generation_amount), (string)$fund->magic_amount);
+            $parts = $this->add($this->add((string) $fund->self_amount, (string) $fund->generation_amount), (string) $fund->magic_amount);
             $this->eq($parts, $fund->funded_total);
-            $this->eq($fund->verified_profit_amount, $this->add((string)$fund->funded_total, (string)$fund->company_rounding_remainder));
-            $totalSelf = $this->add($totalSelf, (string)$fund->self_amount);
-            $totalGen = $this->add($totalGen, (string)$fund->generation_amount);
-            $totalMagic = $this->add($totalMagic, (string)$fund->magic_amount);
-            $totalFunded = $this->add($totalFunded, (string)$fund->funded_total);
-            $totalProfit = $this->add($totalProfit, (string)$fund->verified_profit_amount);
-            $totalRemainder = $this->add($totalRemainder, (string)$fund->company_rounding_remainder);
+            $this->eq($fund->verified_profit_amount, $this->add((string) $fund->funded_total, (string) $fund->company_rounding_remainder));
+            $totalSelf = $this->add($totalSelf, (string) $fund->self_amount);
+            $totalGen = $this->add($totalGen, (string) $fund->generation_amount);
+            $totalMagic = $this->add($totalMagic, (string) $fund->magic_amount);
+            $totalFunded = $this->add($totalFunded, (string) $fund->funded_total);
+            $totalProfit = $this->add($totalProfit, (string) $fund->verified_profit_amount);
+            $totalRemainder = $this->add($totalRemainder, (string) $fund->company_rounding_remainder);
             $selfRows = DB::table('profit_sharing_self_reserves')->where('funding_id', $fund->id)->get();
             $this->assertCount(2, $selfRows);
-            $selfSum = '0'; $profitSum = '0';
+            $selfSum = '0';
+            $profitSum = '0';
             foreach ($selfRows as $r) {
-                $selfSum = $this->add($selfSum, (string)$r->self_share_reserved);
-                $profitSum = $this->add($profitSum, (string)$r->member_profit_amount);
+                $selfSum = $this->add($selfSum, (string) $r->self_share_reserved);
+                $profitSum = $this->add($profitSum, (string) $r->member_profit_amount);
             }
             $this->eq($fund->self_amount, $selfSum);
             $this->eq($fund->verified_profit_amount, $profitSum);
@@ -125,24 +129,25 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
             $this->assertCount(51, $budgets);
             $budgetTotal = '0';
             foreach ($budgets as $index => $budget) {
-                $this->assertSame($index + 1, (int)$budget->level_number);
-                $classified = $this->add($this->add((string)$budget->unallocated_amount, (string)$budget->held_amount),
-                    $this->add((string)$budget->payable_amount, (string)$budget->paid_amount));
+                $this->assertSame($index + 1, (int) $budget->level_number);
+                $classified = $this->add($this->add((string) $budget->unallocated_amount, (string) $budget->held_amount),
+                    $this->add((string) $budget->payable_amount, (string) $budget->paid_amount));
                 $this->eq($budget->budget_amount, $classified);
-                $budgetTotal = $this->add($budgetTotal, (string)$budget->budget_amount);
+                $budgetTotal = $this->add($budgetTotal, (string) $budget->budget_amount);
             }
-            $this->eq($generation->pool_amount, $this->add($budgetTotal, (string)$generation->rounding_unallocated));
+            $this->eq($generation->pool_amount, $this->add($budgetTotal, (string) $generation->rounding_unallocated));
             $ledger = DB::table('financial_ledger')->where('reference_type', 'profit_sharing_funding')
                 ->where('reference_id', $fund->id)->get();
             $this->assertCount(4, $ledger);
-            $net = '0'; $types = [];
+            $net = '0';
+            $types = [];
             foreach ($ledger as $entry) {
                 $this->assertSame('completed', $entry->status);
                 $this->assertNotNull($entry->transaction_key);
                 $this->assertNotContains($entry->entry_type, $types);
                 $types[] = $entry->entry_type;
-                $net = $this->add($net, (string)$entry->amount);
-                $this->eq($entry->balance_after, $this->add((string)$entry->balance_before, (string)$entry->amount));
+                $net = $this->add($net, (string) $entry->amount);
+                $this->eq($entry->balance_after, $this->add((string) $entry->balance_before, (string) $entry->amount));
             }
             $this->eq('0', $net);
         }
@@ -155,7 +160,7 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
         $pool = DB::table('generation_pool_accounts')->find(1);
         $this->eq($totalGen, $pool->balance);
         $this->eq($totalGen, $pool->total_funded);
-        $this->eq($totalGen, $this->add($this->add((string)$pool->unallocated_balance, (string)$pool->held_balance), (string)$pool->payable_balance));
+        $this->eq($totalGen, $this->add($this->add((string) $pool->unallocated_balance, (string) $pool->held_balance), (string) $pool->payable_balance));
         $this->eq('0', $pool->total_paid);
         $this->eq(bcsub('2000.00000000', $totalFunded, 8), DB::table('company_wallet')->where('id', 1)->value('balance'));
         $beforeLedger = DB::table('financial_ledger')->count();
@@ -163,10 +168,10 @@ final class FinancialLedgerReconciliationAuditTest extends TestCase
         $sameId = UnifiedProfitSharingService::fund($admin, '1000.00000000', 'AUDIT-PERIOD-01', [
             $a->id => '600.00000000', $b->id => '400.00000000',
         ]);
-        $this->assertSame((int)$ids[0], $sameId);
+        $this->assertSame((int) $ids[0], $sameId);
         $this->assertSame($beforeLedger, DB::table('financial_ledger')->count());
         $this->assertSame($beforeFundings, DB::table('profit_sharing_fundings')->count());
-        $genId = (int)$fundings[0]->generation_funding_id;
+        $genId = (int) $fundings[0]->generation_funding_id;
         $run = GenerationAllocationService::allocate($admin, $genId);
         $this->assertSame($run, GenerationAllocationService::allocate($admin, $genId));
         $this->assertSame(1, DB::table('generation_allocation_runs')->where('funding_id', $genId)->count());

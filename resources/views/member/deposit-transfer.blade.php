@@ -18,11 +18,15 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 @if($errors->any())<div class="notice errors" role="alert"><strong>Request could not be completed:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <div class="layout">
 <section class="panel" aria-labelledby="deposit-title"><h2 id="deposit-title">Submit deposit evidence</h2><p class="hint">Evidence submission is subject to the deposit safety switch and independent admin verification.</p>
+@php($depositsOpen = config('leobot.deposits_enabled', false) === true && config('leobot.production_financial_approval', false) === true && config('leobot_usdt_rpc.enabled', false) === true)
+@if($depositsOpen)
+<p>Send USDT only on the selected network. BNB, TRX and other tokens will not credit your USDT balance.</p><p>Official receiving addresses:</p><ul>@foreach(['BEP20', 'TRC20'] as $network)<li>{{ $network }}: <strong>{{ config('leobot_deposits.receiving_addresses.'.$network) ?: 'Not configured — do not send funds' }}</strong></li>@endforeach</ul>
 <form method="post" action="{{ route('member.deposit-request.store') }}">@csrf
 <label class="field"><span>Amount (USDT)</span><input type="number" inputmode="decimal" step="0.00000001" min="10" name="amount" value="{{ old('amount') }}" placeholder="Minimum 10 USDT" required></label>
 <label class="field"><span>Network</span><select name="network" required><option value="TRC20" @selected(old('network')==='TRC20')>TRC20</option><option value="BEP20" @selected(old('network')==='BEP20')>BEP20</option></select></label>
 <label class="field"><span>Blockchain transaction hash</span><input name="tx_hash" maxlength="150" value="{{ old('tx_hash') }}" placeholder="Verified transaction hash" autocomplete="off" required></label>
-<input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Submit evidence for review</button></form></section>
+<input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Submit evidence for review</button></form>
+@else<p role="status">Deposits are currently disabled. Do not send funds until deposit verification is available.</p>@endif</section>
 <section class="panel" aria-labelledby="transfer-title"><h2 id="transfer-title">Transfer available funds</h2><p class="hint">Transfers are only permitted when enabled by an administrator. No balance is estimated or invented here.</p>
 <form method="post" action="{{ route('member.fund-transfer.store') }}">@csrf
 <label class="field"><span>Recipient member ID</span><input type="number" name="recipient_id" min="1" step="1" value="{{ old('recipient_id') }}" placeholder="Member ID" required></label>

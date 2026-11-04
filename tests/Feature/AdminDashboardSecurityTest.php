@@ -18,27 +18,27 @@ class AdminDashboardSecurityTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (string) ($cfg['port'] ?? '') === '5433'
-            && preg_match('/^lumiflowon_http_[a-f0-9]{12}$/', (string) ($cfg['database'] ?? '')) === 1
+            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
-            || $identity->database_name !== 'lumiflowon_http_73ca65b40af1'
+        if (! $identity
+            || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
                 'SAFETY STOP: Database identity mismatch.'
@@ -53,9 +53,9 @@ class AdminDashboardSecurityTest extends TestCase
         string $status = 'active'
     ): User {
         $id = DB::table('users')->insertGetId([
-            'username' => 'DASH' . Str::upper(Str::random(10)),
+            'username' => 'DASH'.Str::upper(Str::random(10)),
             'name' => 'Dashboard Security Test',
-            'email' => Str::uuid() . '@example.test',
+            'email' => Str::uuid().'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,

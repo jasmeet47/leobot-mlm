@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\EnsureMemberPin;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class Mt5QuickLinksHttpTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -19,10 +23,10 @@ class Mt5QuickLinksHttpTest extends TestCase
             && config('database.default') === 'pgsql'
             && ($cfg['host'] ?? '') === '127.0.0.1'
             && (int) ($cfg['port'] ?? 0) === 5433
-            && ($cfg['database'] ?? '') === 'lumiflowon_http_73ca65b40af1'
+            && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException('SAFETY STOP: Wrong test database.');
         }
 
@@ -30,14 +34,14 @@ class Mt5QuickLinksHttpTest extends TestCase
             'SELECT current_database() AS db, inet_server_port() AS port'
         );
 
-        if (!$identity
-            || $identity->db !== 'lumiflowon_http_73ca65b40af1'
+        if (! $identity
+            || $identity->db !== 'leobot_financial_disposable'
             || (int) $identity->port !== 5433) {
             throw new \RuntimeException('SAFETY STOP: Database identity mismatch.');
         }
 
-        if (!Schema::hasTable('mt5_display_settings')
-            || !Schema::hasTable('dashboard_quick_links')) {
+        if (! Schema::hasTable('mt5_display_settings')
+            || ! Schema::hasTable('dashboard_quick_links')) {
             throw new \RuntimeException('SAFETY STOP: Required tables missing.');
         }
     }
@@ -113,14 +117,14 @@ class Mt5QuickLinksHttpTest extends TestCase
 
         $this->assertNotNull($route);
         $this->assertContains(
-            \App\Http\Middleware\EnsureMemberPin::class,
+            EnsureMemberPin::class,
             $route->gatherMiddleware()
         );
 
         // Isolate the controller's OFF-state behavior.
         // The real application still enforces member PIN verification.
         $this->withoutMiddleware(
-            \App\Http\Middleware\EnsureMemberPin::class
+            EnsureMemberPin::class
         );
 
         $this->actingAs($this->member())

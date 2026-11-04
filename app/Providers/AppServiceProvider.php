@@ -2,12 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
 use App\Contracts\UsdtChainVerifier;
 use App\Contracts\UsdtWalletOwnershipVerifier;
 use App\Services\DisabledUsdtChainVerifier;
-use App\Services\DisabledUsdtWalletOwnershipVerifier;
+use App\Services\MultiNetworkUsdtWalletOwnershipVerifier;
+use App\Services\ReadOnlyUsdtChainVerifier;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,9 +21,9 @@ class AppServiceProvider extends ServiceProvider
             if (
                 config('leobot.production_financial_approval', false) === true &&
                 config('leobot_usdt_rpc.enabled', false) === true &&
-                config('leobot_withdrawal.external_payment_verification_enabled', false) === true
+                (config('leobot_withdrawal.external_payment_verification_enabled', false) === true || config('leobot.deposits_enabled', false) === true)
             ) {
-                return $app->make(\App\Services\ReadOnlyUsdtChainVerifier::class);
+                return $app->make(ReadOnlyUsdtChainVerifier::class);
             }
 
             return $app->make(DisabledUsdtChainVerifier::class);
@@ -31,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
         // They do not authorize deposits, withdrawals, or payments.
         $this->app->bind(
             UsdtWalletOwnershipVerifier::class,
-            \App\Services\MultiNetworkUsdtWalletOwnershipVerifier::class
+            MultiNetworkUsdtWalletOwnershipVerifier::class
         );
     }
 

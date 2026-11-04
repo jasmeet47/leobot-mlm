@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Services;
 
+use App\Contracts\UsdtChainVerifier;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use RuntimeException;
 
-/** Manual evidence submission and dual-party verified wallet credit. No chain verification is claimed. */
+/** Incoming USDT must match a configured treasury, canonical token, exact amount and chain finality. */
 final class VerifiedDepositService
 {
     private static function gate(): void
@@ -18,7 +20,7 @@ final class VerifiedDepositService
 
     private static function amount(string $amount): void
     {
-        if (!preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) ||
+        if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) ||
             bccomp($amount, '10', 8) < 0 ||
             bccomp($amount, '999999999999.99999999', 8) > 0) {
             throw new InvalidArgumentException('Deposit minimum is 10 USDT; maximum 8 decimals.');
@@ -29,29 +31,37 @@ final class VerifiedDepositService
     {
         self::gate();
         self::amount($amount);
-        if ($memberId < 1 || !in_array($network, ['TRC20', 'BEP20'], true) ||
-            !preg_match('/\A[A-Za-z0-9]{20,150}\z/D', $txHash) ||
-            !preg_match('/\A[A-Za-z0-9_-]{8,100}\z/D', $requestKey)) {
+        $txHash = strtolower(trim($txHash));
+        $pattern = $network === 'BEP20' ? '/\A0x[a-f0-9]{64}\z/D' : '/\A[a-f0-9]{64}\z/D';
+        if ($memberId < 1 || ! in_array($network, ['TRC20', 'BEP20'], true) ||
+            ! preg_match($pattern, $txHash) ||
+            ! preg_match('/\A[A-Za-z0-9_-]{8,100}\z/D', $requestKey)) {
             throw new InvalidArgumentException('Invalid deposit evidence or request key.');
         }
-        return DB::transaction(function () use ($memberId, $amount, $network, $txHash, $requestKey): int {
+
+        $receivingAddress = (string) config('leobot_deposits.receiving_addresses.'.$network, '');
+        UsdtPaymentEvidence::assertAddress($network, $receivingAddress);
+
+        return DB::transaction(function () use ($memberId, $amount, $network, $txHash, $requestKey, $receivingAddress): int {
             $user = DB::table('users')->where('id', $memberId)->lockForUpdate()->first();
-            if (!$user || $user->status !== 'active' || self::blocked($user)) {
+            if (! $user || $user->status !== 'active' || $user->deleted_at !== null || self::blocked($user)) {
                 throw new RuntimeException('Active unblocked member required.');
             }
             $existing = DB::table('member_deposit_requests')->where('request_key', $requestKey)->first();
             if ($existing) {
-                if ((int)$existing->user_id !== $memberId ||
-                    bccomp((string)$existing->amount, $amount, 8) !== 0 ||
+                if ((int) $existing->user_id !== $memberId ||
+                    bccomp((string) $existing->amount, $amount, 8) !== 0 ||
                     $existing->network !== $network || $existing->tx_hash !== $txHash) {
                     throw new RuntimeException('Deposit request key reused with different details.');
                 }
-                return (int)$existing->id;
+
+                return (int) $existing->id;
             }
-            return (int)DB::table('member_deposit_requests')->insertGetId([
-                'user_id'=>$memberId, 'request_key'=>$requestKey, 'amount'=>$amount,
-                'network'=>$network, 'tx_hash'=>$txHash, 'status'=>'pending',
-                'created_at'=>now(), 'updated_at'=>now(),
+
+            return (int) DB::table('member_deposit_requests')->insertGetId([
+                'user_id' => $memberId, 'request_key' => $requestKey, 'amount' => $amount,
+                'network' => $network, 'tx_hash' => $txHash, 'receiving_address' => $receivingAddress, 'status' => 'pending',
+                'created_at' => now(), 'updated_at' => now(),
             ]);
         }, 3);
     }
@@ -60,32 +70,48 @@ final class VerifiedDepositService
     public static function approve(int $adminId, int $depositId, string $verificationReference): void
     {
         self::gate();
-        if ($adminId < 1 || $depositId < 1 || !preg_match('/\A[A-Za-z0-9._:-]{8,150}\z/D', $verificationReference)) {
+        if ($adminId < 1 || $depositId < 1 || ! preg_match('/\A[A-Za-z0-9._:-]{8,150}\z/D', $verificationReference)) {
             throw new InvalidArgumentException('Invalid approval reference.');
         }
-        DB::transaction(function () use ($adminId, $depositId, $verificationReference): void {
+        $actor = DB::table('users')->where('id', $adminId)->first();
+        if (! $actor || ! in_array($actor->role, ['admin', 'super_admin'], true) || $actor->status !== 'active' || $actor->deleted_at !== null || self::blocked($actor)) {
+            throw new RuntimeException('Administrator authorization required.');
+        }
+        $snapshot = DB::table('member_deposit_requests')->where('id', $depositId)->first();
+        if (! $snapshot || $snapshot->status !== 'pending' || empty($snapshot->receiving_address)) {
+            throw new RuntimeException('Pending deposit with an immutable treasury address is required.');
+        }
+        (new UsdtPaymentVerificationPolicy(app(UsdtChainVerifier::class)))->assertVerified(
+            $snapshot->network, $snapshot->tx_hash, $snapshot->receiving_address, $snapshot->receiving_address, (string) $snapshot->amount
+        );
+        DB::transaction(function () use ($adminId, $depositId, $verificationReference, $snapshot): void {
+            self::gate();
             $admin = DB::table('users')->where('id', $adminId)->lockForUpdate()->first();
-            if (!$admin || !in_array(strtolower((string)($admin->role ?? '')), ['admin','super_admin'], true) || self::blocked($admin)) {
+            if (! $admin || ! in_array(strtolower((string) ($admin->role ?? '')), ['admin', 'super_admin'], true) || $admin->status !== 'active' || $admin->deleted_at !== null || self::blocked($admin)) {
                 throw new RuntimeException('Administrator authorization required.');
             }
             $deposit = DB::table('member_deposit_requests')->where('id', $depositId)->lockForUpdate()->first();
-            if (!$deposit || $deposit->status !== 'pending') {
+            if (! $deposit || $deposit->status !== 'pending') {
                 throw new RuntimeException('Deposit is not pending.');
             }
-            if ((int)$deposit->user_id === $adminId) {
+            if ($deposit->receiving_address !== $snapshot->receiving_address || $deposit->network !== $snapshot->network
+                || $deposit->tx_hash !== $snapshot->tx_hash || bccomp((string) $deposit->amount, (string) $snapshot->amount, 8) !== 0) {
+                throw new RuntimeException('Deposit details changed during verification.');
+            }
+            if ((int) $deposit->user_id === $adminId) {
                 throw new RuntimeException('Self-approval denied.');
             }
             $member = DB::table('users')->where('id', $deposit->user_id)->lockForUpdate()->first();
-            if (!$member || $member->status !== 'active' || self::blocked($member)) {
+            if (! $member || $member->status !== 'active' || $member->deleted_at !== null || self::blocked($member)) {
                 throw new RuntimeException('Member is inactive or blocked.');
             }
-            WalletService::credit((int)$deposit->user_id, 'activation_balance', (string)$deposit->amount,
+            WalletService::credit((int) $deposit->user_id, 'activation_balance', (string) $deposit->amount,
                 'verified_deposit', 'deposit:credit:'.$deposit->id,
-                ['reference_type'=>'member_deposit_request', 'reference_id'=>$deposit->id,
-                 'description'=>'Admin-verified external USDT deposit']);
+                ['reference_type' => 'member_deposit_request', 'reference_id' => $deposit->id,
+                    'description' => 'Admin-verified external USDT deposit']);
             DB::table('member_deposit_requests')->where('id', $depositId)->update([
-                'status'=>'approved', 'reviewed_by'=>$adminId, 'reviewed_at'=>now(),
-                'verification_reference'=>$verificationReference, 'updated_at'=>now(),
+                'status' => 'approved', 'reviewed_by' => $adminId, 'reviewed_at' => now(),
+                'verification_reference' => $verificationReference, 'updated_at' => now(),
             ]);
         }, 3);
     }
@@ -94,20 +120,22 @@ final class VerifiedDepositService
     {
         self::gate();
         DB::transaction(function () use ($adminId, $depositId): void {
-            $admin = DB::table('users')->where('id',$adminId)->lockForUpdate()->first();
-            if (!$admin || !in_array(strtolower((string)($admin->role ?? '')), ['admin','super_admin'], true) || self::blocked($admin)) {
+            $admin = DB::table('users')->where('id', $adminId)->lockForUpdate()->first();
+            if (! $admin || ! in_array(strtolower((string) ($admin->role ?? '')), ['admin', 'super_admin'], true) || $admin->status !== 'active' || $admin->deleted_at !== null || self::blocked($admin)) {
                 throw new RuntimeException('Administrator authorization required.');
             }
-            $deposit = DB::table('member_deposit_requests')->where('id',$depositId)->lockForUpdate()->first();
-            if (!$deposit || $deposit->status !== 'pending') throw new RuntimeException('Deposit is not pending.');
-            DB::table('member_deposit_requests')->where('id',$depositId)->update([
-                'status'=>'rejected','reviewed_by'=>$adminId,'reviewed_at'=>now(),'updated_at'=>now(),
+            $deposit = DB::table('member_deposit_requests')->where('id', $depositId)->lockForUpdate()->first();
+            if (! $deposit || $deposit->status !== 'pending') {
+                throw new RuntimeException('Deposit is not pending.');
+            }
+            DB::table('member_deposit_requests')->where('id', $depositId)->update([
+                'status' => 'rejected', 'reviewed_by' => $adminId, 'reviewed_at' => now(), 'updated_at' => now(),
             ]);
         }, 3);
     }
 
     private static function blocked(object $user): bool
     {
-        return in_array(strtolower((string)($user->is_blocked ?? false)), ['1','t','true'], true);
+        return in_array(strtolower((string) ($user->is_blocked ?? false)), ['1', 't', 'true'], true);
     }
 }

@@ -13,6 +13,8 @@ final class FinancialSeedState
         'generation_qualification_settings',
         'level_settings',
         'financial_settings',
+        'investment_distribution_settings',
+        'investment_distribution_level_rates',
         'company_wallet',
         'roi_settings',
         'magic_income_settings',
@@ -21,6 +23,15 @@ final class FinancialSeedState
         'profit_sharing_settings',
         'profit_sharing_reserve_accounts',
         'referral_privacy_settings',
+        'staking_controls',
+        'withdrawal_settings',
+        'magic_matrix_settings',
+        'magic_matrix_level_rates',
+        'company_magic_wallet',
+        'mt5_display_settings',
+        'dashboard_quick_links',
+        'registration_email_otp_settings',
+        'leobot_password_security_settings',
     ];
 
     private static function assertDisposableDatabase(): void

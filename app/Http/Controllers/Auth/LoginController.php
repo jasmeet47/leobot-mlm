@@ -24,7 +24,7 @@ class LoginController extends Controller
             ->first();
 
         // Do not reveal whether the account exists.
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid username/email or password.',
@@ -32,7 +32,7 @@ class LoginController extends Controller
         }
 
         // Only known member statuses can receive a token.
-        if ($user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
+        if ($user->deleted_at !== null || $user->is_blocked || ! in_array($user->status, ['active', 'inactive'], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Account is not available for login.',

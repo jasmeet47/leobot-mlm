@@ -6,27 +6,18 @@ use App\Models\User;
 use App\Services\GenerationAllocationService;
 use App\Services\UnifiedProfitSharingService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Tests\Support\FinancialSeedState;
 use Tests\TestCase;
 
 class GenerationAllocationServiceTest extends TestCase
 {
-    use RefreshDatabase {
-        refreshDatabase as private refreshDatabaseWithLaravelTrait;
-    }
+    use DatabaseTruncation;
 
-    public function refreshDatabase()
-    {
-        // Validate the actual database before Laravel may run migrate:fresh.
-        // The existing guard permits only the disposable PostgreSQL database.
-        $this->beforeTruncatingDatabase();
-
-        $this->refreshDatabaseWithLaravelTrait();
-    }
     protected function beforeTruncatingDatabase(): void
     {
         $connection = DB::connection();
@@ -55,19 +46,19 @@ class GenerationAllocationServiceTest extends TestCase
                 'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
             );
         }
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function afterTruncatingDatabase(): void
     {
-        \Tests\Support\FinancialSeedState::restoreOrCapture();
+        FinancialSeedState::restoreOrCapture();
     }
 
     private function user(
@@ -81,7 +72,7 @@ class GenerationAllocationServiceTest extends TestCase
         $id = DB::table('users')->insertGetId([
             'username' => $username,
             'name' => 'Generation Test User',
-            'email' => $uuid . '@example.test',
+            'email' => $uuid.'@example.test',
             'phone' => '9000000000',
             'sponsor_user_id' => $parent,
             'password' => Hash::make('TestPassword123!'),
@@ -525,6 +516,7 @@ class GenerationAllocationServiceTest extends TestCase
 
         GenerationAllocationService::allocate($admin, $fund);
     }
+
     public function test_blocked_admin_with_stale_model_cannot_allocate(): void
     {
         $admin = $this->admin();
@@ -539,6 +531,4 @@ class GenerationAllocationServiceTest extends TestCase
             $this->money('300', DB::table('generation_pool_accounts')->where('id', 1)->value('balance'));
         }
     }
-
-
 }

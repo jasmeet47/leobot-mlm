@@ -16,11 +16,16 @@ use RuntimeException;
 final class GenerationAllocationService
 {
     private const SCALE = 8;
+
     private const MAX_LEVEL = 51;
+
     // Fail closed rather than silently generating a partial allocation.
     private const MAX_USERS = 10000;
+
     private const MAX_ACTIVE_PACKAGES = 20000;
+
     private const MAX_ALLOCATION_ROWS = 100000;
+
     private const MAX_MONEY = '999999999999.99999999';
 
     /**
@@ -47,38 +52,15 @@ final class GenerationAllocationService
                 if (DB::transactionLevel() === 1) {
                     DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
                 } else {
-                    $connection = DB::connection();
-                    $config = $connection->getConfig();
-                    $disposableTest = app()->environment('testing')
-                        && ($config['host'] ?? null) === '127.0.0.1'
-                        && (string) ($config['port'] ?? '') === '5433'
-                        && ($config['database'] ?? null) === 'leobot_fullsuite_20261031_121634_525c1a23'
-                        && empty($config['url']);
-                    if ($disposableTest) {
-                        $identity = DB::selectOne(
-                            'SELECT current_database() AS database_name, inet_server_port() AS server_port'
-                        );
-                        $disposableTest = $identity
-                            && $identity->database_name === 'leobot_fullsuite_20261031_121634_525c1a23'
-                            && app()->environment('testing')
-                            && (string) \Illuminate\Support\Facades\DB::selectOne('SELECT current_user AS role')->role === 'lumiflowon_staking_test'
-                            && (int) $identity->server_port === 5433;
-                    }
-                    if (! $disposableTest) {
-                        throw new RuntimeException(
-                            'Allocation requires an outermost transaction for snapshot isolation.'
-                        );
-                    }
-                    // Only in the verified disposable PostgreSQL test database:
-                    // RefreshDatabase owns an outer rollback transaction.
-                    // Row-lock/accounting tests run there without modifying the
-                    // production transaction isolation policy.
+                    throw new RuntimeException(
+                        'Allocation requires an outermost transaction for snapshot isolation.'
+                    );
                 }
             }
 
             $actualAdmin = DB::table('users')->where('id', $admin->getKey())
                 ->lockForUpdate()->first(['id', 'role', 'status', 'is_blocked']);
-            if (!$actualAdmin || !in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true)
+            if (! $actualAdmin || ! in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true)
                 || ((string) $actualAdmin->status !== 'active' || in_array($actualAdmin->is_blocked, [true, 1, '1', 't', 'true'], true))) {
                 throw new AuthorizationException('Active ADMIN approval required.');
             }
@@ -87,14 +69,14 @@ final class GenerationAllocationService
             // to the global reserve, including another allocation.
             $pool = DB::table('generation_pool_accounts')->where('id', 1)
                 ->lockForUpdate()->first();
-            if (!$pool) {
+            if (! $pool) {
                 throw new RuntimeException('Generation pool account missing.');
             }
             self::assertPoolReconciles($pool);
 
             $funding = DB::table('generation_profit_fundings')
                 ->where('id', $fundingId)->lockForUpdate()->first();
-            if (!$funding) {
+            if (! $funding) {
                 throw new RuntimeException('Funding record missing.');
             }
 
@@ -107,7 +89,7 @@ final class GenerationAllocationService
 
             $settings = DB::table('generation_pool_settings')
                 ->where('id', 1)->lockForUpdate()->first();
-            if (!$settings || self::trueValue($settings->generation_enabled)) {
+            if (! $settings || self::trueValue($settings->generation_enabled)) {
                 throw new RuntimeException('Generation distribution must remain OFF.');
             }
             if ($funding->status !== 'funded_unallocated') {
@@ -166,7 +148,7 @@ final class GenerationAllocationService
                 $amount = (string) $package->investment_amount;
                 self::assertNonnegative($amount);
                 $ownerId = (int) $package->user_id;
-                if (!isset($byId[$ownerId])) {
+                if (! isset($byId[$ownerId])) {
                     throw new RuntimeException('Active package owner missing.');
                 }
                 $activeOwner[$ownerId] = true;
@@ -178,7 +160,7 @@ final class GenerationAllocationService
                         break;
                     }
                     $parent = (int) $parent;
-                    if (!isset($byId[$parent]) || isset($visited[$parent])) {
+                    if (! isset($byId[$parent]) || isset($visited[$parent])) {
                         throw new RuntimeException('Missing or cyclic sponsor chain.');
                     }
                     $visited[$parent] = true;
@@ -253,7 +235,7 @@ final class GenerationAllocationService
                             if ($candidateCount > self::MAX_ALLOCATION_ROWS) {
                                 throw new RuntimeException('Too many allocation rows for safe processing.');
                             }
-                            if (!isset($unlockCache[$candidateId])) {
+                            if (! isset($unlockCache[$candidateId])) {
                                 $unlockCache[$candidateId] = self::unlockLevel(
                                     $business[$candidateId] ?? [], $rules
                                 );
@@ -263,7 +245,7 @@ final class GenerationAllocationService
                             if ((string) $byId[$candidateId]->status !== 'active' ||
                                 in_array($byId[$candidateId]->is_blocked, [true, 1, '1', 't', 'true'], true)) {
                                 $reason = 'member_inactive';
-                            } elseif (!isset($activeOwner[$candidateId])) {
+                            } elseif (! isset($activeOwner[$candidateId])) {
                                 $reason = 'no_active_package';
                             } elseif ($unlocked < $level) {
                                 $reason = 'level_locked';
@@ -358,13 +340,14 @@ final class GenerationAllocationService
         foreach ($rules as $rule) {
             $sum = '0.00000000';
             for ($level = (int) $rule->business_from_level;
-                 $level <= (int) $rule->business_to_level; $level++) {
+                $level <= (int) $rule->business_to_level; $level++) {
                 $sum = bcadd($sum, $businessByLevel[$level] ?? '0.00000000', 8);
             }
             if (bccomp($sum, (string) $rule->required_business, 8) >= 0) {
                 $unlocked = max($unlocked, (int) $rule->unlock_through_level);
             }
         }
+
         return $unlocked;
     }
 
@@ -377,9 +360,9 @@ final class GenerationAllocationService
         }
         $unallocatedAfter = bcsub($unallocatedBefore, $amount, 8);
         $bucketAfter = bcadd($bucketBefore, $amount, 8);
-        self::journalRow($runId, $bucket . '_reserve_out', 'generation_unallocated',
-            '-' . $amount, $unallocatedBefore, $unallocatedAfter);
-        self::journalRow($runId, $bucket . '_reserve_in', 'generation_' . $bucket,
+        self::journalRow($runId, $bucket.'_reserve_out', 'generation_unallocated',
+            '-'.$amount, $unallocatedBefore, $unallocatedAfter);
+        self::journalRow($runId, $bucket.'_reserve_in', 'generation_'.$bucket,
             $amount, $bucketBefore, $bucketAfter);
     }
 
@@ -389,14 +372,14 @@ final class GenerationAllocationService
     ): void {
         DB::table('financial_ledger')->insert([
             'user_id' => null,
-            'entry_type' => 'generation_allocation_' . $entry,
+            'entry_type' => 'generation_allocation_'.$entry,
             'wallet_type' => $wallet,
             'amount' => $amount,
             'balance_before' => $before,
             'balance_after' => $after,
             'reference_type' => 'generation_allocation_run',
             'reference_id' => $runId,
-            'transaction_key' => 'generation:allocation:' . $runId . ':' . $entry,
+            'transaction_key' => 'generation:allocation:'.$runId.':'.$entry,
             'status' => 'completed',
             'description' => 'Phase 2: internal reserve classification only; no member payout.',
             'created_at' => now(), 'updated_at' => now(),
@@ -405,8 +388,8 @@ final class GenerationAllocationService
 
     private static function assertPoolReconciles(object $pool): void
     {
-        foreach (['balance','unallocated_balance','held_balance',
-                  'payable_balance','total_funded','total_paid'] as $column) {
+        foreach (['balance', 'unallocated_balance', 'held_balance',
+            'payable_balance', 'total_funded', 'total_paid'] as $column) {
             self::assertNonnegative((string) $pool->{$column});
         }
         $reconciled = bcadd(bcadd(
@@ -422,7 +405,7 @@ final class GenerationAllocationService
 
     private static function assertNonnegative(string $amount): void
     {
-        if (!preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount)
+        if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount)
             || bccomp($amount, '0', 8) < 0
             || bccomp($amount, self::MAX_MONEY, 8) > 0) {
             throw new RuntimeException('Invalid nonnegative accounting amount.');
@@ -434,6 +417,7 @@ final class GenerationAllocationService
         if (is_bool($value)) {
             return $value;
         }
+
         return in_array(strtolower((string) $value),
             ['1', 't', 'true', 'yes', 'on'], true);
     }

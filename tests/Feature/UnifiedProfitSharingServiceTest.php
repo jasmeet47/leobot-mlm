@@ -7,27 +7,18 @@ use App\Services\GenerationAllocationService;
 use App\Services\TradingProfitPoolService;
 use App\Services\UnifiedProfitSharingService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Tests\Support\FinancialSeedState;
 use Tests\TestCase;
 
 class UnifiedProfitSharingServiceTest extends TestCase
 {
-    use RefreshDatabase {
-        refreshDatabase as private refreshDatabaseWithLaravelTrait;
-    }
+    use DatabaseTruncation;
 
-    public function refreshDatabase()
-    {
-        // Validate the actual database before Laravel may run migrate:fresh.
-        // The existing guard permits only the disposable PostgreSQL database.
-        $this->beforeTruncatingDatabase();
-
-        $this->refreshDatabaseWithLaravelTrait();
-    }
     protected function beforeTruncatingDatabase(): void
     {
         $connection = DB::connection();
@@ -56,19 +47,19 @@ class UnifiedProfitSharingServiceTest extends TestCase
                 'SAFETY STOP: Financial tests require local PostgreSQL 127.0.0.1:5433/leobot_financial_disposable.'
             );
         }
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function afterTruncatingDatabase(): void
     {
-        \Tests\Support\FinancialSeedState::restoreOrCapture();
+        FinancialSeedState::restoreOrCapture();
     }
 
     private function member(
@@ -81,7 +72,7 @@ class UnifiedProfitSharingServiceTest extends TestCase
         $id = DB::table('users')->insertGetId([
             'username' => $username,
             'name' => 'Test Member',
-            'email' => $uuid . '@example.test',
+            'email' => $uuid.'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
@@ -132,20 +123,20 @@ class UnifiedProfitSharingServiceTest extends TestCase
             $this->assertGreaterThanOrEqual(-30, $exponent);
             $this->assertLessThanOrEqual(30, $exponent);
 
-            $digits = $m[1] . ($m[2] ?? '');
+            $digits = $m[1].($m[2] ?? '');
             $point = strlen($m[1]) + $exponent;
 
             if ($point <= 0) {
-                $actual = '0.' . str_repeat('0', -$point) . $digits;
+                $actual = '0.'.str_repeat('0', -$point).$digits;
             } elseif ($point >= strlen($digits)) {
-                $actual = $digits . str_repeat(
+                $actual = $digits.str_repeat(
                     '0',
                     $point - strlen($digits)
                 );
             } else {
                 $actual = substr($digits, 0, $point)
-                    . '.'
-                    . substr($digits, $point);
+                    .'.'
+                    .substr($digits, $point);
             }
         }
 
@@ -198,7 +189,7 @@ class UnifiedProfitSharingServiceTest extends TestCase
 
         $shares = $self->mapWithKeys(
             fn ($r) => [
-                (int) $r->user_id => (string) $r->self_share_reserved
+                (int) $r->user_id => (string) $r->self_share_reserved,
             ]
         );
 
@@ -828,6 +819,7 @@ class UnifiedProfitSharingServiceTest extends TestCase
             );
         }
     }
+
     public function test_legacy_magic_reference_cannot_be_reused_for_unified_funding(): void
     {
         $admin = $this->admin();
@@ -874,6 +866,4 @@ class UnifiedProfitSharingServiceTest extends TestCase
             $this->eqMoney('0', DB::table('generation_pool_accounts')->where('id', 1)->value('balance'));
         }
     }
-
-
 }

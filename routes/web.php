@@ -1,23 +1,31 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-
-use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
-use App\Http\Controllers\Admin\ReferralPrivacyController;
-use App\Http\Controllers\Admin\MemberManagementController;
+use App\Http\Controllers\Admin\LevelConfigController;
+use App\Http\Controllers\Admin\MagicMatrixAdminController;
 use App\Http\Controllers\Admin\MemberBlockController;
+use App\Http\Controllers\Admin\MemberManagementController;
+use App\Http\Controllers\Admin\MemberRetirementController;
+use App\Http\Controllers\Admin\PasswordOtpSettingsController;
+use App\Http\Controllers\Admin\ReferralPrivacyController;
 use App\Http\Controllers\Admin\UnifiedFundingController;
-
-use App\Http\Controllers\Auth\DashboardController;
+use App\Http\Controllers\Admin\WithdrawalAdminController;
+use App\Http\Controllers\Auth\PasswordOtpController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\RegistrationEmailOtpController;
 use App\Http\Controllers\Auth\SecurityPinController;
-
+use App\Http\Controllers\DashboardQuickLinksController;
 use App\Http\Controllers\Member\MemberDashboardController;
+use App\Http\Controllers\Member\MemberTeamViewerController;
 use App\Http\Controllers\Member\ReferralContactConsentController;
+use App\Http\Controllers\Member\UsdtWalletController;
+use App\Http\Controllers\Member\WithdrawalMemberController;
+use App\Http\Controllers\Mt5DisplayController;
 use App\Http\Middleware\EnsureMemberPin;
+use App\Http\Middleware\MeasureLoginRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,7 +67,7 @@ Route::post('/login', [
     RegisterController::class,
     'login',
 ])
-    ->middleware(\App\Http\Middleware\MeasureLoginRequest::class)
+    ->middleware(MeasureLoginRequest::class)
     ->middleware('throttle:5,1')
     ->name('login.submit');
 
@@ -69,10 +77,10 @@ Route::post('/login', [
 | Named routes retained for existing Blade references
 |--------------------------------------------------------------------------
 */
-Route::get('/forgot-password', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'requestForm'])->name('password.otp.request');
-Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'send'])->middleware('throttle:3,1')->name('password.otp.send');
-Route::get('/reset-password-otp', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'resetForm'])->name('password.otp.form');
-Route::post('/reset-password-otp', [\App\Http\Controllers\Auth\PasswordOtpController::class, 'reset'])->middleware('throttle:5,1')->name('password.otp.reset');
+Route::get('/forgot-password', [PasswordOtpController::class, 'requestForm'])->name('password.otp.request');
+Route::post('/forgot-password', [PasswordOtpController::class, 'send'])->middleware('throttle:3,1')->name('password.otp.send');
+Route::get('/reset-password-otp', [PasswordOtpController::class, 'resetForm'])->name('password.otp.form');
+Route::post('/reset-password-otp', [PasswordOtpController::class, 'reset'])->middleware('throttle:5,1')->name('password.otp.reset');
 
 /*
 |--------------------------------------------------------------------------
@@ -82,8 +90,8 @@ Route::post('/reset-password-otp', [\App\Http\Controllers\Auth\PasswordOtpContro
 
 Route::middleware(['auth', 'account.not_blocked'])->group(function () {
     // Read-only 51-level member viewer: authenticated user is the only root.
-    Route::get('/member/team-levels', [\App\Http\Controllers\Member\MemberTeamViewerController::class, 'index'])
-        ->middleware(\App\Http\Middleware\EnsureMemberPin::class)
+    Route::get('/member/team-levels', [MemberTeamViewerController::class, 'index'])
+        ->middleware(EnsureMemberPin::class)
         ->name('member.team-levels');
 
     /*
@@ -91,7 +99,6 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
     | Protected Dashboard
     |--------------------------------------------------------------------------
     */
-
 
     /*
     |--------------------------------------------------------------------------
@@ -170,8 +177,13 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
 */
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
-    Route::get('/admin/password-otp-settings', [\App\Http\Controllers\Admin\PasswordOtpSettingsController::class, 'index'])->name('admin.password-otp.index');
-    Route::post('/admin/password-otp-settings', [\App\Http\Controllers\Admin\PasswordOtpSettingsController::class, 'update'])->middleware('throttle:5,1')->name('admin.password-otp.update');
+    Route::post('/admin/members/{member}/restore', [MemberRetirementController::class, 'restore'])->middleware('throttle:5,1')->name('admin.members.restore');
+    Route::post('/admin/mt5/toggle', [Mt5DisplayController::class, 'toggle'])->middleware('throttle:5,1')->name('admin.mt5.toggle');
+    Route::get('/admin/quick-links', [DashboardQuickLinksController::class, 'index'])->name('admin.quick-links.index');
+    Route::post('/admin/quick-links', [DashboardQuickLinksController::class, 'update'])->middleware('throttle:5,1')->name('admin.quick-links.update');
+
+    Route::get('/admin/password-otp-settings', [PasswordOtpSettingsController::class, 'index'])->name('admin.password-otp.index');
+    Route::post('/admin/password-otp-settings', [PasswordOtpSettingsController::class, 'update'])->middleware('throttle:5,1')->name('admin.password-otp.update');
 
     /*
     |--------------------------------------------------------------------------
@@ -222,7 +234,6 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -306,47 +317,55 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
-    Route::get('/admin/magic-matrix', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'index'])
+    Route::get('/admin/magic-matrix', [MagicMatrixAdminController::class, 'index'])
         ->name('admin.magic.index');
-    Route::post('/admin/magic-matrix/policy', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updatePolicy'])
+    Route::post('/admin/magic-matrix/policy', [MagicMatrixAdminController::class, 'updatePolicy'])
         ->middleware('throttle:5,1')->name('admin.magic.policy');
-    Route::post('/admin/magic-matrix/rates', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updateRates'])
+    Route::post('/admin/magic-matrix/rates', [MagicMatrixAdminController::class, 'updateRates'])
         ->middleware('throttle:5,1')->name('admin.magic.rates');
-    Route::post('/admin/magic-matrix/switches', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'updateSwitches'])
+    Route::post('/admin/magic-matrix/switches', [MagicMatrixAdminController::class, 'updateSwitches'])
         ->middleware('throttle:5,1')->name('admin.magic.switches');
-    Route::post('/admin/magic-matrix/settle', [\App\Http\Controllers\Admin\MagicMatrixAdminController::class, 'settle'])
+    Route::post('/admin/magic-matrix/settle', [MagicMatrixAdminController::class, 'settle'])
         ->middleware('throttle:3,1')->name('admin.magic.settle');
-    Route::get('/admin/withdrawals', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'index'])
+    Route::get('/admin/withdrawals', [WithdrawalAdminController::class, 'index'])
         ->name('admin.withdrawals.index');
-    Route::post('/admin/withdrawals/{id}/approve', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'approve'])
+    Route::post('/admin/withdrawals/{id}/approve', [WithdrawalAdminController::class, 'approve'])
         ->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.approve');
-    Route::post('/admin/withdrawals/{id}/reject', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'reject'])
+    Route::post('/admin/withdrawals/{id}/reject', [WithdrawalAdminController::class, 'reject'])
         ->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.reject');
-    Route::post('/admin/withdrawals/fee', [\App\Http\Controllers\Admin\WithdrawalAdminController::class, 'updateFee'])
+    Route::post('/admin/withdrawals/controls', [WithdrawalAdminController::class, 'updateControls'])->middleware('throttle:5,1')->name('admin.withdrawals.controls');
+    Route::post('/admin/withdrawals/{id}/payment', [WithdrawalAdminController::class, 'payment'])->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.payment');
+    Route::post('/admin/withdrawals/fee', [WithdrawalAdminController::class, 'updateFee'])
         ->middleware('throttle:5,1')->name('admin.withdrawals.fee');
 });
-Route::middleware(['auth','account.not_blocked',\App\Http\Middleware\EnsureMemberPin::class])->group(function () {
+Route::middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->group(function () {
     Route::get('/member/usdt-wallets/page', function () {
         return view('member.usdt-wallets');
     })->name('member.usdt-wallets.page');
     Route::get('/member/usdt-wallets',
-        [\App\Http\Controllers\Member\UsdtWalletController::class, 'index'])
+        [UsdtWalletController::class, 'index'])
         ->middleware('throttle:30,1')->name('member.usdt-wallets.index');
 
     Route::post('/member/usdt-wallets/challenge',
-        [\App\Http\Controllers\Member\UsdtWalletController::class, 'challenge'])
+        [UsdtWalletController::class, 'challenge'])
         ->middleware('throttle:5,1')->name('member.usdt-wallets.challenge');
 
     Route::post('/member/usdt-wallets/verify',
-        [\App\Http\Controllers\Member\UsdtWalletController::class, 'verify'])
+        [UsdtWalletController::class, 'verify'])
         ->middleware('throttle:5,1')->name('member.usdt-wallets.verify');
-    Route::get('/member/withdrawals', [\App\Http\Controllers\Member\WithdrawalMemberController::class, 'index'])
+    Route::get('/member/withdrawals', [WithdrawalMemberController::class, 'index'])
         ->name('member.withdrawals.index');
-    Route::post('/member/withdrawals', [\App\Http\Controllers\Member\WithdrawalMemberController::class, 'store'])
+    Route::post('/member/withdrawals', [WithdrawalMemberController::class, 'store'])
         ->middleware('throttle:3,1')->name('member.withdrawals.store');
 });
 
 require __DIR__.'/leobot_financial_ui.php';
 
 // Beta-only staking HTTP routes
-require_once __DIR__ . '/staking_routes.php';
+require __DIR__.'/staking_routes.php';
+
+Route::get('/member/mt5', [Mt5DisplayController::class, 'member'])
+    ->middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->name('member.mt5.view');
+
+Route::post('/registration-email-otp/send', [RegistrationEmailOtpController::class, 'send'])->middleware('throttle:5,1')->name('registration-email-otp.send');
+Route::post('/registration-email-otp/verify', [RegistrationEmailOtpController::class, 'verify'])->middleware('throttle:10,1')->name('registration-email-otp.verify');

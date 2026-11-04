@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\UsdtChainVerifier;
 use App\Models\User;
 use App\Services\WithdrawalPaymentConfirmationService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -41,6 +42,7 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
 
         config()->set('leobot_withdrawal.external_payment_verification_enabled', true);
         config()->set('leobot.withdrawals_enabled', true);
+        config()->set('leobot.production_financial_approval', true);
         DB::table('withdrawal_settings')->where('id', 1)
             ->update(['admin_review_enabled' => true]);
     }
@@ -50,9 +52,9 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
         $id = Str::random(14);
 
         $key = DB::table('users')->insertGetId([
-            'username' => 'PC' . $id,
+            'username' => 'PC'.$id,
             'name' => 'Confirmation Test',
-            'email' => $id . '@example.test',
+            'email' => $id.'@example.test',
             'phone' => '9000000000',
             'password' => bcrypt(Str::random(32)),
             'status' => 'active',
@@ -97,7 +99,8 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
 
     private function service(bool $verified): WithdrawalPaymentConfirmationService
     {
-        $chain = new class($verified) implements UsdtChainVerifier {
+        $chain = new class($verified) implements UsdtChainVerifier
+        {
             public function __construct(private bool $result) {}
 
             public function verified(
@@ -117,8 +120,10 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
     {
         $admin = $this->person('admin');
         $id = $this->withdrawal($this->person('member'));
-        $hash = '0x' . str_repeat('a', 64);
+        $hash = '0x'.str_repeat('a', 64);
 
+        $this->service(true)->beginPayment($admin, $id);
+        $this->service(true)->submitPayment($admin, $id, 'BEP20', $hash);
         $this->service(true)->confirm($admin, $id, 'BEP20', $hash);
 
         $this->assertSame(
@@ -143,9 +148,11 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
         $admin = $this->person('admin');
         $id = $this->withdrawal($this->person('member'));
 
+        $this->service(false)->beginPayment($admin, $id);
+        $this->service(false)->submitPayment($admin, $id, 'BEP20', '0x'.str_repeat('b', 64));
         try {
             $this->service(false)->confirm(
-                $admin, $id, 'BEP20', '0x' . str_repeat('b', 64)
+                $admin, $id, 'BEP20', '0x'.str_repeat('b', 64)
             );
             $this->fail('Unverified payment was accepted.');
         } catch (RuntimeException $e) {
@@ -153,7 +160,7 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
         }
 
         $this->assertSame(
-            'approved_awaiting_payment',
+            'payment_submitted',
             DB::table('withdrawal_requests')->find($id)->status
         );
         $this->assertSame(
@@ -169,10 +176,12 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
         $id = $this->withdrawal($this->person('member'));
         $service = $this->service(true);
 
-        $service->confirm($admin, $id, 'BEP20', '0x' . str_repeat('c', 64));
+        $service->beginPayment($admin, $id);
+        $service->submitPayment($admin, $id, 'BEP20', '0x'.str_repeat('c', 64));
+        $service->confirm($admin, $id, 'BEP20', '0x'.str_repeat('c', 64));
 
         try {
-            $service->confirm($admin, $id, 'BEP20', '0x' . str_repeat('d', 64));
+            $service->confirm($admin, $id, 'BEP20', '0x'.str_repeat('d', 64));
             $this->fail('Duplicate confirmation was accepted.');
         } catch (RuntimeException $e) {
             $this->assertStringContainsString('approved unpaid', $e->getMessage());
@@ -190,10 +199,10 @@ final class WithdrawalConfirmationIntegrationTest extends TestCase
         $member = $this->person('member');
         $id = $this->withdrawal($this->person('member'));
 
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
+        $this->expectException(AuthorizationException::class);
 
         $this->service(true)->confirm(
-            $member, $id, 'BEP20', '0x' . str_repeat('e', 64)
+            $member, $id, 'BEP20', '0x'.str_repeat('e', 64)
         );
     }
 }

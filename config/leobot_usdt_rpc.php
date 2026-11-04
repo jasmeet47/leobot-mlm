@@ -1,7 +1,8 @@
 <?php
+
 return [
     // Do not enable until trusted endpoints and integration tests are validated.
-    'enabled' => false,
+    'enabled' => env('LUMIFLOWON_USDT_RPC_ENABLED', false),
     'bsc_rpc_url' => env('LEOBOT_BSC_RPC_URL', ''),
     'bsc_confirmations' => 30,
     'tron_full_node_url' => env('LEOBOT_TRON_FULL_NODE_URL', ''),

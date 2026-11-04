@@ -13,13 +13,13 @@ class AdminOnly
         $user = $request->user();
 
         // Unauthenticated users cannot access admin routes.
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized.');
         }
 
         // Blocked accounts must never retain administrator access,
         // even when their role and activation status remain unchanged.
-        if ($user->is_blocked) {
+        if ($user->deleted_at !== null || $user->is_blocked) {
             abort(403, 'Unauthorized.');
         }
 
@@ -29,7 +29,7 @@ class AdminOnly
         }
 
         // Authorization is based on role, not username.
-        if (!in_array(
+        if (! in_array(
             $user->role,
             ['admin', 'super_admin'],
             true

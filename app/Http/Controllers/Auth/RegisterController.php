@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureMemberPin;
 use App\Models\User;
+use App\Services\RegistrationEmailOtpService;
+use App\Services\TeamCounterService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -57,7 +61,7 @@ class RegisterController extends Controller
             ->where('username', $data['sponsor_id'])
             ->first(['username', 'name']);
 
-        if (!$sponsor) {
+        if (! $sponsor) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Sponsor ID not found.',
@@ -98,11 +102,18 @@ class RegisterController extends Controller
             ],
         ]);
 
+        $otp = app(RegistrationEmailOtpService::class);
+        if ($otp->enabled()) {
+            $validated += $request->validate([
+                'challenge_token' => ['required', 'string', 'size:64', 'regex:/^[a-f0-9]+$/D'],
+            ]);
+        }
+
         $user = null;
 
         // Each retry uses a new transaction.
         for ($attempt = 0; $attempt < self::MAX_USERNAME_TRIES; $attempt++) {
-            $candidate = 'TX' . random_int(100000, 999999);
+            $candidate = 'TX'.random_int(100000, 999999);
 
             try {
                 $user = DB::transaction(function () use (
@@ -114,10 +125,15 @@ class RegisterController extends Controller
                         $validated['sponsor_id']
                     )->lockForUpdate()->first();
 
-                    if (!$sponsor) {
+                    if (! $sponsor) {
                         throw ValidationException::withMessages([
                             'sponsor_id' => 'Invalid Sponsor ID. Please enter a valid Sponsor ID.',
                         ]);
+                    }
+
+                    $otp = app(RegistrationEmailOtpService::class);
+                    if ($otp->enabled()) {
+                        $otp->consumeVerified($validated['email'], $validated['challenge_token'] ?? '');
                     }
 
                     $newMember = User::create([
@@ -134,7 +150,7 @@ class RegisterController extends Controller
                         'status' => 'inactive',
                     ]);
 
-                    \App\Services\TeamCounterService::synchronize(
+                    TeamCounterService::synchronize(
                         (int) $newMember->id
                     );
 
@@ -143,19 +159,19 @@ class RegisterController extends Controller
 
                 break;
             } catch (QueryException $exception) {
-                if (!self::isUsernameCollision($exception)) {
+                if (! self::isUsernameCollision($exception)) {
                     throw $exception;
                 }
             }
         }
 
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException(
                 'Could not allocate a unique member username. Please retry.'
             );
         }
 
-        $referralLink = url('/join?ref=' . $user->username);
+        $referralLink = url('/join?ref='.$user->username);
 
         if ($request->is('api/*')) {
             // API registration issues no session or bearer token.
@@ -213,9 +229,9 @@ class RegisterController extends Controller
         int $limit
     ): void {
         $key = 'leobot:'
-            . $action
-            . ':'
-            . hash('sha256', $request->ip() ?? 'unknown');
+            .$action
+            .':'
+            .hash('sha256', $request->ip() ?? 'unknown');
 
         if (RateLimiter::tooManyAttempts($key, $limit)) {
             abort(429, 'Too many requests. Please try again later.');
@@ -242,17 +258,18 @@ class RegisterController extends Controller
             'password' => $credentials['password'],
         ]);
 
-        \Illuminate\Support\Facades\Log::info('leobot.login.auth_timing', [
+        Log::info('leobot.login.auth_timing', [
             'auth_ms' => round((hrtime(true) - $lbLoginStart) / 1000000, 2),
             'success' => $loginSuccess,
         ]);
 
         if ($loginSuccess) {
             $user = $request->user();
-            if ($user->is_blocked || !in_array($user->status, ['active', 'inactive'], true)) {
+            if ($user->deleted_at !== null || $user->is_blocked || ! in_array($user->status, ['active', 'inactive'], true)) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+
                 return back()->withErrors([
                     'username' => 'Invalid username or password.',
                 ])->withInput($request->only('username'));
@@ -276,7 +293,7 @@ class RegisterController extends Controller
 
             // Members must complete PIN setup before dashboard access.
             // A saved intended URL cannot bypass PIN setup.
-            return \App\Http\Middleware\EnsureMemberPin::hasConfiguredPin(
+            return EnsureMemberPin::hasConfiguredPin(
                 $user
             )
                 ? redirect()->route('member.dashboard')

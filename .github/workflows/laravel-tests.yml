@@ -37,12 +37,27 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          extensions: mbstring, dom, fileinfo, pdo_pgsql, pgsql, bcmath, curl, xml, zip, intl, gd
+          extensions: mbstring, dom, fileinfo, pdo_pgsql, pgsql, gmp, bcmath, curl, xml, zip, intl, gd
           tools: composer:v2
           coverage: none
 
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Audit PHP Dependencies
+        run: composer audit --locked
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Build and Audit Frontend
+        run: |
+          npm ci --ignore-scripts
+          npm audit
+          npm run build
 
       - name: Generate Testing APP_KEY
         run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"

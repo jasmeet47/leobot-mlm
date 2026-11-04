@@ -41,3 +41,11 @@ README_*.txt
 backups/
 test-all.ps1*
 phpunit.financial-disposable.xml
+
+# Generated local state must never enter a production image.
+/public/build
+/public/hot
+/bootstrap/cache/*.php
+/storage/framework/views/*.php
+/storage/framework/sessions/*
+/storage/framework/cache/data/*

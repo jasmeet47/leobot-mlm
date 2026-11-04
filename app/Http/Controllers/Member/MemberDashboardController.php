@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Services\MagicIncomeReportService;
+use App\Services\MagicMatrixTeamReadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -144,7 +146,7 @@ class MemberDashboardController extends Controller
                         : 'Hidden',
 
                     'full' => $phoneAllowed
-                        && !empty($referral->phone)
+                        && ! empty($referral->phone)
                             ? $referral->phone
                             : 'Hidden',
 
@@ -157,7 +159,7 @@ class MemberDashboardController extends Controller
                         : 'Hidden',
 
                     'full' => $emailAllowed
-                        && !empty($referral->email)
+                        && ! empty($referral->email)
                             ? $referral->email
                             : 'Hidden',
 
@@ -169,7 +171,7 @@ class MemberDashboardController extends Controller
                         (string) ($referral->total_investment ?? '0'),
                         '0',
                         8
-                    ) . ' USDT'
+                    ).' USDT'
                     : 'Hidden';
 
                 // Package status is independent of users.status.
@@ -231,8 +233,8 @@ class MemberDashboardController extends Controller
         $generationTotals = DB::table('generation_member_allocations')
             ->where('user_id', $member->id)
             ->selectRaw(
-                "COALESCE(SUM(CASE WHEN classification = ? AND status = ? THEN share_amount ELSE 0 END), 0) AS qualified_total,
-                 COALESCE(SUM(CASE WHEN classification = ? AND status = ? THEN share_amount ELSE 0 END), 0) AS held_total",
+                'COALESCE(SUM(CASE WHEN classification = ? AND status = ? THEN share_amount ELSE 0 END), 0) AS qualified_total,
+                 COALESCE(SUM(CASE WHEN classification = ? AND status = ? THEN share_amount ELSE 0 END), 0) AS held_total',
                 [
                     'payable',
                     'qualified_reserved_no_payout',
@@ -266,6 +268,7 @@ class MemberDashboardController extends Controller
             ])
             ->orderByDesc('id')
             ->paginate(10, ['*'], 'wallet_page');
+
         return view('member.dashboard', [
             'member' => $member,
             'teamSummary' => $teamSummary,
@@ -275,6 +278,8 @@ class MemberDashboardController extends Controller
             'emailConsent' => $emailConsent,
             'incomeSummary' => $incomeSummary,
             'walletHistory' => $walletHistory,
+            'magicIncomeSummary' => MagicIncomeReportService::summary((int) $member->id),
+            'magicTeam' => MagicMatrixTeamReadService::forMember((int) $member->id),
         ]);
     }
 
@@ -300,13 +305,13 @@ class MemberDashboardController extends Controller
         }
 
         return substr($phone, 0, 2)
-            . str_repeat('X', $length - 4)
-            . substr($phone, -2);
+            .str_repeat('X', $length - 4)
+            .substr($phone, -2);
     }
 
     private static function maskEmail(string $email): string
     {
-        if (!str_contains($email, '@')) {
+        if (! str_contains($email, '@')) {
             return '****';
         }
 
@@ -317,7 +322,7 @@ class MemberDashboardController extends Controller
         }
 
         return substr($name, 0, 1)
-            . '***@'
-            . $domain;
+            .'***@'
+            .$domain;
     }
 }

@@ -2,41 +2,43 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\TestCase;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Testing\TestResponse;
+use Tests\TestCase;
 
-class MemberDashboardMagicSummaryContractTest extends TestCase
+final class MemberDashboardMagicSummaryContractTest extends TestCase
 {
-    public function test_member_dashboard_controller_provides_magic_summary_contract(): void
-    {
-        $controller = file_get_contents(
-            dirname(__DIR__, 2) .
-            '/app/Http/Controllers/Member/MemberDashboardController.php'
-        );
+    use RefreshDatabase;
 
-        $this->assertMatchesRegularExpression(
-            "/'magicIncomeSummary'\s*=>/",
-            $controller
-        );
+    private function dashboard(): TestResponse
+    {
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active', 'security_pin' => Hash::make('123456')]);
+
+        return $this->actingAs($member)->get(route('member.dashboard'))->assertOk();
     }
 
-    public function test_member_dashboard_has_safe_magic_summary_guards(): void
+    public function test_member_dashboard_provides_numeric_settled_magic_summary(): void
     {
-        $view = file_get_contents(
-            dirname(__DIR__, 2) .
-            '/resources/views/member/dashboard.blade.php'
-        );
+        $response = $this->dashboard();
+        $summary = $response->viewData('magicIncomeSummary');
+        $this->assertIsArray($summary);
+        foreach (['weekly_usdt', 'monthly_usdt', 'lifetime_usdt'] as $period) {
+            $this->assertSame(0, bccomp('0', $summary[$period], 8));
+        }
+        $response->assertSee('Magic Income (Settled)')->assertSee('No pending or held amounts.');
+    }
 
-        $this->assertSame(
-            3,
-            substr_count(
-                $view,
-                '@if(isset($magicIncomeSummary) && is_array($magicIncomeSummary))'
-            )
-        );
-
-        $this->assertStringNotContainsString(
-            '@if($magicIncomeSummary !== null)',
-            $view
-        );
+    public function test_member_dashboard_handles_absent_or_partial_summary_without_blade_errors(): void
+    {
+        $data = $this->dashboard()->original->getData();
+        $data['magicIncomeSummary'] = null;
+        $html = view('member.dashboard', $data)->render();
+        $this->assertStringNotContainsString('Magic Income (Settled)', $html);
+        $data['magicIncomeSummary'] = ['weekly_usdt' => '12.00000001'];
+        $html = view('member.dashboard', $data)->render();
+        $this->assertStringContainsString('12.00000001 USDT', $html);
+        $this->assertStringContainsString('0.00000000 USDT', $html);
     }
 }

@@ -1,98 +1,48 @@
-
-# ==================================================
-# LeoBot MLM - Laravel 13 Production Dockerfile
-# PHP 8.3 + PostgreSQL + Vite
-# ==================================================
-
-# Stage 1: Build frontend assets
-FROM node:22-bookworm-slim AS frontend
-
+# syntax=docker/dockerfile:1
+FROM node:24-bookworm-slim AS frontend
 WORKDIR /app
-
-# Install Node dependencies
-COPY package*.json ./
-RUN npm install
-
-# Copy project files needed by Vite
+COPY package.json package-lock.json .npmrc ./
+RUN --mount=type=secret,id=proxy_ca \
+    if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
+    npm ci --ignore-scripts --strict-ssl=true
 COPY . .
+RUN --mount=type=secret,id=proxy_ca \
+    if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
+    NODE_USE_ENV_PROXY=1 npm run build
 
-# Generate public/build/manifest.json
-RUN npm run build
-
-
-# Stage 2: Laravel application
 FROM php:8.3-apache
-
-# Install PHP extensions and system packages
-RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libpq-dev libgmp-dev \
-    zip \
-    unzip \
-    git \
-    && docker-php-ext-configure gd \
-        --with-freetype \
-        --with-jpeg \
-    && docker-php-ext-install gmp \
-        gd \
-        pdo \
-        pdo_mysql \
-        pdo_pgsql \
-        bcmath \
-    && rm -rf /var/lib/apt/lists/*
-
-# Enable Apache rewrite
-RUN a2enmod rewrite
-
-# Install Composer
-COPY --from=composer:latest \
-    /usr/bin/composer \
-    /usr/bin/composer
-
-# Copy Laravel project
-COPY . /var/www/html
-
-# Set Apache document root
+RUN --mount=type=secret,id=proxy_ca \
+    set -eu; \
+    if [ -f /run/secrets/proxy_ca ]; then \
+        apt-get -o Acquire::https::CaInfo=/run/secrets/proxy_ca update; \
+    else apt-get update; fi; \
+    apt-get install -y --no-install-recommends \
+        libpng-dev libjpeg-dev libfreetype6-dev libpq-dev libgmp-dev \
+        libonig-dev libxml2-dev libicu-dev libzip-dev libcurl4-openssl-dev unzip git; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    docker-php-ext-install -j2 gmp gd pdo_pgsql bcmath mbstring dom intl zip curl opcache; \
+    rm -rf /var/lib/apt/lists/*; \
+    a2enmod rewrite headers
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-
-RUN sed -ri \
-    -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/*.conf
-
-RUN sed -ri \
-    -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/apache2.conf
-
-# Set application working directory
+RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf /etc/apache2/apache2.conf
 WORKDIR /var/www/html
-
-# Install production PHP dependencies
-RUN composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction
-
-# Copy generated Vite assets from frontend stage
-COPY --from=frontend --chown=www-data:www-data \
-    /app/public/build \
-    /var/www/html/public/build
-
-# Set Laravel file permissions
-RUN chown -R www-data:www-data \
-        /var/www/html/storage \
-        /var/www/html/bootstrap/cache \
-    && chmod -R 775 \
-        /var/www/html/storage \
-        /var/www/html/bootstrap/cache
-
-# Render web port
+COPY . .
+RUN --mount=type=secret,id=proxy_ca \
+    set -eu; \
+    if [ -f /run/secrets/proxy_ca ]; then export COMPOSER_CAFILE=/run/secrets/proxy_ca; fi; \
+    composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress; \
+    composer check-platform-reqs --no-dev
+COPY --from=frontend --chown=www-data:www-data /app/public/build /var/www/html/public/build
+RUN find . -type d -exec chmod 755 {} + \
+    && find . -type f -exec chmod 644 {} + \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && printf 'expose_php=Off\ndisplay_errors=Off\nlog_errors=On\n' > /usr/local/etc/php/conf.d/production-security.ini \
+    && printf '<Directory /var/www/html/public>\nAllowOverride All\nRequire all granted\n</Directory>\nServerName localhost\n' > /etc/apache2/conf-available/laravel.conf \
+    && a2enconf laravel
 EXPOSE 80
-
-# Use Render secret file only if provided.
-# Environment variables configured in Render
-# are also supported by Laravel.
-#
-# No automatic migrations or seeding.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD php -r 'exit(@file_get_contents("http://127.0.0.1/up") === false ? 1 : 0);'
+# Deployments must configure secrets externally. Never migrate, seed, or activate finance on boot.
 CMD ["sh", "-c", "if [ -f /etc/secrets/.env ]; then ln -sfn /etc/secrets/.env /var/www/html/.env; fi; exec apache2-foreground"]
