@@ -27,7 +27,7 @@ final class VerifiedDepositService
         }
     }
 
-    public static function submit(int $memberId, string $amount, string $network, string $txHash, string $requestKey): int
+    public static function submit(int $memberId, string $amount, string $network, string $txHash, string $requestKey, ?string $expectedReceivingAddress = null): int
     {
         self::gate();
         self::amount($amount);
@@ -39,23 +39,29 @@ final class VerifiedDepositService
             throw new InvalidArgumentException('Invalid deposit evidence or request key.');
         }
 
-        $receivingAddress = (string) config('leobot_deposits.receiving_addresses.'.$network, '');
+        $receivingAddress = DepositDestinationService::address($network);
         UsdtPaymentEvidence::assertAddress($network, $receivingAddress);
 
-        return DB::transaction(function () use ($memberId, $amount, $network, $txHash, $requestKey, $receivingAddress): int {
+        return DB::transaction(function () use ($memberId, $amount, $network, $txHash, $requestKey, $receivingAddress, $expectedReceivingAddress): int {
+            DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ['lumiflowon-deposit-destination:'.$network]);
             $user = DB::table('users')->where('id', $memberId)->lockForUpdate()->first();
-            if (! $user || $user->status !== 'active' || $user->deleted_at !== null || self::blocked($user)) {
-                throw new RuntimeException('Active unblocked member required.');
+            if (! $user || ! in_array($user->status, ['active', 'inactive'], true) || $user->role !== 'member' || $user->deleted_at !== null || self::blocked($user)) {
+                throw new RuntimeException('This account is not eligible for deposits. Please contact support.');
             }
             $existing = DB::table('member_deposit_requests')->where('request_key', $requestKey)->first();
             if ($existing) {
                 if ((int) $existing->user_id !== $memberId ||
                     bccomp((string) $existing->amount, $amount, 8) !== 0 ||
-                    $existing->network !== $network || $existing->tx_hash !== $txHash) {
+                    $existing->network !== $network || $existing->tx_hash !== $txHash
+                    || ($expectedReceivingAddress !== null && $existing->receiving_address !== $expectedReceivingAddress)) {
                     throw new RuntimeException('Deposit request key reused with different details.');
                 }
 
                 return (int) $existing->id;
+            }
+
+            if (DepositDestinationService::address($network) !== $receivingAddress || ($expectedReceivingAddress !== null && $expectedReceivingAddress !== $receivingAddress)) {
+                throw new RuntimeException('The receiving address changed. Refresh the deposit page before sending or submitting funds.');
             }
 
             return (int) DB::table('member_deposit_requests')->insertGetId([
@@ -102,8 +108,8 @@ final class VerifiedDepositService
                 throw new RuntimeException('Self-approval denied.');
             }
             $member = DB::table('users')->where('id', $deposit->user_id)->lockForUpdate()->first();
-            if (! $member || $member->status !== 'active' || $member->deleted_at !== null || self::blocked($member)) {
-                throw new RuntimeException('Member is inactive or blocked.');
+            if (! $member || ! in_array($member->status, ['active', 'inactive'], true) || $member->role !== 'member' || $member->deleted_at !== null || self::blocked($member)) {
+                throw new RuntimeException('This account is not eligible for deposit credit. Please contact support.');
             }
             WalletService::credit((int) $deposit->user_id, 'activation_balance', (string) $deposit->amount,
                 'verified_deposit', 'deposit:credit:'.$deposit->id,

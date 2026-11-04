@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -11,6 +12,7 @@ final class RegistrationEmailOtpController extends Controller
     {
         $data = $request->validate(['email' => ['required', 'email', 'max:255']]);
         $token = $service->send($data['email'], $request->ip() ?? 'unknown');
+
         return response()->json(['success' => true, 'message' => 'OTP sent. Check your email.', 'challenge_token' => $token]);
     }
 
@@ -22,6 +24,7 @@ final class RegistrationEmailOtpController extends Controller
             'challenge_token' => ['required', 'string', 'size:64', 'regex:/\A[a-f0-9]{64}\z/'],
         ]);
         $service->verify($data['email'], $data['otp'], $data['challenge_token']);
-        return response()->json(['success' => true, 'message' => 'Email OTP verified.']);
+
+        return response()->json(['success' => true, 'message' => 'OTP verified successfully.']);
     }
 }

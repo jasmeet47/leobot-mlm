@@ -576,7 +576,10 @@ body{align-items:flex-start!important;padding:22px 14px!important}
                 </div>
 
 
-                <button type="submit">
+                @if($loginCaptcha)
+<div class="form-group"><label for="lumi-login-captcha">Security check: {{ $loginCaptcha['left'] }} + {{ $loginCaptcha['right'] }} = ?</label><input id="lumi-login-captcha" name="login_captcha" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" autocomplete="off" required placeholder="Enter the answer">@error('login_captcha')<p role="alert" style="color:#fca5a5">{{ $message }}</p>@enderror</div>
+@endif
+<button type="submit">
 
                     Login
 
@@ -688,7 +691,13 @@ body{align-items:flex-start!important;padding:22px 14px!important}
                 </div>
 
 
-                <div class="form-group">
+                <div class="form-group" id="lumi-registration-otp"><label for="lumi-otp-code">Email verification</label>
+<input type="hidden" name="challenge_token" id="lumi-otp-token" value="">
+<button type="button" id="lumi-send-otp" @disabled(!$registrationOtpEnabled)>Send Email OTP</button>
+<input id="lumi-otp-code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="Enter six-digit OTP" autocomplete="one-time-code" @disabled(!$registrationOtpEnabled)>
+<button type="button" id="lumi-verify-otp" disabled>Verify OTP</button>
+<p id="lumi-otp-status" role="status" aria-live="polite">@unless($registrationOtpEnabled)Email verification is currently unavailable. Please contact support.@endunless</p></div>
+<div class="form-group">
 
                     <label>
                         Mobile
@@ -903,6 +912,20 @@ document.querySelectorAll('input[type="password"]').forEach(function(input, inde
     });
     input.insertAdjacentElement('afterend', button);
 });
-</script></body>
+</script><script>
+(function(){
+ const panel=document.getElementById('lumi-registration-otp');if(!panel)return;
+ const form=panel.closest('form'),email=form.querySelector('[name=email]'),send=document.getElementById('lumi-send-otp'),verify=document.getElementById('lumi-verify-otp'),token=document.getElementById('lumi-otp-token'),code=document.getElementById('lumi-otp-code'),status=document.getElementById('lumi-otp-status');
+ const enabled=@json($registrationOtpEnabled);let verified=false,boundEmail='',busy=false;
+ function feedback(message,ok){status.textContent=message;status.style.color=ok?'#22c55e':'#fca5a5';status.dataset.state=ok?'success':'error';}
+ function reset(){verified=false;token.value='';code.value='';verify.disabled=true;status.textContent='';status.dataset.state='';}
+ email.addEventListener('input',function(){if(enabled)reset();});
+ async function call(url,data){const response=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@json(csrf_token())},body:JSON.stringify(data)});const result=await response.json();if(!response.ok||result.success!==true)throw new Error(Object.values(result.errors||{}).flat()[0]||result.message||'Please try again.');return result;}
+ send.addEventListener('click',async function(){if(!enabled||busy)return;if(!email.checkValidity()){email.reportValidity();return;}reset();busy=true;send.disabled=true;const target=email.value.trim().toLowerCase();try{const result=await call(@json(route('registration-email-otp.send')),{email:target});if(email.value.trim().toLowerCase()!==target)return;boundEmail=target;token.value=result.challenge_token;verify.disabled=false;feedback('OTP sent. Check your email.',true);}catch(error){feedback(error.message,false);}finally{busy=false;send.disabled=!enabled;}});
+ verify.addEventListener('click',async function(){if(!enabled||busy||!token.value)return;busy=true;verify.disabled=true;const challenge=token.value,target=boundEmail;try{if(email.value.trim().toLowerCase()!==boundEmail)throw new Error('Email changed. Request a new OTP.');const result=await call(@json(route('registration-email-otp.verify')),{email:target,otp:code.value,challenge_token:challenge});if(email.value.trim().toLowerCase()!==target||token.value!==challenge)return;verified=true;feedback('OTP verified successfully.',true);}catch(error){verified=false;feedback(error.message,false);}finally{busy=false;verify.disabled=verified||!token.value;}});
+ form.addEventListener('submit',function(event){if(enabled&&!verified){event.preventDefault();feedback('Please verify your email OTP before creating the account.',false);}});
+})();
+</script>
+</body>
 
 </html>

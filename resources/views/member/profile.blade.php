@@ -8,7 +8,7 @@ h1,h2{color:#f4c66b}a{color:#f4c66b}dt{font-weight:700;color:#f4c66b;margin-top:
 label{display:block;margin:14px 0 5px}input{width:100%;padding:12px;border:1px solid #826c48;background:#091827;color:white;border-radius:8px}
 button{margin-top:18px;padding:12px 20px;background:#b68b41;color:#091827;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
 .error{color:#ffb6b6}
-</style></head><body><main>
+</style></head><body>@include('partials.lumiflowon-page-brand')<main>
 <p><a href="{{ route('member.dashboard') }}">Back to Dashboard</a></p>
 <dl><dt>User ID</dt><dd>{{ $member->username }}</dd><dt>Name</dt><dd>{{ $member->name }}</dd>
 <dt>Phone</dt><dd>{{ $member->phone }}</dd><dt>Email</dt><dd>{{ $member->email }}</dd></dl>

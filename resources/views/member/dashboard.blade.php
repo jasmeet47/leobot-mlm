@@ -33,7 +33,7 @@
         .notice { margin-top: 25px; border: 1px solid #334155; background: #111827; padding: 15px; border-radius: 10px; color: #94a3b8; font-size: 13px; }
         .success { color: #86efac; }
     </style>
-<!-- LEOBOT_PREMIUM_UI_V1: presentation only; no market feed or invented prices -->
+<!-- LUMIFLOWON_PREMIUM_UI_V1: presentation only; no market feed or invented prices -->
 <style>
 :root{--lb-bg:#070d19;--lb-panel:#101d30;--lb-panel2:#15243a;--lb-border:#293a53;--lb-text:#e8eff9;--lb-muted:#9caec4;--lb-green:#21c997;--lb-blue:#50a7ff}
 body{background:radial-gradient(ellipse at 90% 0%,#153153 0%,#080f1e 43%,#060c16 100%) fixed!important;color:var(--lb-text)!important}
@@ -45,7 +45,7 @@ main section,main .card,main .stat-card,main .panel,main .notice{border-radius:1
 @media(max-width:720px){.lb-terminal-grid{grid-template-columns:1fr}.lb-terminal{padding:18px;border-radius:16px}.lb-terminal-tile{min-height:auto}.lb-terminal-status{white-space:normal}}
 </style>
 <style>
-/* LEOBOT_MEMBER_PREMIUM_DARK_V1 */
+/* LUMIFLOWON_MEMBER_PREMIUM_DARK_V1 */
 body {
     background: radial-gradient(ellipse at 90% 0%, #173455 0%, #091424 45%, #060c16 100%) fixed !important;
     color: #e9f3ff !important;
@@ -112,7 +112,7 @@ main a:hover, .container a:hover {
 }
 </style>
 <style>
-/* LEOBOT_MEMBER_MENU_V1 */
+/* LUMIFLOWON_MEMBER_MENU_V1 */
 .lb-member-menu {
     position: relative;
 }
@@ -152,7 +152,7 @@ main a:hover, .container a:hover {
 }
 </style>
 <style>
-/* LEOBOT_INTERNATIONAL_TRADING_UI_V2: presentation only */
+/* LUMIFLOWON_INTERNATIONAL_TRADING_UI_V2: presentation only */
 :root { --lb-gold:#e6bd6a; --lb-gold-soft:#f7dfaa; --lb-panel:#0e1b2c; --lb-line:#2b3e54; }
 html { scroll-behavior:smooth; scroll-padding-top:22px; }
 body { background:radial-gradient(ellipse at 15% -10%,#20344d 0%,transparent 40%),linear-gradient(150deg,#07101d,#0b1727 70%,#08111e) fixed!important; }
@@ -196,7 +196,7 @@ main tr:hover td { background:#152a40; }
 @media(max-width:420px) { .lb-nav-groups { grid-template-columns:1fr 1fr; } .lb-home-link { text-align:center; } .lb-terminal-head { align-items:flex-start; } }
 </style>
 <style>
-/* LEOBOT_UI_FINAL_POLISH_V3: navigation, spacing, responsive-only */
+/* LUMIFLOWON_UI_FINAL_POLISH_V3: navigation, spacing, responsive-only */
 main.container { padding-top:18px!important; }
 main.container>header { margin:0 0 16px; position:relative; z-index:50; box-shadow:0 8px 30px #020a1580; }
 main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); border-radius:17px; }
@@ -230,7 +230,7 @@ main.container>.lb-terminal { margin:0 0 18px; padding:clamp(16px,2.2vw,26px); b
 }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
 </style>
-<!-- LEOBOT_TOP_RIGHT_HAMBURGER_V1: member presentation only -->
+<!-- LUMIFLOWON_TOP_RIGHT_HAMBURGER_V1: member presentation only -->
 <style>
 main.container > header {display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:12px}
 main.container > header .brand {width:auto!important; min-width:0}
@@ -246,13 +246,13 @@ body.lb-menu-ready .lb-profile-strip.lb-menu-visible {display:flex}
 @media(max-width:700px) {main.container > header .brand {font-size:19px} .lb-hamburger-nav {display:flex!important; width:auto!important; flex:none!important} .lb-menu-caption {display:none}}
 </style>
 <style>
-/* LEOBOT_MEMBER_MENU_FOUR_GROUPS_V1: presentation only */
+/* LUMIFLOWON_MEMBER_MENU_FOUR_GROUPS_V1: presentation only */
 .lb-hamburger-panel .lb-menu-group-title { position:sticky; top:0; z-index:1; padding:10px 12px 6px; margin-top:6px; font-size:12px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:#f1cd86; background:#0b1b2d; border-bottom:1px solid rgba(241,205,134,.25); }
 .lb-hamburger-panel .lb-menu-group-title:first-child { margin-top:0; }
 .lb-hamburger-panel .action { padding-left:15px!important; }
 </style>
 
-<style id="LEOBOT_SHARED_DARK_GOLD_V2">
+<style id="LUMIFLOWON_SHARED_DARK_GOLD_V2">
 /* Local UI theme only. No application logic or event handlers are modified. */
 :root { color-scheme: dark; --lb-bg:#091729; --lb-surface:#10243a; --lb-surface-2:#17314b; --lb-gold:#e6ba62; --lb-text:#eaf1f9; --lb-muted:#b7c7d9; --lb-border:#3b526b; }
 html, body { background-color:var(--lb-bg) !important; color:var(--lb-text); }
@@ -277,24 +277,24 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 @media (max-width: 640px) { table { max-width:100%; } input, select, textarea { max-width:100%; box-sizing:border-box; } }
 </style>
 
-<!-- LEOBOT_REFERRAL_ALWAYS_VISIBLE_V1 -->
+<!-- LUMIFLOWON_REFERRAL_ALWAYS_VISIBLE_V1 -->
 <style>
 #referral-link{display:block!important;visibility:visible!important;opacity:1!important;max-height:none!important;overflow:visible!important}
 </style>
 </head>
-<body>
+<body>@include('partials.lumiflowon-page-brand')
 
 
 
 <main class="container">
     <header>
         <div class="brand">LumiFlowOn <small>Member Dashboard</small></div>
-        <!-- LEOBOT_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
+        <!-- LUMIFLOWON_MEMBER_MENU_V2: anchored groups preserve all existing dashboard sections -->
         <nav class="actions lb-nav-groups lb-hamburger-nav" aria-label="Member actions">
     <details class="lb-member-menu lb-nav-dropdown lb-hamburger" id="lb-hamburger-menu">
         <summary class="action lb-hamburger-trigger" aria-label="Open member menu" title="Member menu"><span aria-hidden="true">&#9776;</span><span class="lb-menu-caption"> Menu</span></summary>
         <div class="lb-member-menu-panel lb-hamburger-panel" aria-label="Member navigation">
-            <!-- LEOBOT_MEMBER_MENU_FOUR_GROUPS_V1 -->
+            <!-- LUMIFLOWON_MEMBER_MENU_FOUR_GROUPS_V1 -->
             <div class="lb-menu-group-title" role="heading" aria-level="3">Dashboard</div>
             <a class="action" href="{{ route('member.dashboard') }}">Dashboard Overview</a>
 
@@ -363,7 +363,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 
 <section class="lb-quick-links" style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
 <h2>LumiFlowOn Quick Links</h2>
-<p style="color:#9fb1c9">Admin-controlled official links. Unconfigured links are not clickable.</p>
+
 <div style="display:flex;gap:12px;flex-wrap:wrap">
 @foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
 @php
@@ -392,7 +392,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
 </section>
 @endif
-<!-- LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
+<!-- LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->
 <style>
 .lb-quick-actions{margin:18px 0 22px;padding:18px;border:1px solid #2b435e;border-radius:16px;background:#101d30}
 .lb-quick-actions h2{margin:0 0 12px;font-size:20px;color:#f1f7ff}
@@ -411,7 +411,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>View transfer page; financial approval required</small></a>
   </div>
 </section>
-<!-- /LEOBOT_QUICK_ACTIONS_SAFE_V1 -->
+<!-- /LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->
 @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
   <h2>My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</h2>
@@ -692,7 +692,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
             <p class="muted">For assistance, use the official LumiFlowOn support contact provided by your administrator. No support channel is configured on this dashboard.</p>
         </div>
     </section>
-    <p class="notice">Read-only dashboard. Values reflect currently recorded data; no transfer, activation, trading funding or income payout is performed by this page. Security PIN setup is an access step, not financial transaction authorization.</p>
+
 
 <!-- MT5 display intentionally last on Member Dashboard; read-only and admin-controlled -->
 @php
@@ -730,7 +730,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 })();
 </script>
 <script>
-/* LEOBOT_UI_FINAL_POLISH_V3: exclusive menus; no financial actions */
+/* LUMIFLOWON_UI_FINAL_POLISH_V3: exclusive menus; no financial actions */
 (function () {
     const menus = Array.from(document.querySelectorAll('.lb-nav-groups details.lb-nav-dropdown'));
     menus.forEach(function (menu) {
@@ -753,7 +753,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 })();
 </script>
 <script>
-/* LEOBOT_TOP_RIGHT_HAMBURGER_V1: visibility only, no data or financial changes */
+/* LUMIFLOWON_TOP_RIGHT_HAMBURGER_V1: visibility only, no data or financial changes */
 (function () {
     var ids = ['magic-team','team-breakdown','referral-privacy','wallet-history','financial-records','member-profile','income-summary','team-overview','direct-referrals','account-settings','member-support'];
     var menu = document.getElementById('lb-hamburger-menu');
@@ -785,8 +785,8 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     reveal();
 })();
 </script>
-<!-- LEOBOT_REFERRAL_OVERVIEW_VISIBLE_V1: presentation-only card; original referral generation remains unchanged -->
-<style id="LEOBOT_REFERRAL_OVERVIEW_VISIBLE_V1">
+<!-- LUMIFLOWON_REFERRAL_OVERVIEW_VISIBLE_V1: presentation-only card; original referral generation remains unchanged -->
+<style id="LUMIFLOWON_REFERRAL_OVERVIEW_VISIBLE_V1">
 #leobot-referral-overview-card{display:block!important;visibility:visible!important;opacity:1!important;background:#10243b!important;border:1px solid #b68b41!important;border-radius:14px!important;padding:18px!important;margin:16px 0 22px!important;color:#e7eef8!important;box-sizing:border-box!important;max-width:100%!important}
 #leobot-referral-overview-card h2{color:#f4c66b!important;font-size:1.15rem!important;margin:0 0 10px!important}
 #leobot-referral-overview-card .lb-referral-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -796,7 +796,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 </style>
 <script>
 (function () {
-  function initLeoBotReferralCard() {
+  function initLumiflowonReferralCard() {
     var original = document.getElementById('member-referral-link');
     if (true) return; // Disable duplicate top referral card; keep original section.
     var section = document.getElementById('referral-link');
@@ -838,11 +838,11 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     card.appendChild(heading); card.appendChild(row); card.appendChild(status);
     target.insertBefore(card, target.firstChild);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLeoBotReferralCard);
-  else initLeoBotReferralCard();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLumiflowonReferralCard);
+  else initLumiflowonReferralCard();
 })();
 </script>
-<!-- LEOBOT_REFERRAL_COPY_FINAL_V1: clipboard enhancement, no referral generation changes -->
+<!-- LUMIFLOWON_REFERRAL_COPY_FINAL_V1: clipboard enhancement, no referral generation changes -->
 <script>
 (function () {
     'use strict';

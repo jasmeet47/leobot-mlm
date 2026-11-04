@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deposits &amp; Transfers | LeoBot</title>
+<title>Deposits &amp; Transfers | Lumiflowon</title>
 <style>
 :root{color-scheme:dark;--bg:#080f1e;--panel:#101e32;--tile:#172a43;--border:#30445f;--text:#edf4ff;--muted:#a6bad0;--gold:#f2bf61;--green:#4ddbb1}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173455 0%,#0a1526 45%,#070d18 100%) fixed;color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}
@@ -10,7 +10,7 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 </style>
 @include('partials.lumiflowon-financial-theme')</head>
 <body>@include('partials.lumiflowon-financial-nav')<main>
-<header class="top"><div><div class="brand">LEOBOT</div><div class="eyebrow">Member Portal / Financial Requests</div></div><a class="back" href="{{ url('/member/dashboard') }}">← Member Dashboard</a></header>
+<header class="top"><div><div class="brand">LUMIFLOWON</div><div class="eyebrow">Member Portal / Financial Requests</div></div><a class="back" href="{{ url('/member/dashboard') }}">← Member Dashboard</a></header>
 <h1>Deposits &amp; Transfers</h1>
 <p class="lead">Submit deposit evidence for independent review and manage member-to-member transfers when authorized.</p>
 <div class="notice"><strong>Safety:</strong> External USDT payments require independent admin verification. Do not send funds without confirming the official destination. A submitted request is not an approved deposit.</div>
@@ -20,12 +20,16 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 <section class="panel" aria-labelledby="deposit-title"><h2 id="deposit-title">Submit deposit evidence</h2><p class="hint">Evidence submission is subject to the deposit safety switch and independent admin verification.</p>
 @php($depositsOpen = config('leobot.deposits_enabled', false) === true && config('leobot.production_financial_approval', false) === true && config('leobot_usdt_rpc.enabled', false) === true)
 @if($depositsOpen)
-<p>Send USDT only on the selected network. BNB, TRX and other tokens will not credit your USDT balance.</p><p>Official receiving addresses:</p><ul>@foreach(['BEP20', 'TRC20'] as $network)<li>{{ $network }}: <strong>{{ config('leobot_deposits.receiving_addresses.'.$network) ?: 'Not configured — do not send funds' }}</strong></li>@endforeach</ul>
+<p>Choose the matching USDT network before sending.</p>
+@foreach($destinations as $network => $destination)<section style="padding:16px;margin:12px 0"><h3>{{ $network }} USDT</h3>
+@if($destination['has_qr'])<img src="{{ route('member.deposit-qr', $destination['id']) }}" alt="{{ $network }} receiving QR" style="width:220px;max-width:100%;background:white">@endif
+@if($destination['address'])<input id="deposit-address-{{ $network }}" value="{{ $destination['address'] }}" readonly aria-label="{{ $network }} receiving address"><button type="button" data-copy-address="{{ $network }}">Copy {{ $network }} Address</button><p id="copy-status-{{ $network }}" role="status" aria-live="polite"></p>@else<p>Receiving address is not configured. Do not send funds.</p>@endif
+</section>@endforeach
 <form method="post" action="{{ route('member.deposit-request.store') }}">@csrf
 <label class="field"><span>Amount (USDT)</span><input type="number" inputmode="decimal" step="0.00000001" min="10" name="amount" value="{{ old('amount') }}" placeholder="Minimum 10 USDT" required></label>
 <label class="field"><span>Network</span><select name="network" required><option value="TRC20" @selected(old('network')==='TRC20')>TRC20</option><option value="BEP20" @selected(old('network')==='BEP20')>BEP20</option></select></label>
 <label class="field"><span>Blockchain transaction hash</span><input name="tx_hash" maxlength="150" value="{{ old('tx_hash') }}" placeholder="Verified transaction hash" autocomplete="off" required></label>
-<input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Submit evidence for review</button></form>
+<input type="hidden" name="receiving_address" id="deposit-address-quote" value="{{ $destinations['TRC20']['address'] }}"><input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Submit evidence for review</button></form>
 @else<p role="status">Deposits are currently disabled. Do not send funds until deposit verification is available.</p>@endif</section>
 <section class="panel" aria-labelledby="transfer-title"><h2 id="transfer-title">Transfer available funds</h2><p class="hint">Transfers are only permitted when enabled by an administrator. No balance is estimated or invented here.</p>
 <form method="post" action="{{ route('member.fund-transfer.store') }}">@csrf
@@ -33,7 +37,10 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 <label class="field"><span>Amount (USDT)</span><input type="number" inputmode="decimal" step="0.00000001" min="0.00000001" name="amount" value="{{ old('amount') }}" placeholder="Transfer amount" required></label>
 <input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Request transfer</button></form></section>
 </div>
-<section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on LeoBot database records.</p>
+<section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on Lumiflowon database records.</p>
 @if($deposits->isEmpty())<div class="empty">No deposit requests yet.</div>@else<div class="table-wrap"><table><thead><tr><th>ID</th><th>Amount (USDT)</th><th>Network</th><th>Status</th></tr></thead><tbody>@foreach($deposits as $d)<tr><td>{{ $d->id }}</td><td>{{ $d->amount }}</td><td>{{ $d->network }}</td><td><span class="tag">{{ ucfirst($d->status) }}</span></td></tr>@endforeach</tbody></table></div>@endif
-</section><p class="footer">LeoBot Demo · Financial transactions remain subject to backend controls and administrator approval.</p>
-</main></body></html>
+</section><p class="footer">Lumiflowon · Your deposit and transfer history.</p>
+</main>@if($depositsOpen)<script>
+const destinations=@json($destinations);const network=document.querySelector('select[name=network]');const quote=document.getElementById('deposit-address-quote');if(network&&quote){const syncQuote=()=>{quote.value=destinations[network.value].address;};syncQuote();network.addEventListener('change',syncQuote);}
+document.querySelectorAll('[data-copy-address]').forEach(button=>button.addEventListener('click',async()=>{const key=button.dataset.copyAddress,input=document.getElementById('deposit-address-'+key),status=document.getElementById('copy-status-'+key);let copied=false;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(input.value);copied=true;}}catch(error){}if(!copied){input.focus();input.select();try{copied=document.execCommand('copy');}catch(error){}}status.textContent=copied?'Address copied successfully.':'Copy failed. Select and copy the address manually.';status.style.color=copied?'#22c55e':'#fca5a5';}));
+</script>@endif</body></html>

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\DepositDestinationService;
 use App\Services\StakingReconciliationService;
 use App\Services\UsdtPaymentEvidence;
 use Illuminate\Console\Command;
@@ -20,7 +21,7 @@ final class StakingReadiness extends Command
         $report = ['checks' => [], 'accounting' => null, 'on_chain_reserve_solvency' => 'NOT VERIFIED'];
         foreach (['BEP20', 'TRC20'] as $network) {
             try {
-                UsdtPaymentEvidence::assertAddress($network, (string) config('leobot_deposits.receiving_addresses.'.$network, ''));
+                UsdtPaymentEvidence::assertAddress($network, DepositDestinationService::address($network));
                 $report['checks'][$network.'_treasury_address'] = 'PASS';
             } catch (Throwable) {
                 $report['checks'][$network.'_treasury_address'] = 'FAIL';

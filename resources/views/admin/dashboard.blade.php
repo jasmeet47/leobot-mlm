@@ -248,8 +248,9 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
   <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
   <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.deposit-control.index') }}">Deposit Control</a>
 <a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
-  <a href="{{ route('admin.deposit-review.index') }}">Deposit Management (Review Only)</a>
+  <a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a>
   <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
   <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
   <div class="lf-nav-title">Settings</div>
@@ -281,10 +282,10 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
     </div>
 </header>
 
-<main class="container">
+<main class="container"><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-control.index') }}">Open Deposit Control</a> · <a href="{{ route('admin.deposit-review.index') }}">Review Deposits</a></section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
-  <h2>Staking Control</h2><p><a href="{{ route('admin.staking.profit.index') }}">Trading-profit statements and verification</a> · <a href="{{ route('admin.withdrawals.index') }}">Principal fee, withdrawal controls and payment review</a></p>
+  <h2>Staking Control</h2><p><a href="{{ route('admin.staking.index') }}">Open Staking Control</a> · <a href="{{ route('admin.staking.profit.index') }}">Trading-profit statements</a></p>
   @php
     $stakingControlReady = \Illuminate\Support\Facades\Schema::hasTable('staking_controls');
     $stakingEnabled = $stakingControlReady && (bool) \Illuminate\Support\Facades\DB::table('staking_controls')->orderBy('id')->value('enabled');
@@ -376,8 +377,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
         <div class="card">
             <h2>Admin Withdrawals</h2>
             <p>Review withdrawal requests, approval controls and principal withdrawal fees. External payouts require administrator review and confirmed chain verification.</p>
-            <a href="{{ route('admin.staking.index') }}">Staking Control</a>
-<a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
         </div>
     </section>
 
@@ -472,12 +472,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
             <a href="{{ route('admin.magic.index') }}">Open Magic Matrix</a>
         </div>
 
-        <div class="card">
-            <h2>Admin Withdrawals</h2>
-            <p>Review withdrawal requests, approval controls and principal withdrawal fees. External payouts require administrator review and confirmed chain verification.</p>
-            <a href="{{ route('admin.staking.index') }}">Staking Control</a>
-<a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
-        </div>
+
     </section>
 
 </main>

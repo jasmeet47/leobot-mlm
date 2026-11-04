@@ -151,7 +151,7 @@
     </style>
 </head>
 
-<body>
+<body>@include('partials.lumiflowon-page-brand')
     <main class="card">
 
         <div class="brand">

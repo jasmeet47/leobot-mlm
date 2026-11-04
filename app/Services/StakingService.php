@@ -85,7 +85,7 @@ final class StakingService
                 throw new RuntimeException('Production staking requires an operational principal payout policy and chain verification.');
             }
             foreach (['BEP20', 'TRC20'] as $network) {
-                UsdtPaymentEvidence::assertAddress($network, (string) config('leobot_deposits.receiving_addresses.'.$network, ''));
+                UsdtPaymentEvidence::assertAddress($network, DepositDestinationService::address($network));
             }
             foreach (['bsc_rpc_url', 'tron_full_node_url', 'tron_solidity_node_url'] as $key) {
                 $url = (string) config('leobot_usdt_rpc.'.$key, '');

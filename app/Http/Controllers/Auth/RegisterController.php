@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureMemberPin;
 use App\Models\User;
+use App\Services\LoginCaptcha;
 use App\Services\RegistrationEmailOtpService;
 use App\Services\TeamCounterService;
 use Illuminate\Database\QueryException;
@@ -42,7 +43,10 @@ class RegisterController extends Controller
             $referralCode = null;
         }
 
-        return view('auth-page', compact('referralCode', 'sponsorName'));
+        $registrationOtpEnabled = app(RegistrationEmailOtpService::class)->enabled();
+        $loginCaptcha = config('leobot_auth.captcha_enabled', true) ? LoginCaptcha::issue($request) : null;
+
+        return view('auth-page', compact('referralCode', 'sponsorName', 'registrationOtpEnabled', 'loginCaptcha'));
     }
 
     /**
@@ -245,6 +249,7 @@ class RegisterController extends Controller
      */
     public function login(Request $request)
     {
+        LoginCaptcha::verify($request);
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],

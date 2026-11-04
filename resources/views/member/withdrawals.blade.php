@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LeoBot — My Withdrawals</title>@include('partials.lumiflowon-financial-theme')</head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lumiflowon — My Withdrawals</title>@include('partials.lumiflowon-financial-theme')</head>
 <body style="font:15px system-ui,sans-serif;max-width:760px;margin:auto;padding:2rem">@include('partials.lumiflowon-financial-nav')<h1>Withdrawal Requests</h1><p><a href="{{route('member.dashboard')}}">← Member Dashboard</a></p>
 <p><a href="{{ route('member.staking.index') }}">Request flexible staking principal withdrawals</a>. This form uses your available earnings wallet. Requests hold the gross amount pending admin approval; no external transfer is performed automatically.</p>
 @if(session('status'))<p>{{session('status')}}</p>@endif
