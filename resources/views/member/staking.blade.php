@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Flexible Staking</title></head>
-<body style="font:16px system-ui;max-width:960px;margin:auto;padding:24px"><h1>Flexible USDT Staking</h1><p><a href="{{ route('member.dashboard') }}">Dashboard</a> · <a href="{{ route('member.deposit-transfer.index') }}">Deposit USDT</a> · <a href="{{ route('member.withdrawals.index') }}">Withdrawal history</a></p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Flexible Staking</title>@include('partials.lumiflowon-financial-theme')</head>
+<body style="font:16px system-ui;max-width:960px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Flexible USDT Staking</h1><p><a href="{{ route('member.dashboard') }}">Dashboard</a> · <a href="{{ route('member.deposit-transfer.index') }}">Deposit USDT</a> · <a href="{{ route('member.withdrawals.index') }}">Withdrawal history</a></p>
 <p>No fixed return and no lock period. Rewards depend on realized trading profit entered and independently reviewed by administrators. Trading can lose money; future profit is not guaranteed.</p>
 @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
 @foreach($errors->all() as $error)<p role="alert">{{ $error }}</p>@endforeach

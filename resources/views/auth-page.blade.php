@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>LEOBOT MLM</title>
+    <title>LumiFlowOn</title>
 
     <style>
 
@@ -288,6 +288,141 @@
 
     </style>
 
+<style id="lumiflowon-premium-gold-v1">
+:root {
+    --lumi-navy: #06152b;
+    --lumi-deep: #020915;
+    --lumi-gold: #f2cc78;
+    --lumi-gold-light: #ffe6a4;
+    --lumi-text: #f9f6ed;
+}
+
+html {
+    background: var(--lumi-deep);
+}
+
+body {
+    color: var(--lumi-text);
+    background:
+        radial-gradient(ellipse at 92% 35%,
+            rgba(15, 91, 169, .34), transparent 42%),
+        radial-gradient(ellipse at 5% 78%,
+            rgba(188, 131, 43, .16), transparent 38%),
+        linear-gradient(135deg,
+            #081d3d 0%, #041126 52%, #010713 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+h1, h2, h3 {
+    color: #fff4d5;
+}
+
+h1 {
+    color: var(--lumi-gold-light);
+    text-shadow: 0 2px 22px rgba(237, 190, 91, .2);
+}
+
+.forms {
+    gap: 28px;
+    align-items: start;
+}
+
+.forms > div,
+.forms > section,
+.forms > article {
+    background: linear-gradient(
+        145deg,
+        rgba(5, 17, 38, .96),
+        rgba(1, 8, 20, .98)
+    );
+    border: 1px solid rgba(245, 202, 112, .78);
+    border-radius: 16px;
+    box-shadow:
+        0 16px 48px rgba(0, 0, 0, .35),
+        0 0 24px rgba(236, 190, 91, .08);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+    background: rgba(3, 17, 37, .93);
+    color: #fff;
+    border: 1px solid rgba(231, 194, 122, .5);
+    border-radius: 9px;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #b5bbca;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid rgba(246, 206, 124, .7);
+    outline-offset: 1px;
+    border-color: var(--lumi-gold);
+}
+
+button[type="submit"],
+input[type="submit"] {
+    background: linear-gradient(
+        135deg,
+        #fff0b8 0%,
+        #f0cb78 45%,
+        #b88b43 100%
+    );
+    color: #11100c;
+    border: 1px solid #ffdfa0;
+    border-radius: 9px;
+    font-weight: 750;
+    box-shadow: 0 4px 18px rgba(238, 192, 93, .16);
+    cursor: pointer;
+}
+
+button[type="submit"]:hover,
+input[type="submit"]:hover {
+    filter: brightness(1.08);
+}
+
+a {
+    color: #ffe2a0;
+}
+
+a:hover {
+    color: #fff3ce;
+}
+
+@media (max-width: 760px) {
+    .forms {
+        gap: 18px;
+    }
+}
+</style>
+<style id="lumiflowon-full-navy-gold-v2">
+html,body{background:#041023!important;color:#f8eed9!important;min-height:100vh!important}
+body{align-items:flex-start!important;padding:22px 14px!important}
+.container{background:#07152b!important;border:1px solid rgba(224,179,90,.65)!important;box-shadow:0 20px 60px rgba(0,0,0,.55)!important;max-width:1040px!important;overflow:hidden!important}
+.header{background:linear-gradient(135deg,#06152b 0%,#0a2444 58%,#091a31 100%)!important;color:#ffe4a1!important;border-bottom:1px solid #bd9650!important;padding:24px 20px!important}
+.header h1{color:#ffe3a0!important}.header p{color:#e4dfd2!important}
+.forms{background:#07152b!important;gap:20px!important;padding:20px!important;align-items:stretch!important}
+.forms>.box{background:linear-gradient(145deg,#0c1b32,#040c1b)!important;border:1px solid #bc9655!important;border-radius:15px!important;box-shadow:none!important;padding:28px!important}
+.forms>.box+.box{border-left:1px solid #bc9655!important}
+.forms h2,.forms label,.forms p,.forms legend{color:#f8eed9!important}
+.forms input:not([type=checkbox]):not([type=radio]){background:#0b1a31!important;color:#fff6e3!important;border:1px solid #9d824f!important}
+.forms input::placeholder{color:#bac3d0!important}
+.forms input:focus{border-color:#f5d38d!important;box-shadow:0 0 0 2px rgba(244,199,111,.22)!important}
+.forms button[type=submit]{background:linear-gradient(100deg,#ffe8a5,#c49a50)!important;color:#16100a!important}
+.footer{background:#07152b!important;color:#c5c9d0!important;border-top:1px solid rgba(224,179,90,.3)!important}
+.sponsor{background:#0b2a27!important;color:#b5f0d4!important;border-color:#31745c!important}
+.success{background:#12392b!important;color:#d8ffe7!important;border-color:#397c5c!important}
+.error,.lumi-captcha-error{background:#3b1b20!important;color:#ffe3e3!important;border:1px solid #a85e64!important}
+.ref-link{background:#0c1d36!important;color:#ffe3a0!important;border-color:#9d824f!important}
+.lumi-dynamic-brand img{max-height:125px!important}
+@media(max-width:750px){body{padding:8px!important}.forms{grid-template-columns:1fr!important;padding:12px!important;gap:12px!important}.forms>.box{padding:20px!important}.forms>.box+.box{border-left:1px solid #bc9655!important;border-top:1px solid #bc9655!important}.header{padding:18px 12px!important}}
+</style>
+<style>.lumi-dynamic-brand{display:flex;justify-content:center;margin:0 auto 12px}.lumi-dynamic-brand img{max-width:min(320px,70vw);max-height:125px;object-fit:contain}</style>
 </head>
 
 <body>
@@ -298,7 +433,7 @@
 
     <div class="header">
 
-        <h1>LEOBOT MLM</h1>
+        <div class="lumi-dynamic-brand"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"></div><h1>LumiFlowOn</h1>
 
         <p>
             Secure Login & Registration
@@ -617,7 +752,7 @@
 
     <div class="footer">
 
-        © {{ date('Y') }} LEOBOT MLM
+        © {{ date('Y') }} LumiFlowOn
 
     </div>
 
@@ -756,6 +891,18 @@
     }());
 </script>
 
-</body>
+<script>
+document.querySelectorAll('input[type="password"]').forEach(function(input, index) {
+    if (!input.id) input.id = 'lumi-password-' + index;
+    const button = document.createElement('button');
+    button.type = 'button'; button.textContent = 'Show password';
+    button.setAttribute('aria-controls', input.id); button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', function() {
+        const show = input.type === 'password'; input.type = show ? 'text' : 'password';
+        button.textContent = show ? 'Hide password' : 'Show password'; button.setAttribute('aria-pressed', String(show));
+    });
+    input.insertAdjacentElement('afterend', button);
+});
+</script></body>
 
 </html>

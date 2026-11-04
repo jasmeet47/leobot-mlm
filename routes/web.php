@@ -363,6 +363,7 @@ require __DIR__.'/leobot_financial_ui.php';
 
 // Beta-only staking HTTP routes
 require __DIR__.'/staking_routes.php';
+require __DIR__.'/beta_public_ui.php';
 
 Route::get('/member/mt5', [Mt5DisplayController::class, 'member'])
     ->middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->name('member.mt5.view');

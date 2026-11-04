@@ -12,8 +12,8 @@ button{padding:.8rem;cursor:pointer;background:#1646a0;color:white;border:0;bord
 button:disabled{opacity:.5}
 #status{font-weight:600;overflow-wrap:anywhere}
 </style>
-</head>
-<body>
+@include('partials.lumiflowon-financial-theme')</head>
+<body>@include('partials.lumiflowon-financial-nav')
 <h1>Verify BEP20 Wallet</h1>
 <p><a href="{{ route('member.withdrawals.index') }}">Back to Withdrawals</a></p>
 <section>

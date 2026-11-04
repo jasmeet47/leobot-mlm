@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Withdrawal Review</title></head>
-<body style="font:15px system-ui;max-width:1100px;margin:auto;padding:24px"><h1>Withdrawal Review</h1><p><a href="{{ route('admin.dashboard') }}">Admin dashboard</a></p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Withdrawal Review</title>@include('partials.lumiflowon-financial-theme')</head>
+<body style="font:15px system-ui;max-width:1100px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Withdrawal Review</h1><p><a href="{{ route('admin.dashboard') }}">Admin dashboard</a></p>
 <p>This panel never sends USDT. Review the request, lock it for payment, send the exact net amount once using the company wallet on the selected network, record the hash, and verify the confirmed transfer. Payment-processing requests cannot be rejected/refunded automatically.</p>
 @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
 @foreach($errors->all() as $error)<p role="alert">{{ $error }}</p>@endforeach

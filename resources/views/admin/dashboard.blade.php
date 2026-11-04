@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeoBot MLM - Admin Dashboard</title>
+    <title>LumiFlowOn - Admin Dashboard</title>
 
     <style>
         * {
@@ -230,14 +230,45 @@ main.container .card p {
     color: #b4c7dc !important;
 }
 </style>
+<style id="lumiflowon-admin-sidebar-v1">
+:root{--lf-gold:#d8ae5b;--lf-navy:#06152b;--lf-text:#f1f5ff}
+body{background:#06142a!important;color:var(--lf-text)!important;font-family:Inter,system-ui,Arial,sans-serif!important}
+.lf-shell{display:flex;min-height:100vh}.lf-sidebar{width:256px;flex:0 0 256px;background:linear-gradient(180deg,#061327,#071c39);border-right:1px solid #34425c;padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20}.lf-side-brand{display:flex;align-items:center;gap:10px;color:#f7d887;font-weight:800;font-size:20px;text-decoration:none;margin:3px 6px 28px}.lf-side-brand img{width:40px;height:40px;object-fit:contain;border-radius:6px}.lf-nav-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9baec8;margin:20px 13px 8px}.lf-nav a{display:block;color:#e6edfa!important;text-decoration:none;padding:12px 13px;border-radius:9px;margin:3px 0;font-size:14px}.lf-nav a:hover,.lf-nav a:focus-visible{background:#173252;outline:1px solid #bd9652}.lf-nav a.lf-current{background:linear-gradient(95deg,#ffdf91,#d7a64d);color:#091427!important;font-weight:800}.lf-nav .lf-sub{padding-left:29px;font-size:13px}.lf-main{min-width:0;flex:1}.lf-main .header{background:#07172d!important;border-bottom:1px solid #3d455a!important}.lf-main .header-inner{max-width:100%!important}.lf-main .container{max-width:1400px!important;margin:24px auto!important}.lf-sidebar-toggle{display:none;border:1px solid #c49c54;background:#0a1c35;color:#ffe2a0;padding:9px 12px;border-radius:8px;cursor:pointer}.lf-overlay{display:none}.lf-main .card a{background:linear-gradient(95deg,#ffe2a0,#cfa053)!important;color:#111d2d!important;font-weight:700}.lf-main .footer{color:#bac7d9!important}.lf-main .notice{color:#f3e5c2!important}
+@media(max-width:850px){.lf-sidebar{position:fixed;transform:translateX(-105%);transition:transform .2s;width:256px;box-shadow:0 0 40px #0007}.lf-sidebar.lf-open{transform:translateX(0)}.lf-sidebar-toggle{display:inline-block}.lf-overlay.lf-open{display:block;position:fixed;inset:0;background:#0009;z-index:19}.lf-main .header-inner{justify-content:flex-start!important}.lf-main .container{padding:14px!important}}
+</style>
 </head>
 
 <body>
+<div class="lf-shell">
+<div class="lf-overlay" id="lfOverlay" onclick="lfCloseNav()"></div>
+<aside class="lf-sidebar" id="lfSidebar" aria-label="Admin navigation">
+ <a class="lf-side-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"><span>LumiFlowOn</span></a>
+ <nav class="lf-nav">
+  <a href="{{ route('admin.dashboard') }}" class="lf-current">▦ &nbsp; Dashboard</a>
+  <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
+  <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
+  <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
+  <a href="{{ route('admin.deposit-review.index') }}">Deposit Management (Review Only)</a>
+  <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
+  <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
+  <div class="lf-nav-title">Settings</div>
+  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub ">✉ &nbsp; Registration Email OTP</a>
+  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">▧ &nbsp; Logo Management</a>
+  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">◈ &nbsp; Referral Privacy</a>
+  <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">↗ &nbsp; Quick Links</a>
+ </nav>
+</aside>
+<div class="lf-main">
+
+
+
 
 <header class="header">
+<button type="button" class="lf-sidebar-toggle" aria-label="Open admin menu" onclick="lfToggleNav()">☰ Menu</button>
     <div class="header-inner">
         <div>
-            <div class="brand">LEOBOT MLM</div>
+            <div class="brand">LumiFlowOn</div>
             <div class="subtitle">Secure Administration Panel</div>
         </div>
 
@@ -251,18 +282,6 @@ main.container .card p {
 </header>
 
 <main class="container">
-<section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
-  <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LEOBOT / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LeoBot records.</p></div>
-    <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Protected admin session</div>
-  </div>
-  <div class="lb-terminal-grid">
-    <div class="lb-terminal-tile"><small>Platform</small><strong>LeoBot Control</strong></div>
-    <div class="lb-terminal-tile"><small>Financial operations</small><strong class="accent">Approval gated</strong></div>
-    <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
-  </div>
-  <p class="lb-terminal-foot lb-terminal-note">UI theme only Â· No MT5 feed Â· No simulated trading values Â· Existing financial permissions remain unchanged.</p>
-</section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
   <h2>Staking Control</h2><p><a href="{{ route('admin.staking.profit.index') }}">Trading-profit statements and verification</a> · <a href="{{ route('admin.withdrawals.index') }}">Principal fee, withdrawal controls and payment review</a></p>
@@ -291,7 +310,52 @@ main.container .card p {
     <button type="button" disabled title="Requires financial verification and separate approval">Turn Staking ON (locked)</button>
   @endif
 </section>
-<section class="card" style="margin:16px 0;padding:18px"><h2>Password Recovery Settings</h2><p>Password OTP Settings page not installed; link withheld until view is present.</p></section>
+
+<!-- LUMIFLOWON_MT5_UI_FIXED -->
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+<h2>Dashboard Quick Links</h2>
+<p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+<span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
+@endforeach
+</div>
+<p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>
+<a href="{{ route('admin.quick-links.index') }}">Manage Quick Links</a>
+</section>
+<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+    <h2>MT5 Live Trading Display</h2>
+    <p>View-only. Trading and settlement actions are not available.</p>
+
+    @php
+        $mt5Enabled = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
+    @endphp
+
+    <p>Display: <strong>{{ $mt5Enabled ? 'ON' : 'OFF' }}</strong></p>
+    <p>Live connection: Not configured</p>
+
+    <form method="POST" action="{{ route('admin.mt5.toggle') }}">
+        @csrf
+        <input type="hidden" name="enabled" value="{{ $mt5Enabled ? 0 : 1 }}">
+        <button type="submit">{{ $mt5Enabled ? 'Turn OFF MT5 Display' : 'Turn ON MT5 Display' }}</button>
+    </form>
+
+    <p><a href="{{ route('admin.mt5.view') }}">View MT5 Status (JSON)</a></p>
+</section>
+
+<section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
+  <div class="lb-terminal-head">
+    <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>
+    <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Protected admin session</div>
+  </div>
+  <div class="lb-terminal-grid">
+    <div class="lb-terminal-tile"><small>Platform</small><strong>LumiFlowOn Control</strong></div>
+    <div class="lb-terminal-tile"><small>Financial operations</small><strong class="accent">Approval gated</strong></div>
+    <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
+  </div>
+  <p class="lb-terminal-foot lb-terminal-note">UI theme only · No MT5 feed · No simulated trading values · Existing financial permissions remain unchanged.</p>
+</section>
 <section class="welcome">
         <h1>Admin Dashboard</h1>
 
@@ -301,7 +365,7 @@ main.container .card p {
         </p>
 
         <p>
-            Manage LeoBot settings and review audit history.
+            Manage LumiFlowOn settings and review audit history.
         </p>
         <div class="card">
             <h2>Magic Matrix</h2>
@@ -311,8 +375,9 @@ main.container .card p {
 
         <div class="card">
             <h2>Admin Withdrawals</h2>
-            <p>Review withdrawal requests, approval controls and principal withdrawal fees. Payouts remain disabled.</p>
-            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+            <p>Review withdrawal requests, approval controls and principal withdrawal fees. External payouts require administrator review and confirmed chain verification.</p>
+            <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
         </div>
     </section>
 
@@ -409,16 +474,20 @@ main.container .card p {
 
         <div class="card">
             <h2>Admin Withdrawals</h2>
-            <p>Review withdrawal requests, approval controls and principal withdrawal fees. Payouts remain disabled.</p>
-            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+            <p>Review withdrawal requests, approval controls and principal withdrawal fees. External payouts require administrator review and confirmed chain verification.</p>
+            <a href="{{ route('admin.staking.index') }}">Staking Control</a>
+<a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
         </div>
     </section>
 
 </main>
 
 <footer class="footer">
-    LeoBot MLM - Admin Dashboard
+    LumiFlowOn - Admin Dashboard
 </footer>
 
+
+</div></div>
+<script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script>
 </body>
 </html>
