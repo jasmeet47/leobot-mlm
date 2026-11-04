@@ -917,7 +917,7 @@ document.querySelectorAll('input[type="password"]').forEach(function(input, inde
  const panel=document.getElementById('lumi-registration-otp');if(!panel)return;
  const form=panel.closest('form'),email=form.querySelector('[name=email]'),send=document.getElementById('lumi-send-otp'),verify=document.getElementById('lumi-verify-otp'),token=document.getElementById('lumi-otp-token'),code=document.getElementById('lumi-otp-code'),status=document.getElementById('lumi-otp-status');
  const enabled=@json($registrationOtpEnabled);let verified=false,boundEmail='',busy=false;
- function feedback(message,ok){status.textContent=message;status.style.color=ok?'#22c55e':'#fca5a5';status.dataset.state=ok?'success':'error';}
+ function feedback(message,ok){status.textContent=message;status.style.setProperty('color',ok?'#22c55e':'#fca5a5','important');status.dataset.state=ok?'success':'error';}
  function reset(){verified=false;token.value='';code.value='';verify.disabled=true;status.textContent='';status.dataset.state='';}
  email.addEventListener('input',function(){if(enabled)reset();});
  async function call(url,data){const response=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':@json(csrf_token())},body:JSON.stringify(data)});const result=await response.json();if(!response.ok||result.success!==true)throw new Error(Object.values(result.errors||{}).flat()[0]||result.message||'Please try again.');return result;}

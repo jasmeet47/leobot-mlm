@@ -28,7 +28,7 @@ final class DepositControlController extends Controller
     {
         abort_unless(Schema::hasTable('deposit_destinations'), 503);
         $data = $request->validate(['address' => ['required', 'string', 'max:100'], 'expected_revision' => ['required', 'integer', 'min:0'],
-            'qr' => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048', 'dimensions:max_width=1024,max_height=1024']]);
+            'qr' => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg', 'max:2048', 'dimensions:max_width=1024,max_height=1024']]);
         $address = trim($data['address']);
         try {
             DepositDestinationService::validateAddress($network, $address);
@@ -54,7 +54,7 @@ final class DepositControlController extends Controller
             }
             $bytes = $file->get();
             $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
-            abort_unless(in_array($mime, ['image/png', 'image/jpeg', 'image/webp'], true), 422);
+            abort_unless(in_array($mime, ['image/png', 'image/jpeg'], true), 422);
         }
         DB::transaction(function () use ($request, $data, $network, $address, $bytes, $mime): void {
             DB::select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ['lumiflowon-deposit-destination:'.$network]);
