@@ -15,7 +15,7 @@ final class StakingProfitService
         self::gate();
         self::money($amount);
         $reference = strtoupper(trim($reference));
-        if (! preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{7,149}\z/D', $reference) || ! $allocations || count($allocations) > 1000) {
+        if (! preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{7,99}\z/D', $reference) || ! $allocations || count($allocations) > 1000) {
             throw new RuntimeException('Trading statement evidence and bounded allocations are required.');
         }
         $sum = '0';
@@ -48,7 +48,7 @@ final class StakingProfitService
                 return (int) $old->id;
             }
             $id = DB::table('staking_profit_statements')->insertGetId(['amount' => $amount,
-                'evidence_reference' => $reference, 'submitted_by' => $admin->id, 'status' => 'pending_verification', 'created_at' => now(), 'updated_at' => now()]);
+                'distribution_version' => 'unified_67_30_3', 'evidence_reference' => $reference, 'submitted_by' => $admin->id, 'status' => 'pending_verification', 'created_at' => now(), 'updated_at' => now()]);
             foreach ($allocations as $userId => $share) {
                 if (! DB::table('staking_positions')->where('user_id', $userId)->exists()) {
                     throw new RuntimeException('Profit recipient has no staking history.');
@@ -71,7 +71,7 @@ final class StakingProfitService
             if (! $statement || (int) $statement->submitted_by === $reviewer->id) {
                 throw new AuthorizationException('Independent trading-profit reviewer required.');
             }
-            if ($statement->status === 'credited') {
+            if (in_array($statement->status, ['credited', 'reserved'], true)) {
                 return;
             }
             if ($statement->status !== 'pending_verification') {
@@ -86,14 +86,50 @@ final class StakingProfitService
             if (bccomp($sum, (string) $statement->amount, 8) !== 0) {
                 throw new RuntimeException('Trading profit does not reconcile.');
             }
+            if ($statement->distribution_version !== 'unified_67_30_3') {
+                throw new RuntimeException('Legacy pending profit requires independent reconciliation before distribution.');
+            }
+            $company = DB::table('company_wallet')->where('id', 1)->lockForUpdate()->first();
+            if (! $company) {
+                throw new RuntimeException('Company reserve account missing.');
+            }
+            foreach ([['profit_sharing_fundings', 'profit_reference'], ['generation_profit_fundings', 'profit_reference'], ['magic_pool_fundings', 'source_reference']] as [$table, $column]) {
+                if (DB::table($table)->where($column, $statement->evidence_reference)->exists()) {
+                    throw new RuntimeException('Trading profit evidence already funded; reconcile the existing source.');
+                }
+            }
+            foreach ([['profit_sharing_settings', 'self_profit_percent', '67'], ['generation_pool_settings', 'trading_profit_pool_percent', '30'], ['magic_income_settings', 'trading_profit_pool_percent', '3']] as [$table, $column, $rate]) {
+                $settings = DB::table($table)->where('id', 1)->lockForUpdate()->first();
+                if (! $settings || bccomp((string) $settings->{$column}, $rate, 9) !== 0) {
+                    throw new RuntimeException('Verified trading profit requires the approved 67/30/3 split.');
+                }
+            }
+            $memberProfits = [];
             foreach ($rows as $row) {
-                $member = User::whereKey($row->user_id)->lockForUpdate()->first();
+                $member = User::whereKey($row->user_id)->first();
                 if (! $member || $member->role !== 'member' || $member->status !== 'active' || $member->is_blocked || $member->deleted_at !== null) {
                     throw new RuntimeException('Profit recipient is unavailable.');
                 }
-                WalletService::credit($member->id, 'available_balance', (string) $row->amount, 'staking_trading_profit',
-                    'staking-profit:'.$statementId.':'.$member->id, ['reference_type' => 'staking_profit_statement',
-                        'reference_id' => $statementId, 'description' => 'Variable realized trading profit; manually evidenced and independently reviewed']);
+                $memberProfits[(int) $row->user_id] = (string) $row->amount;
+            }
+            $companyAfter = bcadd((string) $company->balance, $sum, 8);
+            if (bccomp($companyAfter, '999999999999.99999999', 8) > 0) {
+                throw new RuntimeException('Company reserve balance limit exceeded.');
+            }
+            DB::table('company_wallet')->where('id', 1)->update(['balance' => $companyAfter, 'updated_at' => now()]);
+            DB::table('financial_ledger')->insert([
+                'entry_type' => 'verified_trading_profit_receipt', 'wallet_type' => 'company_wallet',
+                'amount' => $sum, 'balance_before' => $company->balance, 'balance_after' => $companyAfter,
+                'transaction_key' => 'staking-profit:receipt:'.$statementId, 'reference_type' => 'staking_profit_statement',
+                'reference_id' => $statementId, 'status' => 'completed', 'description' => $statement->evidence_reference,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $fundingId = UnifiedProfitSharingService::fund($reviewer, $sum, $statement->evidence_reference, $memberProfits);
+            foreach (array_keys($memberProfits) as $userId) {
+                $member = User::whereKey($userId)->lockForUpdate()->first();
+                if (! $member || $member->role !== 'member' || $member->status !== 'active' || $member->is_blocked || $member->deleted_at !== null) {
+                    throw new RuntimeException('Profit recipient is unavailable.');
+                }
             }
             DB::table('financial_ledger')->insert(['entry_type' => 'realized_trading_profit', 'wallet_type' => 'external_trading_profit',
                 'amount' => '-'.$sum, 'balance_before' => $sum, 'balance_after' => '0',
@@ -101,7 +137,7 @@ final class StakingProfitService
                 'reference_id' => $statementId, 'status' => 'completed', 'description' => $statement->evidence_reference,
                 'created_at' => now(), 'updated_at' => now()]);
             DB::table('staking_profit_statements')->where('id', $statementId)->update([
-                'status' => 'credited', 'verified_by' => $reviewer->id, 'updated_at' => now(),
+                'profit_sharing_funding_id' => $fundingId, 'status' => 'reserved', 'verified_by' => $reviewer->id, 'updated_at' => now(),
             ]);
         }, 3);
     }

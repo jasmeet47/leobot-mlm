@@ -108,6 +108,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 </style>
 </head>
 <body>
+@include('partials.beta-notice')
     <div class="wrap">
         <header>
             <div class="brand">LumiFlowOn</div>

@@ -41,6 +41,7 @@ final class FlexibleStakingMigrationTest extends TestCase
         $before = (array) DB::table('users')->find($member->id);
         $oldFee = DB::table('withdrawal_settings')->where('id', 1)->value('principal_withdrawal_fee_percent');
         $migration->up();
+        (require database_path('migrations/2026_11_05_012651_link_staking_profit_to_unified_funding.php'))->up();
         $this->assertSame($before, (array) DB::table('users')->find($member->id));
         $this->assertSame($oldFee, DB::table('withdrawal_settings')->where('id', 1)->value('principal_withdrawal_fee_percent'));
         $this->assertDatabaseHas('staking_positions', ['id' => $position, 'amount' => '50.00000000', 'withdrawn_amount' => '0.00000000', 'funding_wallet' => 'available_balance']);

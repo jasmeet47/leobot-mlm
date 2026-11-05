@@ -18,13 +18,16 @@ use RuntimeException;
 final class UnifiedProfitSharingService
 {
     private const SCALE = 8;
+
     private const RATE_SCALE = 9;
+
     private const MAX_MONEY = '999999999999.99999999';
+
     private const MAX_MEMBERS = 10000;
 
     /**
-     * @param array<int,string> $memberProfits User ID => verified profit attributable
-     *     to that member in this profit period. Sum MUST equal company profit.
+     * @param  array<int,string>  $memberProfits  User ID => verified profit attributable
+     *                                            to that member in this profit period. Sum MUST equal company profit.
      * @return int Immutable profit_sharing_fundings ID. Retries are idempotent.
      */
     public static function fund(
@@ -40,7 +43,7 @@ final class UnifiedProfitSharingService
             throw new RuntimeException('Unified funding is disabled pending production financial approval.');
         }
         self::money($companyProfit, true);
-        if (!preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{2,99}\z/D', $profitReference)) {
+        if (! preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{2,99}\z/D', $profitReference)) {
             throw new InvalidArgumentException('Invalid profit statement reference.');
         }
         $profitReference = strtoupper($profitReference);
@@ -51,7 +54,7 @@ final class UnifiedProfitSharingService
         $normalized = [];
         $sum = '0.00000000';
         foreach ($memberProfits as $memberId => $amount) {
-            if (!is_int($memberId) || $memberId <= 0 || !is_string($amount)) {
+            if (! is_int($memberId) || $memberId <= 0 || ! is_string($amount)) {
                 throw new InvalidArgumentException('Member profits must map integer user IDs to decimal strings.');
             }
             self::money($amount, true);
@@ -63,14 +66,14 @@ final class UnifiedProfitSharingService
         if (bccomp($sum, $companyProfit, self::SCALE) !== 0) {
             throw new RuntimeException('Member profit breakdown must equal the verified company profit.');
         }
-        if (!$admin->exists || (int) $admin->getKey() <= 0) {
+        if (! $admin->exists || (int) $admin->getKey() <= 0) {
             throw new AuthorizationException('Valid active admin required.');
         }
 
         return DB::transaction(function () use ($admin, $companyProfit, $profitReference, $normalized): int {
             $actualAdmin = DB::table('users')->where('id', $admin->getKey())
-                ->lockForUpdate()->first(['id', 'role', 'status', 'is_blocked']);
-            if (!$actualAdmin || !in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true)
+                ->lockForUpdate()->first(['id', 'role', 'status', 'is_blocked', 'deleted_at']);
+            if (! $actualAdmin || $actualAdmin->deleted_at !== null || ! in_array((string) $actualAdmin->role, ['admin', 'super_admin'], true)
                 || ((string) $actualAdmin->status !== 'active' || in_array($actualAdmin->is_blocked, [true, 1, '1', 't', 'true'], true))) {
                 throw new AuthorizationException('Active ADMIN approval required.');
             }
@@ -81,7 +84,7 @@ final class UnifiedProfitSharingService
                 ->where('id', 1)->lockForUpdate()->first();
             $reserves = DB::table('profit_sharing_reserve_accounts')
                 ->where('id', 1)->lockForUpdate()->first();
-            if (!$company || !$generationAccount || !$reserves) {
+            if (! $company || ! $generationAccount || ! $reserves) {
                 throw new RuntimeException('Required reserve accounts are missing.');
             }
 
@@ -112,17 +115,18 @@ final class UnifiedProfitSharingService
                     throw new RuntimeException('Profit reference reused with another amount.');
                 }
                 $rows = DB::table('profit_sharing_self_reserves')
-                    ->where('funding_id', $prior->id)->get(['user_id','member_profit_amount']);
+                    ->where('funding_id', $prior->id)->get(['user_id', 'member_profit_amount']);
                 if ($rows->count() !== count($normalized)) {
                     throw new RuntimeException('Profit reference reused with a different member breakdown.');
                 }
                 foreach ($rows as $row) {
                     $userId = (int) $row->user_id;
-                    if (!isset($normalized[$userId]) ||
+                    if (! isset($normalized[$userId]) ||
                         bccomp($normalized[$userId], self::storedMoney($row->member_profit_amount), 8) !== 0) {
                         throw new RuntimeException('Profit reference reused with a different member breakdown.');
                     }
                 }
+
                 return (int) $prior->id;
             }
             if (DB::table('generation_profit_fundings')
@@ -136,10 +140,10 @@ final class UnifiedProfitSharingService
                 ->lockForUpdate()->first();
             $magic = DB::table('magic_income_settings')->where('id', 1)
                 ->lockForUpdate()->first();
-            if (!$settings || !$generation || !$magic) {
+            if (! $settings || ! $generation || ! $magic) {
                 throw new RuntimeException('Profit sharing settings are missing.');
             }
-            if (!self::yes($settings->combined_funding_enabled)) {
+            if (! self::yes($settings->combined_funding_enabled)) {
                 throw new RuntimeException('Combined funding is OFF; this phase must be approved before use.');
             }
             if (self::yes($generation->generation_enabled) || self::yes($magic->magic_enabled)) {
@@ -161,8 +165,8 @@ final class UnifiedProfitSharingService
             $directTotal = '0.00000000';
             foreach ($normalized as $userId => $memberProfit) {
                 $owner = DB::table('users')->where('id', $userId)
-                    ->lockForUpdate()->first(['is_blocked']);
-                if (!$owner) {
+                    ->lockForUpdate()->first(['is_blocked', 'status', 'role', 'deleted_at']);
+                if (! $owner) {
                     throw new RuntimeException("Unknown profit owner user ID {$userId}.");
                 }
                 if (in_array($owner->is_blocked, [true, 1, '1', 't', 'true'], true)) {
@@ -187,7 +191,7 @@ final class UnifiedProfitSharingService
                 throw new RuntimeException('Funding exceeds verified profit.');
             }
 
-            foreach (['balance','unallocated_balance','held_balance','payable_balance','total_funded','total_paid'] as $field) {
+            foreach (['balance', 'unallocated_balance', 'held_balance', 'payable_balance', 'total_funded', 'total_paid'] as $field) {
                 self::nonnegative((string) $generationAccount->{$field});
             }
             $genParts = bcadd(bcadd((string) $generationAccount->unallocated_balance,
@@ -197,12 +201,12 @@ final class UnifiedProfitSharingService
                     (string) $generationAccount->balance, 8) !== 0) {
                 throw new RuntimeException('Generation reserve accounting is inconsistent.');
             }
-            foreach (['self_balance','magic_balance','total_self_funded','total_magic_funded',
-                'total_self_settled','total_magic_settled'] as $field) {
+            foreach (['self_balance', 'magic_balance', 'total_self_funded', 'total_magic_funded',
+                'total_self_settled', 'total_magic_settled'] as $field) {
                 self::nonnegative((string) $reserves->{$field});
             }
             if (bccomp(bcadd((string) $reserves->self_balance, (string) $reserves->total_self_settled, 8),
-                    (string) $reserves->total_self_funded, 8) !== 0 ||
+                (string) $reserves->total_self_funded, 8) !== 0 ||
                 bccomp(bcadd((string) $reserves->magic_balance, (string) $reserves->total_magic_settled, 8),
                     (string) $reserves->total_magic_funded, 8) !== 0) {
                 throw new RuntimeException('SELF/Magic reserve accounting is inconsistent.');
@@ -215,7 +219,7 @@ final class UnifiedProfitSharingService
             }
 
             $rates = DB::table('level_settings')->orderBy('level_number')
-                ->lockForUpdate()->get(['level_number','commission_percentage','is_active']);
+                ->lockForUpdate()->get(['level_number', 'commission_percentage', 'is_active']);
             if ($rates->count() !== 51) {
                 throw new RuntimeException('Exactly 51 generation rates are required.');
             }
@@ -325,13 +329,14 @@ final class UnifiedProfitSharingService
 
             $key = hash('sha256', $profitReference);
             self::ledger($fundingId, 'profit_sharing_company_out', 'company_wallet',
-                '-' . $reserveTotal, $beforeCompany, $afterCompany, 'profitsharing:company:' . $key);
+                '-'.$reserveTotal, $beforeCompany, $afterCompany, 'profitsharing:company:'.$key);
             self::ledger($fundingId, 'profit_sharing_generation_in', 'generation_pool',
-                $generationAmount, $beforeGen, $afterGen, 'profitsharing:generation:' . $key);
+                $generationAmount, $beforeGen, $afterGen, 'profitsharing:generation:'.$key);
             self::ledger($fundingId, 'profit_sharing_self_reserve_in', 'self_reserve',
-                $directTotal, $beforeSelf, $afterSelf, 'profitsharing:self:' . $key);
+                $directTotal, $beforeSelf, $afterSelf, 'profitsharing:self:'.$key);
             self::ledger($fundingId, 'profit_sharing_magic_reserve_in', 'magic_pool',
-                $magicAmount, $beforeMagic, $afterMagic, 'profitsharing:magic:' . $key);
+                $magicAmount, $beforeMagic, $afterMagic, 'profitsharing:magic:'.$key);
+
             return (int) $fundingId;
         }, 3);
     }
@@ -357,7 +362,7 @@ final class UnifiedProfitSharingService
 
     private static function percentage(string $percent): void
     {
-        if (!preg_match('/\A\d+(?:\.\d{1,9})?\z/D', $percent) ||
+        if (! preg_match('/\A\d+(?:\.\d{1,9})?\z/D', $percent) ||
             bccomp($percent, '0', 9) < 0 || bccomp($percent, '100', 9) > 0) {
             throw new RuntimeException('Percentage outside valid 0-100 range.');
         }
@@ -365,7 +370,7 @@ final class UnifiedProfitSharingService
 
     private static function money(string $amount, bool $positive): void
     {
-        if (!preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) ||
+        if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) ||
             bccomp($amount, $positive ? '0' : '-0.00000001', 8) <= 0 ||
             bccomp($amount, self::MAX_MONEY, 8) > 0) {
             throw new InvalidArgumentException('Invalid USDT amount.');
@@ -379,11 +384,11 @@ final class UnifiedProfitSharingService
     private static function storedMoney(mixed $value): string
     {
         $text = (string) $value;
-        if (!str_contains(strtolower($text), 'e')) {
+        if (! str_contains(strtolower($text), 'e')) {
             return $text;
         }
         if (DB::getDriverName() !== 'sqlite' ||
-            !preg_match('/\A(\d+)(?:\.(\d+))?[eE]([+-]?\d{1,3})\z/D', $text, $m)) {
+            ! preg_match('/\A(\d+)(?:\.(\d+))?[eE]([+-]?\d{1,3})\z/D', $text, $m)) {
             throw new RuntimeException('Invalid stored monetary representation.');
         }
 
@@ -392,19 +397,20 @@ final class UnifiedProfitSharingService
             throw new RuntimeException('Invalid stored monetary exponent.');
         }
         $fraction = $m[2] ?? '';
-        $digits = $m[1] . $fraction;
+        $digits = $m[1].$fraction;
         $decimalPosition = strlen($m[1]) + $exponent;
         if ($decimalPosition <= 0) {
-            $expanded = '0.' . str_repeat('0', -$decimalPosition) . $digits;
+            $expanded = '0.'.str_repeat('0', -$decimalPosition).$digits;
         } elseif ($decimalPosition >= strlen($digits)) {
-            $expanded = $digits . str_repeat('0', $decimalPosition - strlen($digits));
+            $expanded = $digits.str_repeat('0', $decimalPosition - strlen($digits));
         } else {
-            $expanded = substr($digits, 0, $decimalPosition) . '.' .
+            $expanded = substr($digits, 0, $decimalPosition).'.'.
                 substr($digits, $decimalPosition);
         }
         if (str_contains($expanded, '.')) {
             $expanded = rtrim(rtrim($expanded, '0'), '.');
         }
+
         // No rounding: amounts with more than 8 meaningful decimal places
         // are rejected by nonnegative() at their point of use.
         return $expanded;
@@ -412,7 +418,7 @@ final class UnifiedProfitSharingService
 
     private static function nonnegative(string $value): void
     {
-        if (!preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $value) ||
+        if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $value) ||
             bccomp($value, '0', 8) < 0 || bccomp($value, self::MAX_MONEY, 8) > 0) {
             throw new RuntimeException('Invalid reserve balance.');
         }
@@ -428,6 +434,7 @@ final class UnifiedProfitSharingService
         if (is_bool($value)) {
             return $value;
         }
+
         return in_array(strtolower((string) $value),
             ['1', 'true', 't', 'yes', 'on'], true);
     }

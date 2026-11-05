@@ -154,12 +154,15 @@ final class StakingConcurrencyTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $admins[] = User::factory()->create(['role' => 'admin', 'status' => 'active']);
         }
+        DB::table('profit_sharing_settings')->where('id', 1)->update(['combined_funding_enabled' => true]);
         $id = StakingProfitService::submit($admins[0], '9', 'TRADING-CONCURRENT-001', [$member->id => '9']);
         $results = $this->simultaneous([[$admins[1]->id, (string) $id, 'profit_verify_01', 'profit'],
             [$admins[2]->id, (string) $id, 'profit_verify_02', 'profit']], false, 'staking_profit_statements', $id);
         $this->assertTrue($results[0]['ok']);
         $this->assertTrue($results[1]['ok']);
-        $this->assertSame('9.00000000', $member->fresh()->available_balance);
+        $this->assertSame('0.00000000', $member->fresh()->available_balance);
+        $this->assertDatabaseCount('profit_sharing_fundings', 1);
+        $this->assertDatabaseHas('profit_sharing_fundings', ['self_amount' => '6.03000000', 'generation_amount' => '2.70000000', 'magic_amount' => '0.27000000']);
         $this->assertSame(2, DB::table('financial_ledger')->where('reference_type', 'staking_profit_statement')->where('reference_id', $id)->count());
     }
 }

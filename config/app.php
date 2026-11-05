@@ -14,6 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'release_stage' => env('LUMIFLOWON_RELEASE_STAGE', 'production'),
 
     /*
     |--------------------------------------------------------------------------

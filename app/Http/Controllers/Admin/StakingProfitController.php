@@ -20,7 +20,7 @@ final class StakingProfitController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate(['amount' => ['required', 'string', 'max:30'],
-            'evidence_reference' => ['required', 'string', 'max:150'], 'allocations' => ['required', 'string', 'max:50000'],
+            'evidence_reference' => ['required', 'string', 'max:100'], 'allocations' => ['required', 'string', 'max:50000'],
             'realized_profit_confirmed' => ['accepted']]);
         $allocations = [];
         foreach (preg_split('/\R/', trim($data['allocations'])) as $line) {
@@ -47,6 +47,6 @@ final class StakingProfitController extends Controller
             return back()->withErrors(['profit' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Verified variable profit credited. No future return is promised.');
+        return back()->with('status', 'Verified profit reserved: 67% Self, 30% Generation, 3% Magic. Payouts require their separate controls.');
     }
 }

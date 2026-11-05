@@ -426,6 +426,7 @@ body{align-items:flex-start!important;padding:22px 14px!important}
 </head>
 
 <body>
+@include('partials.beta-notice')
 
 <div class="container">
 

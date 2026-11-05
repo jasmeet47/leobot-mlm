@@ -1,3 +1,4 @@
+@include('partials.beta-notice')
 <nav class="lumi-finance-nav" aria-label="LumiFlowOn navigation">
 <a href="{{ url('/') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"></a>
 @if(in_array(auth()->user()?->role, ['admin','super_admin'], true))

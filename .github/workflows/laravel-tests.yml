@@ -1,10 +1,10 @@
-name: LeoBot Laravel Security Tests
+name: LUMIFLOWON Release Verification
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/**']
   pull_request:
-    branches: [main]
+    branches: [main, 'release/**']
 
 permissions:
   contents: read

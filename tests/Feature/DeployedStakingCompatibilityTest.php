@@ -49,6 +49,7 @@ final class DeployedStakingCompatibilityTest extends TestCase
             DB::table('staking_positions')->where('id', $id)->delete();
             Schema::table('staking_positions', fn (Blueprint $table) => $table->dropColumn('remaining_amount'));
             $migration->up();
+            (require database_path('migrations/2026_11_05_012651_link_staking_profit_to_unified_funding.php'))->up();
         }
     }
 }
