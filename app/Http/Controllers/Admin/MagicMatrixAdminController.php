@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MagicIncomeSettlementService;
 use App\Services\MagicMatrixSettingsService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,18 +69,22 @@ final class MagicMatrixAdminController extends Controller
     {
         abort_unless(config('leobot_magic.magic_matrix_rates_write_enabled', false) === true &&
             (! app()->environment('production') || config('leobot_magic.production_rates_approval', false) === true), 404);
-        $data = $request->validate(['rates' => ['required', 'array', 'size:20'], 'rates.*' => ['required', 'regex:/\A\d+(?:\.\d{1,9})?\z/D']]);
+        $data = $request->validate(['rates' => ['required', 'array', 'size:20'], 'rates.*' => ['required', 'string', 'max:14', 'regex:/\A\d{1,3}(?:\.\d{1,9})?\z/D']]);
         $rates = [];
         foreach (range(1, 20) as $i) {
             if (! isset($data['rates'][$i])) {
                 return back()->withErrors(['rates' => 'All levels 1–20 required.']);
             }
-            $rates[$i] = $data['rates'][$i];
+            $rates[$i] = bcadd($data['rates'][$i], '0', 9);
         }
         try {
             MagicMatrixSettingsService::updateLevelRates($request->user(), $rates);
+        } catch (QueryException $e) {
+            report($e);
+
+            return back()->withInput()->withErrors(['rates' => 'The rate table could not be saved. Please try again.']);
         } catch (\InvalidArgumentException|RuntimeException|AuthorizationException $e) {
-            return back()->withErrors(['rates' => $e->getMessage()]);
+            return back()->withInput()->withErrors(['rates' => $e->getMessage()]);
         }
 
         return back()->with('status', '20 rates saved with audit. Financial switches remain unchanged.');
@@ -155,6 +160,6 @@ final class MagicMatrixAdminController extends Controller
             return back()->withErrors(['settle' => $e->getMessage()]);
         }
 
-        return back()->with('status','Magic settlement reviewed: '.json_encode($result,JSON_THROW_ON_ERROR));
+        return back()->with('status', 'Magic settlement reviewed: '.json_encode($result, JSON_THROW_ON_ERROR));
     }
 }

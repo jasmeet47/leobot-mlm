@@ -93,7 +93,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <a href="{{ route('admin.password-otp.index') }}" class="{{ request()->routeIs('admin.password-otp.*') ? 'lf2-active' : '' }}">◉ &nbsp; Password OTP</a>
 <a href="{{ route('admin.referral-privacy.index') }}" class="{{ request()->routeIs('admin.referral-privacy.*') ? 'lf2-active' : '' }}">◈ &nbsp; Referral Privacy</a>
 <a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">↗ &nbsp; Quick Links</a>
-</nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
+<a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
 
 <div class="container">
     <a class="back" href="{{ route('admin.members.index') }}">
@@ -142,9 +142,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
         </p>
         <p><a href="{{ route('admin.members.team-levels', $member->id) }}">View 51-Level Team</a></p>
 
-        @if (session('success'))
-            <p role="status">{{ session('success') }}</p>
-        @endif
+
         @if ($member->role === 'member')
             <h2>Account Access Management</h2>
             <p>Blocking stops logins and new income eligibility. Existing team, principal and history are preserved.</p>
@@ -166,7 +164,12 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
             @error('reason') <p role="alert">{{ $message }}</p> @enderror
         @endif
 
-        <h2>Block/Unblock History (latest 20)</h2>
+        @if($member->role==='member')<section style="border:1px solid #c07883;border-radius:14px;padding:20px;margin:20px 0"><h2>Delete access / Retire member</h2><p>This revokes login access and preserves balances, team and financial history. The username remains reserved.</p>
+@if($member->deleted_at)<form method="post" action="{{ route('admin.members.restore',$member->id) }}">@csrf<label>Restore reason<textarea name="reason" required minlength="10" maxlength="500"></textarea></label><button>Restore account — remains blocked</button></form>
+@else<form method="post" action="{{ route('admin.members.retire',$member->id) }}" onsubmit="return confirm('Retire this member and revoke access? Financial records are preserved.')">@csrf<label>Confirm username<input name="confirm_username" required autocomplete="off" placeholder="{{ $member->username }}"></label><label>Reason<textarea name="reason" required minlength="10" maxlength="500"></textarea></label><button>Delete access / Retire member</button></form>
+@if(config('leobot_safe_delete.enabled',false))<details><summary>Permanent deletion — unused accounts only</summary><p>Accounts with financial history or dependencies cannot be permanently deleted.</p><form method="post" action="{{ route('admin.members.safe-delete',$member->id) }}" onsubmit="return confirm('Permanently delete this unused member? This cannot be undone.')">@csrf<label>Confirm username<input name="confirm_username" required></label><label>Reason<textarea name="reason" required minlength="20" maxlength="500"></textarea></label><button>Delete verified unused account permanently</button></form></details>@endif
+@endif</section>@endif
+<h2>Block/Unblock History (latest 20)</h2>
         @forelse ($blockAudits as $audit)
             <div class="field">
                 <strong>{{ ucfirst($audit->action) }}</strong>

@@ -57,24 +57,16 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <a href="{{ route('admin.password-otp.index') }}" class="{{ request()->routeIs('admin.password-otp.*') ? 'lf2-active' : '' }}">◉ &nbsp; Password OTP</a>
 <a href="{{ route('admin.referral-privacy.index') }}" class="{{ request()->routeIs('admin.referral-privacy.*') ? 'lf2-active' : '' }}">◈ &nbsp; Referral Privacy</a>
 <a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">↗ &nbsp; Quick Links</a>
-</nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
+<a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
 
 <main>
 <h1>LumiFlowOn — Dashboard Quick Links</h1>
 <p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF links.</p>
 <p><a href="{{ route('admin.dashboard') }}">Back to Admin Dashboard</a></p>
 
-@if(session('success'))
-<p role="status">{{ session('success') }}</p>
-@endif
 
-@if($errors->any())
-<div role="alert">
-@foreach($errors->all() as $error)
-<p>{{ $error }}</p>
-@endforeach
-</div>
-@endif
+
+
 
 @foreach(['telegram','whatsapp','youtube','arattai','pdf'] as $platform)
 @php

@@ -20,12 +20,12 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">▧ &nbsp; Logo Management</a>
   <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">◈ &nbsp; Referral Privacy</a>
   <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">↗ &nbsp; Quick Links</a>
- </nav>
+ <a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav>
 </aside><div class="lf-main"><header class="header" style="padding:16px 25px"><button type="button" class="lf-sidebar-toggle" onclick="lfToggleNav()">☰ Menu</button><strong>LumiFlowOn · Admin Settings</strong></header><main class="lf-settings-panel">
 <h1>Registration Email OTP</h1>
 <p>ON: verified email OTP is mandatory for both web and API signup. OFF: normal signup without OTP.</p>
-@if(session('status'))<p role="status">{{ session('status') }}</p>@endif
-@if($errors->any())<p role="alert">{{ $errors->first() }}</p>@endif
+
+
 <form method="POST" action="{{ route('admin.registration-otp.update') }}">@csrf
 <input type="hidden" name="enabled" value="0"><label><input type="checkbox" name="enabled" value="1" {{ $enabled ? 'checked' : '' }}> Require email OTP for signup</label>
 <button type="submit">Save setting</button></form>

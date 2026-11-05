@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\MagicMatrixAdminController;
@@ -370,3 +371,13 @@ Route::get('/member/mt5', [Mt5DisplayController::class, 'member'])
 
 Route::post('/registration-email-otp/send', [RegistrationEmailOtpController::class, 'send'])->middleware('throttle:5,1')->name('registration-email-otp.send');
 Route::post('/registration-email-otp/verify', [RegistrationEmailOtpController::class, 'verify'])->middleware('throttle:10,1')->name('registration-email-otp.verify');
+
+Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
+    Route::get('/admin/announcements', [AnnouncementController::class, 'index'])->name('admin.announcements.index');
+    Route::post('/admin/announcements/settings', [AnnouncementController::class, 'settings'])->middleware('throttle:10,1')->name('admin.announcements.settings');
+    Route::post('/admin/announcements/save/{id?}', [AnnouncementController::class, 'save'])->whereNumber('id')->middleware('throttle:10,1')->name('admin.announcements.save');
+    Route::post('/admin/announcements/{id}/action', [AnnouncementController::class, 'action'])->whereNumber('id')->middleware('throttle:10,1')->name('admin.announcements.action');
+    Route::get('/admin/member-deletion', [MemberManagementController::class, 'index'])->name('admin.members.deletion');
+    Route::post('/admin/members/{member}/retire', [MemberRetirementController::class, 'retire'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.retire');
+});
+Route::post('/announcements/{id}/event', [AnnouncementController::class, 'event'])->whereNumber('id')->middleware('throttle:60,1')->name('announcements.event');

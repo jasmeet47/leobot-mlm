@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lumiflowon — Deposit Control</title>@include('partials.lumiflowon-financial-theme')</head><body style="font:16px system-ui;max-width:1100px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Deposit Control</h1>
 <p>Save the official USDT receiving address and matching QR separately for each network.</p>
-@if(session('status'))<p role="status" style="color:#22c55e">{{ session('status') }}</p>@endif
-@foreach($errors->all() as $error)<p role="alert" style="color:#fca5a5">{{ $error }}</p>@endforeach
+
+
 @unless($ready)<p>Receiving address settings are unavailable until setup completes.</p>@endunless
 @foreach($destinations as $network => $destination)<section style="padding:20px;margin:20px 0"><h2>{{ $network }} USDT</h2>
 @if($destination['has_qr'])<img src="{{ route('admin.deposit-control.qr', $destination['id']) }}" alt="{{ $network }} receiving QR" style="max-width:220px;width:100%;background:white">@endif

@@ -20,7 +20,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub lf-current">▧ &nbsp; Logo Management</a>
   <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">◈ &nbsp; Referral Privacy</a>
   <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">↗ &nbsp; Quick Links</a>
- </nav>
+ <a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav>
 </aside><div class="lf-main"><header class="header" style="padding:16px 25px"><button type="button" class="lf-sidebar-toggle" onclick="lfToggleNav()">☰ Menu</button><strong>LumiFlowOn · Logo Management</strong></header><main>
 <style id="LUMIFLOWON_LOGO_FEEDBACK_FIX_V1">
 .logo-feedback{margin:16px 0;padding:14px;border:1px solid #d6af61;border-radius:10px;background:#192f42;color:#fff}
@@ -29,8 +29,8 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 .logo-feedback strong{display:block;margin-bottom:5px}
 </style>
 @if(session('logo_status'))<div role="status" class="logo-feedback success"><strong>Logo Saved</strong>{{ session('logo_status') }}</div>@endif
-@if($errors->any())<div role="alert" class="logo-feedback error"><strong>Logo upload failed</strong>@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
-@if(session('status'))<div role="status" class="logo-feedback">{{ session('status') }}</div>@endif
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function(){
  var form=document.querySelector('form[action*="logo-settings"]');
@@ -50,4 +50,4 @@ document.addEventListener('DOMContentLoaded', function(){
    if(button){button.textContent='Uploading logo...';button.disabled=true;}
  });
 });
-</script><p><a href="{{ route('admin.dashboard') }}">Back to Admin Dashboard</a></p><h1>LumiFlowOn Logo Settings</h1>@unless($storageReady)<p role="status">Logo uploads are unavailable until storage setup completes.</p>@endunless<p>Only administrators can change the logo. Updates appear on Login, Admin and Member dashboards.</p><img src="{{ route('lumiflowon.brand.logo') }}?v={{ time() }}" alt="Current LumiFlowOn logo">@if(session('logo_status'))<p class="message">{{ session('logo_status') }}</p>@endif @if($errors->any())<div role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif<form action="{{ route('admin.lumiflowon.logo.save') }}" method="post" enctype="multipart/form-data">@csrf<label for="logo">Choose PNG, JPG or WebP logo (maximum 2 MB and 2048 × 2048 pixels)</label><p><input id="logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" required></p><button type="submit" @disabled(!$storageReady)>Save New Logo</button></form><small>Use a trusted image. Previous logo revisions are retained in persistent storage. No financial settings are affected.</small></main></div></div><script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script></body></html>
+</script><p><a href="{{ route('admin.dashboard') }}">Back to Admin Dashboard</a></p><h1>LumiFlowOn Logo Settings</h1>@unless($storageReady)<p role="status">Logo uploads are unavailable until storage setup completes.</p>@endunless<p>Only administrators can change the logo. Updates appear on Login, Admin and Member dashboards.</p><img src="{{ route('lumiflowon.brand.logo') }}?v={{ time() }}" alt="Current LumiFlowOn logo">@if(session('logo_status'))<p class="message">{{ session('logo_status') }}</p>@endif <form action="{{ route('admin.lumiflowon.logo.save') }}" method="post" enctype="multipart/form-data">@csrf<label for="logo">Choose PNG, JPG or WebP logo (maximum 2 MB and 2048 × 2048 pixels)</label><p><input id="logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" required></p><button type="submit" @disabled(!$storageReady)>Save New Logo</button></form><small>Use a trusted image. Previous logo revisions are retained in persistent storage. No financial settings are affected.</small></main></div></div><script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script></body></html>

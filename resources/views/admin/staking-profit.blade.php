@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Trading Profit</title>@include('partials.lumiflowon-financial-theme')</head><body style="font:16px system-ui;max-width:960px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')
 <h1>Realized Trading-Profit Statements</h1><p><a href="{{ route('admin.dashboard') }}">Admin dashboard</a></p><p>No fixed rewards are generated. Record only realized trading profit with traceable evidence and funds received for distribution. An independent administrator or authorized member reviewer must verify the statement before profit is reserved: 67% Self, 30% Generation, 3% Magic. Separate income controls govern payouts. Principal deposits must never be entered as trading profit.</p>
-@if(session('status'))<p role="status">{{ session('status') }}</p>@endif @foreach($errors->all() as $error)<p role="alert">{{ $error }}</p>@endforeach
+
 <form method="post" action="{{ route('admin.staking.profit.store') }}">@csrf
 <p><label>Total realized profit (USDT) <input name="amount" inputmode="decimal" required></label></p>
 <p><label>Unique trading statement / receipt reference <input name="evidence_reference" minlength="8" maxlength="100" required></label></p>

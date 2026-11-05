@@ -221,7 +221,7 @@ main .bg-white textarea {
 <a href="{{ route('admin.password-otp.index') }}" class="{{ request()->routeIs('admin.password-otp.*') ? 'lf2-active' : '' }}">â—‰ &nbsp; Password OTP</a>
 <a href="{{ route('admin.referral-privacy.index') }}" class="{{ request()->routeIs('admin.referral-privacy.*') ? 'lf2-active' : '' }}">â—ˆ &nbsp; Referral Privacy</a>
 <a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">â†— &nbsp; Quick Links</a>
-</nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">â† Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">â˜° Admin Menu</button>
+<a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">â† Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">â˜° Admin Menu</button>
 
 
 <div class="container">
@@ -251,27 +251,11 @@ main .bg-white textarea {
 
     <!-- SUCCESS MESSAGE -->
 
-    @if(session('success'))
-        <div class="success">
-            {{ session('success') }}
-        </div>
-    @endif
+
 
     <!-- VALIDATION ERRORS -->
 
-    @if($errors->any())
-        <div class="error">
 
-            <strong>Please correct these errors:</strong>
-
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-
-        </div>
-    @endif
 
     <!-- SAFETY WARNING -->
 

@@ -55,15 +55,15 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <a href="{{ route('admin.password-otp.index') }}" class="{{ request()->routeIs('admin.password-otp.*') ? 'lf2-active' : '' }}">◉ &nbsp; Password OTP</a>
 <a href="{{ route('admin.referral-privacy.index') }}" class="{{ request()->routeIs('admin.referral-privacy.*') ? 'lf2-active' : '' }}">◈ &nbsp; Referral Privacy</a>
 <a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">↗ &nbsp; Quick Links</a>
-</nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
+<a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">← Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
 <main>
 <a href="{{ route('admin.dashboard') }}">&larr; Admin Dashboard</a>
 <h1>Unified Trading Profit  -  Audit &amp; Reserves</h1>
 <p class="notice"><strong>Production HOLD.</strong> Member activation, withdrawals, payouts and generation distribution are not enabled by this page. Funding entry is disabled unless separately approved. Source-of-funds verification must be independently completed before approval.</p>
 <p><strong>Configured rates:</strong> Self {{ $settings->self_profit_percent ?? 'N/A' }}%, Generation {{ $generation->trading_profit_pool_percent ?? 'N/A' }}%, Magic {{ $magic->trading_profit_pool_percent ?? 'N/A' }}%.</p>
 <p><strong>Combined funding switch:</strong> {{ in_array(strtolower((string) ($settings->combined_funding_enabled ?? '')), ['1','t','true','yes','on'], true) ? 'ON' : 'OFF' }}. <strong>Admin entry gate:</strong> {{ $entryEnabled ? 'Approved for this environment' : 'OFF' }}.</p>
-@if(session('status'))<p role="status">{{ session('status') }}</p>@endif
-@if($errors->any())<div class="error" role="alert"><strong>Request not processed:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+
+
 </main>
 @if($entryEnabled)
 <section><h2>Reserve funding entry (no payout)</h2>
