@@ -38,7 +38,7 @@ RUN find . -type d -exec chmod 755 {} + \
     && find . -type f -exec chmod 644 {} + \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
-    && printf 'expose_php=Off\ndisplay_errors=Off\nlog_errors=On\n' > /usr/local/etc/php/conf.d/production-security.ini \
+    && printf 'expose_php=Off\ndisplay_errors=Off\nlog_errors=On\nupload_max_filesize=6M\npost_max_size=8M\nmemory_limit=256M\n' > /usr/local/etc/php/conf.d/production-security.ini \
     && printf '<Directory /var/www/html/public>\nAllowOverride All\nRequire all granted\n</Directory>\nServerName localhost\n' > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
 EXPOSE 80
