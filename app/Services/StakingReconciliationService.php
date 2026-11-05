@@ -118,6 +118,11 @@ final class StakingReconciliationService
                         }
                     }
                 }
+                if (($statement->verification_method ?? 'independent_admin') === 'independent_member_attestation'
+                    && in_array($statement->status, ['credited', 'reserved', 'independently_verified'], true)
+                    && ! TradingProfitReviewerService::historicalAttestationMatches($statement, $allocations)) {
+                    $issues[] = 'Profit statement '.$statement->id.': immutable independent review does not match the evidence.';
+                }
                 $source = DB::table('financial_ledger')->where('transaction_key', 'staking-profit:source:'.$statement->id)->first();
                 if (bccomp($sum, (string) $statement->amount, 8) !== 0 || (in_array($statement->status, ['credited', 'reserved'], true)
                     && (! $statement->verified_by || (int) $statement->verified_by === (int) $statement->submitted_by

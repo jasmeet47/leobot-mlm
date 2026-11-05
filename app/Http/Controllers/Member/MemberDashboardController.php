@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Services\MagicIncomeReportService;
 use App\Services\MagicMatrixTeamReadService;
+use App\Services\TradingProfitReviewerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -271,6 +272,7 @@ class MemberDashboardController extends Controller
 
         return view('member.dashboard', [
             'member' => $member,
+            'canReviewTradingProfit' => TradingProfitReviewerService::canReview((int) $member->id),
             'teamSummary' => $teamSummary,
             'levelRows' => $levelRows,
             'referrals' => $referrals,

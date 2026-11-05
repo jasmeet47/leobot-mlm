@@ -14,7 +14,8 @@ final class StakingProfitController extends Controller
 {
     public function index(): View
     {
-        return view('admin.staking-profit', ['statements' => DB::table('staking_profit_statements')->orderByDesc('id')->paginate(20)]);
+        return view('admin.staking-profit', ['statements' => DB::table('staking_profit_statements')->orderByDesc('id')->paginate(20),
+            'reviewerGrants' => DB::table('trading_profit_reviewers as r')->join('users as u', 'u.id', '=', 'r.user_id')->get(['u.username', 'r.enabled'])]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -35,7 +36,7 @@ final class StakingProfitController extends Controller
             return back()->withInput()->withErrors(['profit' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Statement recorded; a different administrator must verify the realized profit and received funds.');
+        return back()->with('status', 'Statement recorded; an independent administrator or specifically authorized member reviewer must verify the realized profit and received funds.');
     }
 
     public function approve(Request $request, int $id): RedirectResponse
@@ -48,5 +49,17 @@ final class StakingProfitController extends Controller
         }
 
         return back()->with('status', 'Verified profit reserved: 67% Self, 30% Generation, 3% Magic. Payouts require their separate controls.');
+    }
+
+    public function reserve(Request $request, int $id): RedirectResponse
+    {
+        $request->validate(['verified_funds_received' => ['accepted']]);
+        try {
+            StakingProfitService::reserveReviewed($request->user(), $id);
+        } catch (\RuntimeException $error) {
+            return back()->withErrors(['profit' => $error->getMessage()]);
+        }
+
+        return back()->with('status', 'Independently approved profit reserved 67/30/3. No member payout has been made.');
     }
 }

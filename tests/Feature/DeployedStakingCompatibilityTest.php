@@ -29,6 +29,9 @@ final class DeployedStakingCompatibilityTest extends TestCase
     public function test_migration_refuses_to_reopen_principal_already_returned_by_deployed_legacy_code(): void
     {
         $migration = require database_path('migrations/2026_11_04_084523_add_flexible_staking_accounting.php');
+        foreach (['staking_profit_reviews', 'trading_profit_reviewer_audits', 'trading_profit_reviewers'] as $table) {
+            Schema::dropIfExists($table);
+        }
         $migration->down();
         Schema::table('staking_positions', fn (Blueprint $table) => $table->decimal('remaining_amount', 20, 8)->nullable());
         $member = User::factory()->create(['role' => 'member', 'status' => 'active', 'available_balance' => '40']);
@@ -50,6 +53,7 @@ final class DeployedStakingCompatibilityTest extends TestCase
             Schema::table('staking_positions', fn (Blueprint $table) => $table->dropColumn('remaining_amount'));
             $migration->up();
             (require database_path('migrations/2026_11_05_012651_link_staking_profit_to_unified_funding.php'))->up();
+            (require database_path('migrations/2026_11_05_024931_create_trading_profit_reviewers.php'))->up();
         }
     }
 }

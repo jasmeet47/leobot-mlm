@@ -61,23 +61,33 @@ final class StakingProfitService
         }, 3);
     }
 
-    /** A different administrator must verify the external statement and received funds. */
+    /** A different administrator, or an explicitly granted independent member reviewer, must verify the profit. */
     public static function approve(User $reviewer, int $statementId): void
     {
+        self::reserve($reviewer, $statementId, false);
+    }
+
+    public static function reserveReviewed(User $admin, int $statementId): void
+    {
+        self::reserve($admin, $statementId, true);
+    }
+
+    private static function reserve(User $reviewer, int $statementId, bool $fromReview): void
+    {
         self::gate();
-        DB::transaction(function () use ($reviewer, $statementId): void {
+        DB::transaction(function () use ($reviewer, $statementId, $fromReview): void {
             self::admin($reviewer->id);
             $statement = DB::table('staking_profit_statements')->where('id', $statementId)->lockForUpdate()->first();
-            if (! $statement || (int) $statement->submitted_by === $reviewer->id) {
+            if (! $statement || (! $fromReview && (int) $statement->submitted_by === $reviewer->id)) {
                 throw new AuthorizationException('Independent trading-profit reviewer required.');
             }
             if (in_array($statement->status, ['credited', 'reserved'], true)) {
                 return;
             }
-            if ($statement->status !== 'pending_verification') {
+            if ($statement->status !== ($fromReview ? 'independently_verified' : 'pending_verification')) {
                 throw new RuntimeException('Trading statement is not pending.');
             }
-            $rows = DB::table('staking_profit_allocations')->where('statement_id', $statementId)->orderBy('user_id')->get();
+            $rows = DB::table('staking_profit_allocations')->where('statement_id', $statementId)->orderBy('user_id')->lockForUpdate()->get();
             $sum = '0';
             foreach ($rows as $row) {
                 self::money((string) $row->amount);
@@ -89,6 +99,8 @@ final class StakingProfitService
             if ($statement->distribution_version !== 'unified_67_30_3') {
                 throw new RuntimeException('Legacy pending profit requires independent reconciliation before distribution.');
             }
+            $usesAttestation = $fromReview;
+            $verifiedBy = $usesAttestation ? TradingProfitReviewerService::requireAttestation($statement, $rows) : $reviewer->id;
             $company = DB::table('company_wallet')->where('id', 1)->lockForUpdate()->first();
             if (! $company) {
                 throw new RuntimeException('Company reserve account missing.');
@@ -131,13 +143,16 @@ final class StakingProfitService
                     throw new RuntimeException('Profit recipient is unavailable.');
                 }
             }
+            if ($usesAttestation && TradingProfitReviewerService::requireAttestation($statement, $rows, true) !== $verifiedBy) {
+                throw new RuntimeException('Independent approval changed during reservation.');
+            }
             DB::table('financial_ledger')->insert(['entry_type' => 'realized_trading_profit', 'wallet_type' => 'external_trading_profit',
                 'amount' => '-'.$sum, 'balance_before' => $sum, 'balance_after' => '0',
                 'transaction_key' => 'staking-profit:source:'.$statementId, 'reference_type' => 'staking_profit_statement',
                 'reference_id' => $statementId, 'status' => 'completed', 'description' => $statement->evidence_reference,
                 'created_at' => now(), 'updated_at' => now()]);
             DB::table('staking_profit_statements')->where('id', $statementId)->update([
-                'profit_sharing_funding_id' => $fundingId, 'status' => 'reserved', 'verified_by' => $reviewer->id, 'updated_at' => now(),
+                'profit_sharing_funding_id' => $fundingId, 'status' => 'reserved', 'verified_by' => $verifiedBy, 'verification_method' => $usesAttestation ? 'independent_member_attestation' : 'independent_admin', 'updated_at' => now(),
             ]);
         }, 3);
     }

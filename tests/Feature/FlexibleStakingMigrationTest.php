@@ -7,6 +7,7 @@ use App\Services\StakingReconciliationService;
 use App\Support\DisposableDatabase;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\Support\FinancialSeedState;
 use Tests\TestCase;
 
@@ -28,6 +29,9 @@ final class FlexibleStakingMigrationTest extends TestCase
     public function test_forward_upgrade_preserves_legacy_balances_positions_deposits_fees_and_switches(): void
     {
         $migration = require database_path('migrations/2026_11_04_084523_add_flexible_staking_accounting.php');
+        foreach (['staking_profit_reviews', 'trading_profit_reviewer_audits', 'trading_profit_reviewers'] as $table) {
+            Schema::dropIfExists($table);
+        }
         $migration->down();
         $member = User::factory()->create(['role' => 'member', 'status' => 'active', 'available_balance' => '50', 'activation_balance' => '25']);
         $position = DB::table('staking_positions')->insertGetId(['user_id' => $member->id, 'amount' => '50',
@@ -42,6 +46,7 @@ final class FlexibleStakingMigrationTest extends TestCase
         $oldFee = DB::table('withdrawal_settings')->where('id', 1)->value('principal_withdrawal_fee_percent');
         $migration->up();
         (require database_path('migrations/2026_11_05_012651_link_staking_profit_to_unified_funding.php'))->up();
+        (require database_path('migrations/2026_11_05_024931_create_trading_profit_reviewers.php'))->up();
         $this->assertSame($before, (array) DB::table('users')->find($member->id));
         $this->assertSame($oldFee, DB::table('withdrawal_settings')->where('id', 1)->value('principal_withdrawal_fee_percent'));
         $this->assertDatabaseHas('staking_positions', ['id' => $position, 'amount' => '50.00000000', 'withdrawn_amount' => '0.00000000', 'funding_wallet' => 'available_balance']);
