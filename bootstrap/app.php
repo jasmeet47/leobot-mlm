@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\CanonicalPublicDomain;
 use App\Http\Middleware\EnsureAccountNotBlocked;
+use App\Http\Middleware\MeasureFullLoginLifecycle;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,7 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         |
         */
 
-        $middleware->prepend(\App\Http\Middleware\MeasureFullLoginLifecycle::class);
+        $middleware->prepend(MeasureFullLoginLifecycle::class);
+        $middleware->prepend(CanonicalPublicDomain::class);
         $middleware->redirectGuestsTo('/join');
 
         /*
@@ -42,7 +45,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) =>
-                $request->is('api/*') || $request->expectsJson(),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

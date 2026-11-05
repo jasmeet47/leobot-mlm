@@ -20,3 +20,8 @@ Demo service and all Demo metadata/databases are excluded from this workflow.
 - The owner/admin uses **Reserve previously approved profit** only after recorded independent approval and all existing funding gates permit it. The snapshot, current reviewer permission, account state and 67/30/3 allocation must still match. Separate settlement controls remain required.
 - Revocation blocks new reservations, while earlier financial approvals and audit history remain intact. Repeated approval/reservation requests are idempotent; revised or stale evidence fails closed.
 - An unavailable/missing Production reviewer, inaccessible backup restoration, unfunded treasury or absent real transaction evidence must remain an explicit certification blocker. Never invent a person, source profit, on-chain transfer, backup recovery success or a full release certificate.
+
+
+## Public host isolation
+
+The public apex `lumiflowon.com` is still bound to Beta at the infrastructure layer. Beta now redirects GET/HEAD requests on that exact host to the Production www homepage/login, without copying Beta referral IDs, reset tokens or query strings. Stale form submissions on that host return409 before session or financial processing, rather than replaying a POST into another environment. The dedicated `https://lumiflowon-beta.onrender.com` remains the sandbox URL. No database or domain binding is moved by this middleware.
