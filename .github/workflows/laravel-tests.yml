@@ -45,7 +45,31 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Audit PHP Dependencies
-        run: composer audit --locked
+        run: |
+          audit_status=0
+          composer audit --locked --format=json > composer-audit.json || audit_status=$?
+          if [ "$audit_status" -ne 0 ]; then
+            python3 - <<'PYTHON'
+          import json
+          from pathlib import Path
+          try:
+              report = json.loads(Path('composer-audit.json').read_text())
+              messages = []
+              for package, advisories in report.get('advisories', {}).items():
+                  for advisory in advisories:
+                      messages.append(package + ': ' + advisory.get('title', '') + ' ' + advisory.get('link', '') + ' affected=' + advisory.get('affectedVersions', ''))
+              for package, replacement in report.get('abandoned', {}).items():
+                  messages.append('Abandoned package: ' + package + '; replacement=' + str(replacement))
+              if not messages:
+                  messages = ['Composer audit failed without an advisory result; inspect the dependency-audit step.']
+          except (ValueError, OSError):
+              messages = ['Composer audit could not produce a valid advisory report.']
+          for message in messages:
+              escaped = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print('::error file=composer.lock,title=Composer security audit::' + escaped)
+          PYTHON
+          fi
+          exit "$audit_status"
 
       - name: Setup Node
         uses: actions/setup-node@v6
