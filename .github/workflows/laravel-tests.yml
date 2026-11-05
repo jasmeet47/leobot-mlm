@@ -131,4 +131,25 @@ jobs:
         run: php artisan test --filter=PhpHeaderSafetyTest
 
       - name: Run Laravel Tests
-        run: php artisan test
+        run: |
+          test_status=0
+          php artisan test --log-junit release-tests.xml || test_status=$?
+          python3 - <<'PYTHON'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          def annotation(level, message):
+              escaped = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print('::' + level + ' title=PHP 8.3 release tests::' + escaped)
+          if not Path('release-tests.xml').exists():
+              annotation('error', 'Test runner did not produce the JUnit report.')
+          else:
+              cases = list(ET.parse('release-tests.xml').getroot().iter('testcase'))
+              counts = {kind: sum(case.find(kind) is not None for case in cases) for kind in ['failure', 'error', 'skipped']}
+              annotation('notice', 'Total=' + str(len(cases)) + '; assertions=' + str(sum(int(case.get('assertions', '0')) for case in cases)) + '; ' + str(counts))
+              for case in cases:
+                  for kind in ['failure', 'error']:
+                      issue = case.find(kind)
+                      if issue is not None:
+                          annotation('error', case.get('class', case.get('classname', '')) + '::' + case.get('name', '') + '\n' + (issue.text or '')[:2500])
+          PYTHON
+          exit "$test_status"
