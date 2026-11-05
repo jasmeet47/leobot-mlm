@@ -54,19 +54,11 @@ jobs:
           from pathlib import Path
           try:
               report = json.loads(Path('composer-audit.json').read_text())
-              messages = []
-              for package, advisories in report.get('advisories', {}).items():
-                  for advisory in advisories:
-                      messages.append(package + ': ' + advisory.get('title', '') + ' ' + advisory.get('link', '') + ' affected=' + advisory.get('affectedVersions', ''))
-              for package, replacement in report.get('abandoned', {}).items():
-                  messages.append('Abandoned package: ' + package + '; replacement=' + str(replacement))
-              if not messages:
-                  messages = ['Composer audit failed without an advisory result; inspect the dependency-audit step.']
+              message = json.dumps(report, ensure_ascii=True, separators=(',', ':'))[:50000]
           except (ValueError, OSError):
-              messages = ['Composer audit could not produce a valid advisory report.']
-          for message in messages:
-              escaped = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-              print('::error file=composer.lock,title=Composer security audit::' + escaped)
+              message = 'Composer audit could not produce a valid advisory report.'
+          escaped = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error file=composer.lock,title=Composer security audit::' + escaped)
           PYTHON
           fi
           exit "$audit_status"
