@@ -7,7 +7,17 @@
 $active=$announcements->filter(fn($a)=>$a->status==='published'&&(!$a->starts_at||now()->gte($a->starts_at))&&(!$a->ends_at||now()->lt($a->ends_at)))->count();
 $scheduled=$announcements->filter(fn($a)=>$a->status==='published'&&$a->starts_at&&now()->lt($a->starts_at))->count();
 $expired=$announcements->filter(fn($a)=>$a->ends_at&&now()->gte($a->ends_at))->count();
-$val=fn($key,$default='')=>old($key,$editing?->$key??$default);
+$val=function($key,$default='') use($editing) {
+    $fallback=$editing?->$key??$default;
+    $value=old($key,$fallback);
+    return is_scalar($value)?(string)$value:(is_scalar($fallback)?(string)$fallback:'');
+};
+$oldScalar=function($key,$fallback='') {
+    $value=old($key,$fallback);
+    return is_scalar($value)?(string)$value:(string)$fallback;
+};
+$rawPages=old('pages',$editing?json_decode($editing->pages,true):['home']);
+$selectedPages=is_array($rawPages)?array_values(array_intersect(array_filter($rawPages,'is_string'),App\Services\AnnouncementService::PAGES)):[];
 @endphp
 <div class="am-stats" aria-label="Popup analytics">@foreach(['कुल Popups'=>$announcements->count(),'अभी चालू'=>$active,'कुल Views'=>$stats->sum('views')] as $label=>$number)<div>{{ $label }}<strong>{{ $number }}</strong></div>@endforeach</div>
 <section class="am-card"><h2>{{ $editing?'Edit announcement':'Create new announcement' }}</h2><p class="am-hint">पहले Photo या Message जोड़ें। Extra settings की ज़रूरत हो तो नीचे खोलें।</p>
@@ -21,11 +31,11 @@ $val=fn($key,$default='')=>old($key,$editing?->$key??$default);
 <div class="am-step"><span>2</span><h3>कहाँ और किसे दिखाएँ?</h3></div>
 <div class="am-grid"><label>Popup कहाँ दिखे?<select name="position">@foreach(['center'=>'बीच में Popup','top'=>'ऊपर छोटी पट्टी','bottom'=>'नीचे छोटी पट्टी','corner'=>'कोने में छोटा Popup','banner'=>'पूरी चौड़ाई का Banner','ticker'=>'चलती हुई News पट्टी'] as $position=>$label)<option value="{{ $position }}" @selected($val('position','center')===$position)>{{ $label }}</option>@endforeach</select></label><label>किसे दिखे?<select name="audience">@foreach(['all'=>'सभी लोग','members'=>'सिर्फ Members','guests'=>'बिना Login वाले लोग','group'=>'चुना हुआ Member Group','admins'=>'सिर्फ Admin'] as $audience=>$label)<option value="{{ $audience }}" @selected($val('audience','all')===$audience)>{{ $label }}</option>@endforeach</select></label></div>
 <label id="member-group-option">Member Group<select name="member_group"><option value="">Group चुनें</option>@foreach(['active'=>'Active Members','inactive'=>'Inactive Members'] as $group=>$label)<option value="{{ $group }}" @selected($val('member_group')===$group)>{{ $label }}</option>@endforeach</select></label>
-<fieldset class="am-pages"><legend>कौन-से Pages पर?</legend>@foreach(['home'=>'Homepage','login'=>'Login','registration'=>'Registration','member_dashboard'=>'Member Dashboard','admin_dashboard'=>'Admin Dashboard','public'=>'सभी Public Pages'] as $page=>$label)<label><input type="checkbox" name="pages[]" value="{{ $page }}" @checked(in_array($page,old('pages',$editing?json_decode($editing->pages,true):['home']),true))> {{ $label }}</label>@endforeach<small>Login और Registration एक ही page पर हैं।</small></fieldset>
+<fieldset class="am-pages"><legend>कौन-से Pages पर?</legend>@foreach(['home'=>'Homepage','login'=>'Login','registration'=>'Registration','member_dashboard'=>'Member Dashboard','admin_dashboard'=>'Admin Dashboard','public'=>'सभी Public Pages'] as $page=>$label)<label><input type="checkbox" name="pages[]" value="{{ $page }}" @checked(in_array($page,$selectedPages,true))> {{ $label }}</label>@endforeach<small>Login और Registration एक ही page पर हैं।</small></fieldset>
 <details class="am-extra" @if($errors->any()) open @endif><summary>⚙ Extra settings <small>— समय, button, कितनी बार दिखे</small></summary><div class="am-grid">
 <label>छोटी दूसरी Heading<input name="subheading" value="{{ $val('subheading') }}" maxlength="250"></label><label>Priority<select name="priority">@foreach(['normal'=>'Normal','important'=>'Important','urgent'=>'Urgent — सबसे पहले'] as $priority=>$label)<option value="{{ $priority }}" @selected($val('priority','normal')===$priority)>{{ $label }}</option>@endforeach</select></label>
 <label>Button पर क्या लिखें? <small>(वैकल्पिक)</small><input name="button_text" value="{{ $val('button_text') }}" maxlength="80" placeholder="जैसे: अधिक जानें"></label><label>Button का Link<input name="button_url" value="{{ $val('button_url') }}" placeholder="https://example.com or /join"></label>
-<label>कब से दिखे? (IST)<input type="datetime-local" name="starts_at" value="{{ old('starts_at',$editing?->starts_at?\Carbon\Carbon::parse($editing->starts_at)->timezone('Asia/Kolkata')->format('Y-m-d\TH:i'):'') }}"><small>अभी दिखाने के लिए खाली छोड़ें।</small></label><label>कब बंद हो? (IST)<input type="datetime-local" name="ends_at" value="{{ old('ends_at',$editing?->ends_at?\Carbon\Carbon::parse($editing->ends_at)->timezone('Asia/Kolkata')->format('Y-m-d\TH:i'):'') }}"><small>बिना expiry के लिए खाली छोड़ें।</small></label>
+<label>कब से दिखे? (IST)<input type="datetime-local" name="starts_at" value="{{ $oldScalar('starts_at',$editing?->starts_at?\Carbon\Carbon::parse($editing->starts_at)->timezone('Asia/Kolkata')->format('Y-m-d\TH:i'):'') }}"><small>अभी दिखाने के लिए खाली छोड़ें।</small></label><label>कब बंद हो? (IST)<input type="datetime-local" name="ends_at" value="{{ $oldScalar('ends_at',$editing?->ends_at?\Carbon\Carbon::parse($editing->ends_at)->timezone('Asia/Kolkata')->format('Y-m-d\TH:i'):'') }}"><small>बिना expiry के लिए खाली छोड़ें।</small></label>
 <label>कितनी बार दिखे?<select name="frequency">@foreach(['visit'=>'हर Visit पर','session'=>'एक Session में एक बार','daily'=>'दिन में एक बार','once'=>'एक Member को सिर्फ एक बार','after_login'=>'Login के बाद एक बार'] as $key=>$label)<option value="{{ $key }}" @selected($val('frequency','session')===$key)>{{ $label }}</option>@endforeach</select><small>Guest की पहचान browser session तक सीमित है।</small></label>
 <label>Page खुलने के कितने सेकंड बाद?<input type="number" name="delay_seconds" min="0" max="120" value="{{ $val('delay_seconds',0) }}" required></label></div></details>
 <div class="am-step"><span>3</span><h3>Preview देखें और Save करें</h3></div>

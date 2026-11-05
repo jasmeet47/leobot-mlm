@@ -197,4 +197,27 @@ final class AnnouncementManagementTest extends TestCase
         $migration->up();
         $this->assertTrue(Schema::hasTable('announcements'));
     }
+
+    public function test_invalid_field_shapes_return_to_an_usable_form_without_a_server_error(): void
+    {
+        $this->actingAs($this->admin)->from(route('admin.announcements.index'))
+            ->post(route('admin.announcements.save'), $this->payload([
+                'title' => ['invalid'], 'content' => ['invalid'], 'pages' => 'home',
+                'starts_at' => ['invalid'], 'ends_at' => ['invalid'],
+            ]))->assertRedirect(route('admin.announcements.index'))->assertSessionHasErrors(['title', 'content', 'pages', 'starts_at']);
+        $this->withCookie(config('session.cookie'), session()->getId())
+            ->get(route('admin.announcements.index'))->assertOk()
+            ->assertSee('data-lf-toast="error"', false)->assertDontSee('data-lf-toast="success"', false);
+        $this->assertDatabaseCount('announcements', 0);
+    }
+
+    public function test_edit_form_keeps_saved_ist_schedule_after_validation_failure(): void
+    {
+        $id = $this->create(['starts_at' => '2027-01-05T12:00', 'ends_at' => '2027-01-06T12:00']);
+        $url = route('admin.announcements.index', ['edit' => $id]);
+        $this->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false)->assertSee('value="2027-01-06T12:00"', false);
+        $this->from($url)->post(route('admin.announcements.save', $id), $this->payload(['title' => ['invalid'], 'revision' => 1]))->assertSessionHasErrors('title');
+        $this->withCookie(config('session.cookie'), session()->getId())->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false);
+        $this->assertDatabaseHas('announcements', ['id' => $id, 'revision' => 1]);
+    }
 }
