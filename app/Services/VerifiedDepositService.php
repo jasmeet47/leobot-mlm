@@ -72,12 +72,12 @@ final class VerifiedDepositService
         }, 3);
     }
 
-    /** Admin must independently verify payment destination, chain, confirmations and amount before calling. */
-    public static function approve(int $adminId, int $depositId, string $verificationReference): void
+    /** Legacy caller reference is ignored; the immutable chain/hash produces the unique receipt reference. */
+    public static function approve(int $adminId, int $depositId, ?string $verificationReference = null): void
     {
         self::gate();
-        if ($adminId < 1 || $depositId < 1 || ! preg_match('/\A[A-Za-z0-9._:-]{8,150}\z/D', $verificationReference)) {
-            throw new InvalidArgumentException('Invalid approval reference.');
+        if ($adminId < 1 || $depositId < 1) {
+            throw new InvalidArgumentException('Invalid deposit approval request.');
         }
         $actor = DB::table('users')->where('id', $adminId)->first();
         if (! $actor || ! in_array($actor->role, ['admin', 'super_admin'], true) || $actor->status !== 'active' || $actor->deleted_at !== null || self::blocked($actor)) {
@@ -87,6 +87,7 @@ final class VerifiedDepositService
         if (! $snapshot || $snapshot->status !== 'pending' || empty($snapshot->receiving_address)) {
             throw new RuntimeException('Pending deposit with an immutable treasury address is required.');
         }
+        $verificationReference = 'chain:'.$snapshot->network.':'.$snapshot->tx_hash;
         (new UsdtPaymentVerificationPolicy(app(UsdtChainVerifier::class)))->assertVerified(
             $snapshot->network, $snapshot->tx_hash, $snapshot->receiving_address, $snapshot->receiving_address, (string) $snapshot->amount
         );

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\MemberPaymentSecurity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ class MemberProfileController extends Controller
 {
     public function index(Request $request): View
     {
-        return view('member.profile', ['member' => $request->user()]);
+        return view('member.profile', ['member' => $request->user(), 'profileWallets' => MemberPaymentSecurity::wallets($request->user()->id), 'walletChangesEnabled' => MemberPaymentSecurity::changesEnabled()]);
     }
 
     public function updatePassword(Request $request): RedirectResponse

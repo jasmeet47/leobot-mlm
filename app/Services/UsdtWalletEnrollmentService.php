@@ -27,13 +27,18 @@ final class UsdtWalletEnrollmentService
             $message,
             $signature
         ) {
+            MemberPaymentSecurity::assertChangesEnabled();
+            $member = DB::table('users')->where('id', $userId)->lockForUpdate()->first();
+            if (! $member || $member->role !== 'member' || $member->is_blocked || $member->deleted_at !== null) {
+                throw new RuntimeException('Eligible member required.');
+            }
             $challenge = DB::table('usdt_wallet_challenges')
                 ->where('id', $challengeId)
                 ->where('user_id', $userId)
                 ->lockForUpdate()
                 ->first();
 
-            if (!$challenge || $challenge->consumed_at !== null) {
+            if (! $challenge || $challenge->consumed_at !== null) {
                 throw new RuntimeException('Invalid or consumed wallet challenge.');
             }
 
@@ -42,7 +47,7 @@ final class UsdtWalletEnrollmentService
 
             UsdtPaymentEvidence::assertAddress($network, $address);
 
-            if (!$this->challenges->consume(
+            if (! $this->challenges->consume(
                 $userId,
                 $challengeId,
                 $message,
@@ -58,7 +63,7 @@ final class UsdtWalletEnrollmentService
                 ->lockForUpdate()
                 ->first();
 
-            $proofDigest = hash('sha256', $message . "\n" . $signature);
+            $proofDigest = hash('sha256', $message."\n".$signature);
 
             if ($existing) {
                 DB::table('usdt_member_wallets')
@@ -71,10 +76,12 @@ final class UsdtWalletEnrollmentService
                         'updated_at' => now('UTC'),
                     ]);
 
+                MemberPaymentSecurity::select($userId, (int) $existing->id, $network);
+
                 return (int) $existing->id;
             }
 
-            return (int) DB::table('usdt_member_wallets')
+            $walletId = (int) DB::table('usdt_member_wallets')
                 ->insertGetId([
                     'user_id' => $userId,
                     'network' => $network,
@@ -86,6 +93,9 @@ final class UsdtWalletEnrollmentService
                     'created_at' => now('UTC'),
                     'updated_at' => now('UTC'),
                 ]);
+            MemberPaymentSecurity::select($userId, $walletId, $network);
+
+            return $walletId;
         }, 3);
     }
 }

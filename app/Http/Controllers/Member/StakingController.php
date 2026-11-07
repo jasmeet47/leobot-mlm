@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Services\MemberPaymentSecurity;
 use App\Services\StakingPrincipalService;
 use App\Services\StakingService;
+use App\Services\WithdrawalEmailOtpService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +21,7 @@ final class StakingController extends Controller
         return view('member.staking', [
             'member' => $request->user(),
             'positions' => DB::table('staking_positions')->where('user_id', $request->user()->id)->orderByDesc('id')->paginate(20),
-            'wallets' => DB::table('usdt_member_wallets')->where('user_id', $request->user()->id)->whereNotNull('verified_at')->whereNull('revoked_at')->get(),
+            'wallets' => MemberPaymentSecurity::wallets($request->user()->id),
             'policy' => DB::table('withdrawal_settings')->where('id', 1)->first(),
             'stakingEnabled' => config('leobot.staking_enabled', false) === true && config('leobot.production_financial_approval', false) === true
                 && (bool) DB::table('staking_controls')->orderBy('id')->value('enabled'),
@@ -30,23 +32,29 @@ final class StakingController extends Controller
     {
         $data = $request->validate(['amount' => ['required', 'string', 'max:30'],
             'funding_source' => ['sometimes', 'in:deposit,rewards'], 'request_key' => ['required', 'string', 'max:100'], 'usdt_wallet_id' => ['required', 'integer', 'min:1'],
+            'withdrawal_otp' => ['required', 'string', 'size:6'], 'otp_challenge_id' => ['required', 'integer', 'min:1'],
             'expected_fee_percent' => ['required', 'string', 'regex:/\A\d+(?:\.\d{1,9})?\z/D']]);
         try {
-            StakingPrincipalService::request($request->user(), $id, $data['amount'], $data['request_key'], (int) $data['usdt_wallet_id'], $data['expected_fee_percent']);
+            $data['position_id'] = $id;
+            WithdrawalEmailOtpService::execute($request->user(), $data, (int) $data['otp_challenge_id'], $data['withdrawal_otp'], fn () => StakingPrincipalService::request($request->user(), $id, $data['amount'], $data['request_key'], (int) $data['usdt_wallet_id'], $data['expected_fee_percent']));
+        } catch (QueryException $e) {
+            report($e);
+
+            return back()->withErrors(['staking' => 'Withdrawal could not be saved. Please try again.']);
         } catch (\RuntimeException $e) {
-            return back()->withErrors(['staking' => $e->getMessage()]);
+            return back()->withInput($request->except('withdrawal_otp'))->withErrors(['staking' => $e->getMessage()]);
         }
 
-        return redirect()->route('member.withdrawals.index')->with('status', 'Principal reserved for external payout. Your request records its fee, network and net amount.');
+        return redirect()->route('member.withdrawals.index')->with('status', 'Email OTP verified successfully. Principal reserved for external payout. Your request records its fee, network and net amount.');
     }
 
     public function store(Request $request, StakingService $service)
     {
-        $data = $request->validate(['amount' => ['required', 'string', 'max:100', 'regex:/^\d+(\.\d{1,8})?$/'], 'request_key' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9_-]{16,100}$/']]);
+        $data = $request->validate(['funding_source' => ['sometimes', 'in:deposit,rewards'], 'amount' => ['required', 'string', 'max:100', 'regex:/^\d+(\.\d{1,8})?$/'], 'request_key' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9_-]{16,100}$/']]);
         try {
             $id = $service->create((int) $request->user()->id, $data['amount'], $data['request_key'], ($data['funding_source'] ?? 'deposit') === 'deposit' ? 'activation_balance' : 'available_balance');
 
-            return $request->expectsJson() ? response()->json(['stake_id' => $id], 201) : back()->with('status', 'Stake created. No fixed return or lock period applies.');
+            return $request->expectsJson() ? response()->json(['stake_id' => $id], 201) : back()->with('status', 'Your staking was successful! आपका staking सफलतापूर्वक हो गया है। No fixed return or lock period applies.');
         } catch (Throwable $e) {
             if ($e instanceof QueryException) {
                 throw $e;

@@ -14,7 +14,7 @@ button{margin-top:18px;padding:12px 20px;background:#b68b41;color:#091827;border
 <dt>Phone</dt><dd>{{ $member->phone }}</dd><dt>Email</dt><dd>{{ $member->email }}</dd></dl>
 @if(session('success'))<p role="status">{{ session('success') }}</p>@endif
 @if($errors->any())<div class="error" role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
-<h2>Change Password</h2>
+<section><h2>Withdrawal Wallet Address</h2><p>New withdrawal requests go only to your current verified profile address for the chosen network. Already requested payouts keep their locked address.</p>@forelse($profileWallets as $wallet)<p><strong>{{ $wallet->network }}</strong><br><span style="overflow-wrap:anywhere">{{ $wallet->address }}</span></p>@empty<p>No verified payout address saved yet.</p>@endforelse<p>Address changes: <strong>{{ $walletChangesEnabled?'ON':'OFF — disabled by admin' }}</strong></p>@if($walletChangesEnabled)<a href="{{ route('member.usdt-wallets.page') }}">Add / Update BEP20 or TRC20 wallet address</a>@endif</section><h2>Change Password</h2>
 <form method="POST" action="{{ route('member.profile.password') }}">@csrf
 <label for="current_password">Current Password</label><input id="current_password" type="password" name="current_password" autocomplete="current-password" required>
 <label for="new_password">New Password (minimum 12 characters)</label><input id="new_password" type="password" name="password" autocomplete="new-password" minlength="12" required>

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Services\MemberPaymentSecurity;
 use App\Services\UsdtWalletChallengeService;
 use App\Services\UsdtWalletEnrollmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Throwable;
 
 final class UsdtWalletController extends Controller
 {
@@ -17,6 +17,9 @@ final class UsdtWalletController extends Controller
         Request $request,
         UsdtWalletChallengeService $service
     ): JsonResponse {
+        if (! MemberPaymentSecurity::changesEnabled()) {
+            return response()->json(['message' => 'Profile wallet changes are disabled by the administrator.'], 422);
+        }
         $data = $request->validate([
             'network' => ['required', Rule::in(['TRC20', 'BEP20'])],
             'address' => ['required', 'string', 'max:64'],

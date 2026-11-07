@@ -12,7 +12,7 @@ final class AdminSaveFeedback
     {
         $response = $next($request);
         if ($request->is('admin/*') && $request->user() && in_array($request->user()->role, ['admin', 'super_admin'], true) && $response->getStatusCode() === 200 && str_contains($response->headers->get('Content-Type', ''), 'text/html')) {
-            $markup = view('partials.admin-feedback')->render();
+            $markup = view('partials.admin-feedback')->render().view('partials.admin-deposit-notifications')->render();
             $response->setContent(str_replace('</body>', $markup.'</body>', $response->getContent()));
         }
 

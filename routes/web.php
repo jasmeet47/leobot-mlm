@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\DepositReviewController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\MagicMatrixAdminController;
@@ -21,9 +22,11 @@ use App\Http\Controllers\Member\MemberTeamViewerController;
 use App\Http\Controllers\Member\ReferralContactConsentController;
 use App\Http\Controllers\Member\UsdtWalletController;
 use App\Http\Controllers\Member\WithdrawalMemberController;
+use App\Http\Controllers\Member\WithdrawalOtpController;
 use App\Http\Controllers\Mt5DisplayController;
 use App\Http\Middleware\EnsureMemberPin;
 use App\Http\Middleware\MeasureLoginRequest;
+use App\Services\MemberPaymentSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -381,3 +384,12 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): 
     Route::post('/admin/members/{member}/retire', [MemberRetirementController::class, 'retire'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.retire');
 });
 Route::post('/announcements/{id}/event', [AnnouncementController::class, 'event'])->whereNumber('id')->middleware('throttle:60,1')->name('announcements.event');
+
+Route::post('/member/withdrawal-email-otp', [WithdrawalOtpController::class, 'send'])->middleware(['auth', 'account.not_blocked', EnsureMemberPin::class, 'throttle:5,1'])->name('member.withdrawal-otp.send');
+Route::post('/admin/profile-wallet-controls', function (Request $request) {
+    $data = $request->validate(['enabled' => ['required', 'boolean']]);
+    MemberPaymentSecurity::toggle($request->user(), (bool) $data['enabled']);
+
+    return back()->with('status', 'Profile wallet update control saved successfully.');
+})->middleware(['auth', 'account.not_blocked', 'admin', 'throttle:10,1'])->name('admin.profile-wallet-controls');
+Route::get('/admin/deposit-notifications', [DepositReviewController::class, 'notifications'])->middleware(['auth', 'account.not_blocked', 'admin', 'throttle:60,1'])->name('admin.deposit-notifications');

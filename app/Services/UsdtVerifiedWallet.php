@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
@@ -11,10 +12,14 @@ final class UsdtVerifiedWallet
     {
         $wallet = DB::table('usdt_member_wallets')->where('id', $walletId)
             ->where('user_id', $memberId)->lockForUpdate()->first();
-        if (!$wallet || $wallet->verified_at === null || $wallet->revoked_at !== null) {
+        if (! $wallet || $wallet->verified_at === null || $wallet->revoked_at !== null) {
             throw new RuntimeException('A verified, active member-owned USDT wallet is required.');
         }
+        if (MemberPaymentSecurity::selectedId($memberId, (string) $wallet->network) !== $walletId) {
+            throw new RuntimeException('Select the current verified wallet saved in your profile.');
+        }
         UsdtPaymentEvidence::assertAddress((string) $wallet->network, (string) $wallet->address);
+
         return $wallet;
     }
 
