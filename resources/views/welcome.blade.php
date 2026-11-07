@@ -112,7 +112,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
     <div class="wrap">
         <header>
             <div class="brand">LumiFlowOn</div>
-            <a class="toplink" href="{{ route('register.form') }}">Member Access</a>
+            <a class="toplink" href="{{ route('login.form') }}">Member Access</a>
         </header>
 
         <main>
@@ -135,7 +135,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
                         <p role="status">Your account access is currently restricted.</p>
                     @endif
                 @else
-                    <a class="btn" href="{{ route('register.form') }}">Login</a>
+                    <a class="btn" href="{{ route('login.form') }}">Login</a>
                     <a class="btn" href="{{ route('register.form') }}">Sign Up</a>
                 @endauth
             </div>
