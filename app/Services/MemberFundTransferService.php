@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
@@ -7,30 +8,29 @@ use RuntimeException;
 
 /**
  * Disabled-by-default member transfer core.
- * No route/UI is registered by this patch.
+ * Transfer policy and email OTP are enforced by the member workflow.
  */
 final class MemberFundTransferService
 {
-    public static function transfer(int $senderId, int $recipientId, string $amount, string $requestKey): void
+    public static function transfer(int $senderId, int $recipientId, string $amount, string $requestKey): int
     {
-        if (config('leobot.fund_transfers_enabled', false) !== true ||
-            (app()->environment('production') &&
-             config('leobot.production_financial_approval', false) !== true)) {
-            throw new RuntimeException('Fund transfers are disabled.');
+        if (app()->environment('production') && config('leobot.production_financial_approval', false) !== true) {
+            throw new RuntimeException('Production financial approval required.');
         }
         if ($senderId < 1 || $recipientId < 1 || $senderId === $recipientId) {
             throw new InvalidArgumentException('Invalid transfer participants.');
         }
-        if (!preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) ||
+        if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) ||
             bccomp($amount, '0', 8) <= 0 ||
             bccomp($amount, '999999999999.99999999', 8) > 0) {
             throw new InvalidArgumentException('Invalid transfer amount.');
         }
-        if (!preg_match('/\A[A-Za-z0-9_-]{8,100}\z/D', $requestKey)) {
+        if (! preg_match('/\A[A-Za-z0-9_-]{8,100}\z/D', $requestKey)) {
             throw new InvalidArgumentException('Invalid transfer reference.');
         }
 
-        DB::transaction(function () use ($senderId, $recipientId, $amount, $requestKey): void {
+        return DB::transaction(function () use ($senderId, $recipientId, $amount, $requestKey): int {
+            MemberTransferPolicy::assertAmount($amount);
             // Deterministic lock order avoids opposite-direction transfer deadlocks.
             $ids = [$senderId, $recipientId];
             sort($ids, SORT_NUMERIC);
@@ -41,15 +41,15 @@ final class MemberFundTransferService
             }
             foreach ($ids as $id) {
                 $user = $users->get($id);
-                if (($user->status ?? null) !== 'active' ||
-                    in_array(strtolower((string)($user->is_blocked ?? false)), ['1','t','true'], true)) {
+                if (! in_array($user->status ?? null, ['active', 'inactive'], true) || $user->role !== 'member' || $user->deleted_at !== null ||
+                    in_array(strtolower((string) ($user->is_blocked ?? false)), ['1', 't', 'true'], true)) {
                     throw new RuntimeException('Both accounts must be active and unblocked.');
                 }
             }
 
-            $base = 'member-transfer:' . $requestKey;
-            $debitKey = $base . ':debit';
-            $creditKey = $base . ':credit';
+            $base = 'member-transfer:'.$requestKey;
+            $debitKey = $base.':debit';
+            $creditKey = $base.':credit';
             $existing = DB::table('financial_ledger')
                 ->whereIn('transaction_key', [$debitKey, $creditKey])->get();
             if ($existing->isNotEmpty()) {
@@ -67,6 +67,9 @@ final class MemberFundTransferService
                     'from_user_id' => $senderId,
                     'description' => 'Member-to-member transfer credit',
                 ]);
+            $id = DB::table('member_transfer_receipts')->insertGetId(['sender_id' => $senderId, 'recipient_id' => $recipientId, 'amount' => $amount, 'request_key' => $requestKey, 'created_at' => now()]);
+
+            return $id;
             // Nested WalletService transactions participate in the outer atomic transaction.
         }, 3);
     }

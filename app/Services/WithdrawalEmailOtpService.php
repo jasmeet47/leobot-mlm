@@ -28,7 +28,7 @@ final class WithdrawalEmailOtpService
     private static function member(User $member, bool $principal = false): object
     {
         $row = DB::table('users')->where('id', $member->id)->lockForUpdate()->first();
-        if (! $row || $row->role !== 'member' || ! in_array($row->status, $principal ? ['active', 'inactive'] : ['active'], true) || $row->is_blocked || $row->deleted_at || ! filter_var($row->email, FILTER_VALIDATE_EMAIL)) {
+        if (! $row || $row->role !== 'member' || ! in_array($row->status, ['active', 'inactive'], true) || (! $principal && ! StakingMemberEligibility::canReceiveIncome($row)) || $row->is_blocked || $row->deleted_at || ! filter_var($row->email, FILTER_VALIDATE_EMAIL)) {
             throw new RuntimeException('Active member with a valid account email required.');
         }
 

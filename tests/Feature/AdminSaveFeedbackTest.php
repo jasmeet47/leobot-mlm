@@ -68,7 +68,7 @@ final class AdminSaveFeedbackTest extends TestCase
     public function test_user_delete_menu_exposes_safe_retirement_and_preserves_member(): void
     {
         $member = User::factory()->create(['role' => 'member', 'status' => 'active']);
-        $this->actingAs($this->admin())->get(route('admin.members.deletion'))->assertOk()->assertSee('User Delete / Retire');
+        $this->actingAs($this->admin())->get(route('admin.members.deletion'))->assertOk()->assertSee('Delete Member ID');
         $this->get(route('admin.members.show', $member->id))->assertSee('Delete access / Retire member');
         $this->post(route('admin.members.retire', $member->id), ['confirm_username' => $member->username, 'reason' => 'Requested account retirement for testing'])->assertSessionHas('success');
         $this->assertDatabaseHas('users', ['id' => $member->id, 'is_blocked' => true]);

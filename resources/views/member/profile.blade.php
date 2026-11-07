@@ -11,7 +11,7 @@ button{margin-top:18px;padding:12px 20px;background:#b68b41;color:#091827;border
 </style></head><body>@include('partials.lumiflowon-page-brand')<main>
 <p><a href="{{ route('member.dashboard') }}">Back to Dashboard</a></p>
 <dl><dt>User ID</dt><dd>{{ $member->username }}</dd><dt>Name</dt><dd>{{ $member->name }}</dd>
-<dt>Phone</dt><dd>{{ $member->phone }}</dd><dt>Email</dt><dd>{{ $member->email }}</dd></dl>
+<dt>Phone</dt><dd>{{ $member->phone }}</dd><dt>Email</dt><dd>{{ $member->email }}</dd></dl>@include('partials.member-qualification',['qualificationMember'=>$member])
 @if(session('success'))<p role="status">{{ session('success') }}</p>@endif
 @if($errors->any())<div class="error" role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
 <section><h2>Withdrawal Wallet Address</h2><p>New withdrawal requests go only to your current verified profile address for the chosen network. Already requested payouts keep their locked address.</p>@forelse($profileWallets as $wallet)<p><strong>{{ $wallet->network }}</strong><br><span style="overflow-wrap:anywhere">{{ $wallet->address }}</span></p>@empty<p>No verified payout address saved yet.</p>@endforelse<p>Address changes: <strong>{{ $walletChangesEnabled?'ON':'OFF — disabled by admin' }}</strong></p>@if($walletChangesEnabled)<a href="{{ route('member.usdt-wallets.page') }}">Add / Update BEP20 or TRC20 wallet address</a>@endif</section><h2>Change Password</h2>

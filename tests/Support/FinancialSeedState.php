@@ -24,6 +24,8 @@ final class FinancialSeedState
         'profit_sharing_reserve_accounts',
         'referral_privacy_settings',
         'staking_controls',
+        'member_security_controls',
+        'member_transfer_settings',
         'withdrawal_settings',
         'magic_matrix_settings',
         'magic_matrix_level_rates',

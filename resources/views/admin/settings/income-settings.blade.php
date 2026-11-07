@@ -207,21 +207,21 @@ main .bg-white textarea {
 </head>
 
 <body>
-<div class="lf2-shell"><div class="lf2-overlay" id="lf2Overlay" onclick="lf2Toggle(false)"></div><aside class="lf2-sidebar" id="lf2Sidebar" aria-label="Admin navigation"><a class="lf2-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="" onerror="this.style.display='none'"><span>LumiFlowOn</span></a><nav class="lf2-nav">
-<a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'lf2-active' : '' }}">â–¦ &nbsp; Dashboard</a>
-<a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'lf2-active' : '' }}">â™™ &nbsp; Members</a>
-<a href="{{ route('admin.magic.index') }}" class="{{ request()->routeIs('admin.magic.*') ? 'lf2-active' : '' }}">â—‡ &nbsp; Magic Matrix</a>
+<div class="lf2-shell"><div class="lf2-overlay" id="lf2Overlay" onclick="lf2Toggle(false)"></div><aside class="lf2-sidebar" id="lf2Sidebar" aria-label="Admin navigation"><a class="lf2-back" href="{{ route('admin.dashboard') }}">Dashboard</a><nav class="lf2-nav">
+<a class="lf2-back" href="{{ route('admin.dashboard') }}">Dashboard</a>
+<a href="{{ route('admin.members.index') }}" class="{{ request()->routeIs('admin.members.*') ? 'lf2-active' : '' }}">Members</a>
+<a href="{{ route('admin.magic.index') }}" class="{{ request()->routeIs('admin.magic.*') ? 'lf2-active' : '' }}">Magic Matrix</a>
 <a href="{{ route('admin.staking.index') }}">Staking Control</a>
 <a href="{{ route('admin.deposit-control.index') }}">Deposit Control</a>
-<a href="{{ route('admin.withdrawals.index') }}" class="{{ request()->routeIs('admin.withdrawals.*') ? 'lf2-active' : '' }}">â–£ &nbsp; Withdrawals</a>
-<a href="{{ route('admin.income.index') }}" class="{{ request()->routeIs('admin.income.*') ? 'lf2-active' : '' }}">â–¤ &nbsp; Income Settings</a>
-<a href="{{ route('admin.unified-funding.index') }}" class="{{ request()->routeIs('admin.unified-funding.*') ? 'lf2-active' : '' }}">â–¥ &nbsp; Funding Audit</a>
-<a href="{{ route('admin.registration-otp.index') }}" class="{{ request()->routeIs('admin.registration-otp.*') ? 'lf2-active' : '' }}">âœ‰ &nbsp; Registration Email OTP</a>
-<a href="{{ route('admin.lumiflowon.logo.index') }}" class="{{ request()->routeIs('admin.lumiflowon.logo.*') ? 'lf2-active' : '' }}">â–§ &nbsp; Logo Management</a>
-<a href="{{ route('admin.password-otp.index') }}" class="{{ request()->routeIs('admin.password-otp.*') ? 'lf2-active' : '' }}">â—‰ &nbsp; Password OTP</a>
-<a href="{{ route('admin.referral-privacy.index') }}" class="{{ request()->routeIs('admin.referral-privacy.*') ? 'lf2-active' : '' }}">â—ˆ &nbsp; Referral Privacy</a>
-<a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">â†— &nbsp; Quick Links</a>
-<a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav><a class="lf2-back" href="{{ route('admin.dashboard') }}">â† Admin Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">â˜° Admin Menu</button>
+<a href="{{ route('admin.withdrawals.index') }}" class="{{ request()->routeIs('admin.withdrawals.*') ? 'lf2-active' : '' }}">Withdrawals</a>
+<a href="{{ route('admin.income.index') }}" class="{{ request()->routeIs('admin.income.*') ? 'lf2-active' : '' }}">Income Settings</a>
+<a href="{{ route('admin.unified-funding.index') }}" class="{{ request()->routeIs('admin.unified-funding.*') ? 'lf2-active' : '' }}">Funding Audit</a>
+<a href="{{ route('admin.registration-otp.index') }}" class="{{ request()->routeIs('admin.registration-otp.*') ? 'lf2-active' : '' }}">Registration Email OTP</a>
+<a href="{{ route('admin.lumiflowon.logo.index') }}" class="{{ request()->routeIs('admin.lumiflowon.logo.*') ? 'lf2-active' : '' }}">Logo Management</a>
+<a href="{{ route('admin.password-otp.index') }}" class="{{ request()->routeIs('admin.password-otp.*') ? 'lf2-active' : '' }}">Password OTP</a>
+<a href="{{ route('admin.referral-privacy.index') }}" class="{{ request()->routeIs('admin.referral-privacy.*') ? 'lf2-active' : '' }}">Referral Privacy</a>
+<a href="{{ route('admin.quick-links.index') }}" class="{{ request()->routeIs('admin.quick-links.*') ? 'lf2-active' : '' }}">Quick Links</a>
+<a class="lf2-back" href="{{ route('admin.dashboard') }}">Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">â˜° Admin Menu</button>
 
 
 <div class="container">
@@ -231,14 +231,10 @@ main .bg-white textarea {
     <div class="top-links">
 
         <a class="back-link"
-           href="{{ route('admin.levels.index') }}">
-            &larr; 51-Level Settings
-        </a>
+           href="{{ route('admin.levels.index') }}">51-Level Settings</a>
 
         <a class="history-link"
-           href="{{ route('admin.income.history') }}">
-            View Audit History
-        </a>
+           href="{{ route('admin.income.history') }}">Income History</a>
 
     </div>
 
@@ -695,9 +691,7 @@ main .bg-white textarea {
                padding: 12px 18px;
                border-radius: 8px;
                text-decoration: none;
-           ">
-            View Audit History
-        </a>
+           ">Income History</a>
 
     </div>
 

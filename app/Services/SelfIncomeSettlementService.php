@@ -42,7 +42,7 @@ final class SelfIncomeSettlementService
                 throw new RuntimeException('Reserve not eligible for settlement.');
             }
             $member = DB::table('users')->where('id', $reserve->user_id)->lockForUpdate()->first();
-            if (! $member || (string) $member->status !== 'active' || self::blocked($member) || $member->deleted_at !== null || $member->role !== 'member') {
+            if (! $member || ! StakingMemberEligibility::canReceiveIncome($member)) {
                 throw new RuntimeException('Member not eligible at settlement.');
             }
             $amount = (string) $reserve->self_share_reserved;

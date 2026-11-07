@@ -41,7 +41,7 @@ final class WithdrawalRequestService
 
         return DB::transaction(function () use ($member, $amount, $requestKey, $usdtWalletId): int {
             $user = DB::table('users')->where('id', $member->getKey())->lockForUpdate()->first();
-            if (! $user || $user->status !== 'active' || self::blocked($user)) {
+            if (! $user || ! StakingMemberEligibility::canReceiveIncome($user)) {
                 throw new AuthorizationException('Active unblocked member required.');
             }
             $key = strtoupper($requestKey);

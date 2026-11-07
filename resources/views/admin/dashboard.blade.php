@@ -242,23 +242,23 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 <div class="lf-shell">
 <div class="lf-overlay" id="lfOverlay" onclick="lfCloseNav()"></div>
 <aside class="lf-sidebar" id="lfSidebar" aria-label="Admin navigation">
- <a class="lf-side-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"><span>LumiFlowOn</span></a>
+ <a href="{{ route('admin.dashboard') }}" class="lf-current">Dashboard</a>
  <nav class="lf-nav">
-  <a href="{{ route('admin.dashboard') }}" class="lf-current">▦ &nbsp; Dashboard</a>
-  <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
-  <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
+  <a href="{{ route('admin.dashboard') }}" class="lf-current">Dashboard</a>
+  <a href="{{ route('admin.members.index') }}">Members</a>
+  <a href="{{ route('admin.magic.index') }}">Magic Matrix</a>
   <a href="{{ route('admin.staking.index') }}">Staking Control</a>
 <a href="{{ route('admin.deposit-control.index') }}">Deposit Control</a>
-<a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
+<a href="{{ route('admin.withdrawals.index') }}">Withdrawals</a>
   <a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a>
-  <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
-  <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
+  <a href="{{ route('admin.income.index') }}">Income Settings</a>
+  <a href="{{ route('admin.unified-funding.index') }}">Funding Audit</a>
   <div class="lf-nav-title">Settings</div>
-  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub ">✉ &nbsp; Registration Email OTP</a>
-  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">▧ &nbsp; Logo Management</a>
-  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">◈ &nbsp; Referral Privacy</a>
-  <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">↗ &nbsp; Quick Links</a>
- <a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav>
+  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub ">Registration Email OTP</a>
+  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">Logo Management</a>
+  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">Referral Privacy</a>
+  <a href="{{ route('admin.quick-links.index') }}">Quick Links</a>
+ <a href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a></nav>
 </aside>
 <div class="lf-main">
 
@@ -282,10 +282,10 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
     </div>
 </header>
 
-<main class="container"><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-control.index') }}">Open Deposit Control</a> · <a href="{{ route('admin.deposit-review.index') }}">Review Deposits</a></section>
+<main class="container"><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a></section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
-  <h2>Staking Control</h2><p><a href="{{ route('admin.staking.index') }}">Open Staking Control</a> · <a href="{{ route('admin.staking.profit.index') }}">Trading-profit statements</a></p>
+  <h2>Staking Control</h2><p><a href="{{ route('admin.staking.profit.index') }}">Trading Profit</a></p>
   @php
     $stakingControlReady = \Illuminate\Support\Facades\Schema::hasTable('staking_controls');
     $stakingEnabled = $stakingControlReady && (bool) \Illuminate\Support\Facades\DB::table('staking_controls')->orderBy('id')->value('enabled');
@@ -322,7 +322,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 @endforeach
 </div>
 <p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>
-<a href="{{ route('admin.quick-links.index') }}">Manage Quick Links</a>
+<a href="{{ route('admin.quick-links.index') }}">Quick Links</a>
 </section>
 <section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
     <h2>MT5 Live Trading Display</h2>
@@ -371,13 +371,13 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
         <div class="card">
             <h2>Magic Matrix</h2>
             <p>Review 20-level Magic settings, enrollment, top-up and settlement controls. Financial operations remain disabled.</p>
-            <a href="{{ route('admin.magic.index') }}">Open Magic Matrix</a>
+            <a href="{{ route('admin.magic.index') }}">Magic Matrix</a>
         </div>
 
         <div class="card">
             <h2>Admin Withdrawals</h2>
             <p>Review withdrawal requests, approval controls and principal withdrawal fees. External payouts require administrator review and confirmed chain verification.</p>
-            <a href="{{ route('admin.withdrawals.index') }}">Open Withdrawals</a>
+            <a href="{{ route('admin.withdrawals.index') }}">Withdrawals</a>
         </div>
     </section>
 
@@ -397,7 +397,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
     <div class="card">
         <h2>Unified Funding Audit</h2>
         <p>Review 67/30/3 internal reserves. Funding entry remains disabled without separate approval. No payouts.</p>
-        <a href="{{ route('admin.unified-funding.index') }}">Review Funding</a>
+        <a href="{{ route('admin.unified-funding.index') }}">Funding Audit</a>
     </div>
 
         <div class="card">
@@ -406,9 +406,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
                 View and manage generation commission
                 configuration across 51 levels.
             </p>
-            <a href="{{ route('admin.levels.index') }}">
-                Open Settings
-            </a>
+            <a href="{{ route('admin.levels.index') }}">51-Level Settings</a>
         </div>
 
         <div class="card">
@@ -417,9 +415,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
                 Review recorded changes to the
                 generation commission configuration.
             </p>
-            <a href="{{ route('admin.levels.history') }}">
-                View History
-            </a>
+            <a href="{{ route('admin.levels.history') }}">Level History</a>
         </div>
 
         <div class="card">
@@ -428,9 +424,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
                 Review Self Income, Generation Income,
                 Magic Income and related settings.
             </p>
-            <a href="{{ route('admin.income.index') }}">
-                Open Settings
-            </a>
+            <a href="{{ route('admin.income.index') }}">Income Settings</a>
         </div>
 
         <div class="card">
@@ -439,9 +433,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
                 Review recorded changes to
                 income-related configuration.
             </p>
-            <a href="{{ route('admin.income.history') }}">
-                View History
-            </a>
+            <a href="{{ route('admin.income.history') }}">Income History</a>
         </div>
 
         <div class="card">
@@ -450,9 +442,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
                 Manage direct referral contact
                 privacy and consent settings.
             </p>
-            <a href="{{ route('admin.referral-privacy.index') }}">
-                Open Settings
-            </a>
+            <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">Referral Privacy</a>
         </div>
 
         <div class="card">
@@ -462,14 +452,12 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
                 and review sponsor and account status.
                 View member details and audited block/unblock controls.
             </p>
-            <a href="{{ route('admin.members.index') }}">
-                View Members
-            </a>
+            <a href="{{ route('admin.members.index') }}">Members</a>
         </div>
         <div class="card">
             <h2>Magic Matrix</h2>
             <p>Review 20-level Magic settings, enrollment, top-up and settlement controls. Financial operations remain disabled.</p>
-            <a href="{{ route('admin.magic.index') }}">Open Magic Matrix</a>
+            <a href="{{ route('admin.magic.index') }}">Magic Matrix</a>
         </div>
 
 
@@ -484,5 +472,5 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 
 </div></div>
 <script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script>
-<section style="margin:20px;padding:20px;border:1px solid #6579a0;border-radius:14px"><h2>Communication & Member Management</h2><a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></section></body>
+<section style="margin:20px;padding:20px;border:1px solid #6579a0;border-radius:14px"><h2>Communication & Member Management</h2><a href="{{ route('admin.members.deletion') }}">Delete Member ID</a></section><section style="margin:20px;padding:20px"><a href="{{ route('admin.members.deletion') }}">Delete Member ID</a></section></body>
 </html>

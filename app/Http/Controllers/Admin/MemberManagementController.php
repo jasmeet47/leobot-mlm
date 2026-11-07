@@ -28,11 +28,12 @@ class MemberManagementController extends Controller
                 'status',
                 'is_blocked',
                 'created_at',
+                'deleted_at',
             ])
             ->with('sponsor:id,username')
             ->when($search !== '', function ($query) use ($search) {
-                $query->where('username', 'ilike', '%' .
-                    addcslashes($search, '%_\\') . '%');
+                $query->where('username', 'ilike', '%'.
+                    addcslashes($search, '%_\\').'%');
             })
             ->orderByDesc('id')
             ->paginate(20)
@@ -55,8 +56,8 @@ class MemberManagementController extends Controller
         $referrals = $member->referrals()
             ->select(['id', 'username', 'name', 'status', 'created_at', 'sponsor_user_id'])
             ->when($search !== '', function ($query) use ($search) {
-                $query->where('username', 'ilike', '%' .
-                    addcslashes($search, '%_\\') . '%');
+                $query->where('username', 'ilike', '%'.
+                    addcslashes($search, '%_\\').'%');
             })
             ->orderByDesc('id')
             ->paginate(20)
@@ -68,6 +69,7 @@ class MemberManagementController extends Controller
             'search' => $search,
         ]);
     }
+
     public function teamLevels(Request $request, User $member)
     {
         $input = $request->validate([
@@ -101,6 +103,7 @@ class MemberManagementController extends Controller
                 'is_blocked',
                 'role',
                 'created_at',
+                'deleted_at',
             ])
             ->with('sponsor:id,username')
             ->withCount('referrals')

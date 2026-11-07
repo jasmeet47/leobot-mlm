@@ -55,7 +55,7 @@ final class MagicIncomeSettlementService
                 throw new RuntimeException('Verified unified 3% Magic funding source not found.');
             }
             $sourceMember = DB::table('users')->where('id', $sourceUserId)->first();
-            if (! $sourceMember || $sourceMember->status !== 'active' || self::blocked($sourceMember) || $sourceMember->deleted_at !== null || $sourceMember->role !== 'member') {
+            if (! $sourceMember || ! StakingMemberEligibility::canReceiveIncome($sourceMember)) {
                 throw new RuntimeException('Blocked or inactive trading source cannot generate new Magic income.');
             }
             $already = DB::table('magic_income_entitlements')->where('funding_id', $fundingId)
@@ -110,7 +110,7 @@ final class MagicIncomeSettlementService
                     if ($cycle) {
                         $cycleId = (int) $cycle->id;
                     }
-                    if (! $member || $member->status !== 'active' || self::blocked($member) || $member->deleted_at !== null || $member->role !== 'member' ||
+                    if (! $member || ! MagicQualificationService::inspect((int) $member->id)['eligible'] ||
                         ! $cycle || $cycle->status !== 'active') {
                         $status = 'held_ineligible';
                     } else {

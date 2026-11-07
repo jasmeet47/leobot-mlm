@@ -119,7 +119,7 @@ final class StakingProfitService
             $memberProfits = [];
             foreach ($rows as $row) {
                 $member = User::whereKey($row->user_id)->first();
-                if (! $member || $member->role !== 'member' || $member->status !== 'active' || $member->is_blocked || $member->deleted_at !== null) {
+                if (! $member || ! StakingMemberEligibility::canReceiveIncome($member)) {
                     throw new RuntimeException('Profit recipient is unavailable.');
                 }
                 $memberProfits[(int) $row->user_id] = (string) $row->amount;
@@ -139,7 +139,7 @@ final class StakingProfitService
             $fundingId = UnifiedProfitSharingService::fund($reviewer, $sum, $statement->evidence_reference, $memberProfits);
             foreach (array_keys($memberProfits) as $userId) {
                 $member = User::whereKey($userId)->lockForUpdate()->first();
-                if (! $member || $member->role !== 'member' || $member->status !== 'active' || $member->is_blocked || $member->deleted_at !== null) {
+                if (! $member || ! StakingMemberEligibility::canReceiveIncome($member)) {
                     throw new RuntimeException('Profit recipient is unavailable.');
                 }
             }

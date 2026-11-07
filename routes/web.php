@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\DepositReviewController;
+use App\Http\Controllers\Admin\IncomeDistributionController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\MagicMatrixAdminController;
 use App\Http\Controllers\Admin\MemberBlockController;
 use App\Http\Controllers\Admin\MemberManagementController;
+use App\Http\Controllers\Admin\MemberOperationsController;
 use App\Http\Controllers\Admin\MemberRetirementController;
 use App\Http\Controllers\Admin\PasswordOtpSettingsController;
 use App\Http\Controllers\Admin\ReferralPrivacyController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\RegistrationEmailOtpController;
 use App\Http\Controllers\Auth\SecurityPinController;
 use App\Http\Controllers\DashboardQuickLinksController;
+use App\Http\Controllers\Member\MemberActionController;
 use App\Http\Controllers\Member\MemberDashboardController;
 use App\Http\Controllers\Member\MemberTeamViewerController;
 use App\Http\Controllers\Member\ReferralContactConsentController;
@@ -380,7 +383,7 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): 
     Route::post('/admin/announcements/settings', [AnnouncementController::class, 'settings'])->middleware('throttle:10,1')->name('admin.announcements.settings');
     Route::post('/admin/announcements/save/{id?}', [AnnouncementController::class, 'save'])->whereNumber('id')->middleware('throttle:10,1')->name('admin.announcements.save');
     Route::post('/admin/announcements/{id}/action', [AnnouncementController::class, 'action'])->whereNumber('id')->middleware('throttle:10,1')->name('admin.announcements.action');
-    Route::get('/admin/member-deletion', [MemberManagementController::class, 'index'])->name('admin.members.deletion');
+    Route::get('/admin/member-deletion', [MemberOperationsController::class, 'deletion'])->name('admin.members.deletion');
     Route::post('/admin/members/{member}/retire', [MemberRetirementController::class, 'retire'])->whereNumber('member')->middleware('throttle:5,1')->name('admin.members.retire');
 });
 Route::post('/announcements/{id}/event', [AnnouncementController::class, 'event'])->whereNumber('id')->middleware('throttle:60,1')->name('announcements.event');
@@ -393,3 +396,23 @@ Route::post('/admin/profile-wallet-controls', function (Request $request) {
     return back()->with('status', 'Profile wallet update control saved successfully.');
 })->middleware(['auth', 'account.not_blocked', 'admin', 'throttle:10,1'])->name('admin.profile-wallet-controls');
 Route::get('/admin/deposit-notifications', [DepositReviewController::class, 'notifications'])->middleware(['auth', 'account.not_blocked', 'admin', 'throttle:60,1'])->name('admin.deposit-notifications');
+
+Route::middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->group(function (): void {
+    Route::post('/member/profile-wallet/email/send', [MemberActionController::class, 'walletSend'])->middleware('throttle:5,1,profile-wallet-send')->name('member.wallet-otp.send');
+    Route::post('/member/profile-wallet/email/save', [MemberActionController::class, 'walletSave'])->middleware('throttle:5,1,profile-wallet-save')->name('member.wallet-otp.save');
+    Route::get('/member/transfer/recipient', [MemberActionController::class, 'verifyRecipient'])->middleware('throttle:15,1,transfer-recipient')->name('member.transfer.recipient');
+    Route::post('/member/transfer/email/send', [MemberActionController::class, 'transferSend'])->middleware('throttle:5,1,transfer-otp-send')->name('member.transfer-otp.send');
+});
+
+Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
+    Route::post('/admin/member-deletion', [MemberOperationsController::class, 'delete'])->middleware('throttle:5,1')->name('admin.members.delete-selected');
+    Route::get('/admin/transfer-controls', [MemberOperationsController::class, 'transfers'])->name('admin.transfer-controls');
+    Route::post('/admin/transfer-controls', [MemberOperationsController::class, 'updateTransfers'])->middleware('throttle:10,1')->name('admin.transfer-controls.save');
+});
+
+Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
+    Route::get('/admin/income-distribution', [IncomeDistributionController::class, 'index'])->name('admin.income-distribution');
+    Route::post('/admin/income-distribution', [IncomeDistributionController::class, 'submit'])->middleware('throttle:5,1')->name('admin.income-distribution.submit');
+    Route::post('/admin/income-distribution/{id}/reserve', [IncomeDistributionController::class, 'reserve'])->whereNumber('id')->middleware('throttle:5,1')->name('admin.income-distribution.reserve');
+    Route::post('/admin/income-distribution/{id}/pay', [IncomeDistributionController::class, 'distribute'])->whereNumber('id')->middleware('throttle:5,1')->name('admin.income-distribution.pay');
+});

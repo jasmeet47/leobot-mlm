@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Services\DepositDestinationService;
-use App\Services\MemberFundTransferService;
+use App\Services\MemberTransferPolicy;
 use App\Services\VerifiedDepositService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -18,7 +18,10 @@ final class DepositTransferController extends Controller
         $deposits = DB::table('member_deposit_requests')->where('user_id', $request->user()->id)->orderByDesc('id')->limit(30)->get();
         $destinations = collect(['BEP20', 'TRC20'])->mapWithKeys(fn ($network) => [$network => DepositDestinationService::current($network)])->all();
 
-        return view('member.deposit-transfer', compact('deposits', 'destinations'));
+        $transferSettings = MemberTransferPolicy::settings();
+        $transferReceipt = DB::table('member_transfer_receipts as r')->join('users as u', 'u.id', '=', 'r.recipient_id')->where('r.sender_id', $request->user()->id)->where('r.id', session('transfer_receipt_id', 0))->select('r.*', 'u.username as recipient_username')->first();
+
+        return view('member.deposit-transfer', compact('deposits', 'destinations', 'transferSettings', 'transferReceipt'));
     }
 
     public function deposit(Request $request)
@@ -39,13 +42,6 @@ final class DepositTransferController extends Controller
 
     public function transfer(Request $request)
     {
-        $data = $request->validate(['recipient_id' => 'required|integer|min:1', 'amount' => ['required', 'regex:/\A\d+(?:\.\d{1,8})?\z/D'], 'request_key' => 'required|regex:/\A[A-Za-z0-9_-]{8,100}\z/D']);
-        try {
-            MemberFundTransferService::transfer((int) $request->user()->id, (int) $data['recipient_id'], $data['amount'], $data['request_key']);
-        } catch (Throwable $e) {
-            return back()->withErrors(['transfer' => $e->getMessage()]);
-        }
-
-        return back()->with('status', 'Transfer completed.');
+        return app(MemberActionController::class)->transfer($request);
     }
 }

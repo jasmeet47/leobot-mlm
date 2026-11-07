@@ -32,10 +32,7 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 <input type="hidden" name="receiving_address" id="deposit-address-quote" value="{{ $destinations['TRC20']['address'] }}"><input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Submit evidence for review</button></form>
 @else<p role="status">Deposits are currently disabled. Do not send funds until deposit verification is available.</p>@endif</section>
 <section class="panel" aria-labelledby="transfer-title"><h2 id="transfer-title">Transfer available funds</h2><p class="hint">Transfers are only permitted when enabled by an administrator. No balance is estimated or invented here.</p>
-<form method="post" action="{{ route('member.fund-transfer.store') }}">@csrf
-<label class="field"><span>Recipient member ID</span><input type="number" name="recipient_id" min="1" step="1" value="{{ old('recipient_id') }}" placeholder="Member ID" required></label>
-<label class="field"><span>Amount (USDT)</span><input type="number" inputmode="decimal" step="0.00000001" min="0.00000001" name="amount" value="{{ old('amount') }}" placeholder="Transfer amount" required></label>
-<input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Request transfer</button></form></section>
+@include('partials.member-transfer-form')</section>
 </div>
 <section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on Lumiflowon database records.</p>
 @if($deposits->isEmpty())<div class="empty">No deposit requests yet.</div>@else<div class="table-wrap"><table><thead><tr><th>ID</th><th>Amount (USDT)</th><th>Network</th><th>Status</th></tr></thead><tbody>@foreach($deposits as $d)<tr><td>{{ $d->id }}</td><td>{{ $d->amount }}</td><td>{{ $d->network }}</td><td><span class="tag">{{ ucfirst($d->status) }}</span></td></tr>@endforeach</tbody></table></div>@endif

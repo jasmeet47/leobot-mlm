@@ -5,22 +5,22 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 @media(max-width:850px){.lf-sidebar{position:fixed;transform:translateX(-105%);transition:transform .2s;width:256px;box-shadow:0 0 40px #0007}.lf-sidebar.lf-open{transform:translateX(0)}.lf-sidebar-toggle{display:inline-block}.lf-overlay.lf-open{display:block;position:fixed;inset:0;background:#0009;z-index:19}.lf-main .header-inner{justify-content:flex-start!important}.lf-main .container{padding:14px!important}}
 </style><style id="lf-otp-settings-theme">.lf-settings-panel{max-width:900px;margin:38px auto;padding:32px;border:1px solid #c49b55;border-radius:18px;background:#081b34;color:#f6f6fc;box-shadow:0 14px 45px #0005}.lf-settings-panel h1{color:#fff;font-size:30px}.lf-settings-panel p,.lf-settings-panel label{color:#f1f5ff;line-height:1.6}.lf-settings-panel input[type=checkbox]{width:19px;height:19px;accent-color:#d5a64d;vertical-align:middle}.lf-settings-panel button{padding:12px 18px;border:0;border-radius:8px;background:linear-gradient(95deg,#ffe39c,#cda052);color:#0c1930;font-weight:800;cursor:pointer}.lf-settings-panel a{color:#ffe0a1!important}.lf-settings-panel [role=alert]{color:#ffbaba!important}.lf-settings-panel [role=status]{color:#aaf0bd!important}@media(max-width:850px){.lf-settings-panel{margin:15px;padding:20px}}</style></head><body><div class="lf-shell"><div class="lf-overlay" id="lfOverlay" onclick="lfCloseNav()"></div>
 <aside class="lf-sidebar" id="lfSidebar" aria-label="Admin navigation">
- <a class="lf-side-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"><span>LumiFlowOn</span></a>
+ <a href="{{ route('admin.dashboard') }}">Dashboard</a>
  <nav class="lf-nav">
-  <a href="{{ route('admin.dashboard') }}" class="">▦ &nbsp; Dashboard</a>
-  <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
-  <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
+  <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+  <a href="{{ route('admin.members.index') }}">Members</a>
+  <a href="{{ route('admin.magic.index') }}">Magic Matrix</a>
   <a href="{{ route('admin.staking.index') }}">Staking Control</a>
 <a href="{{ route('admin.deposit-control.index') }}">Deposit Control</a>
-<a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
-  <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
-  <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
+<a href="{{ route('admin.withdrawals.index') }}">Withdrawals</a>
+  <a href="{{ route('admin.income.index') }}">Income Settings</a>
+  <a href="{{ route('admin.unified-funding.index') }}">Funding Audit</a>
   <div class="lf-nav-title">Settings</div>
-  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub lf-current">✉ &nbsp; Registration Email OTP</a>
-  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">▧ &nbsp; Logo Management</a>
-  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">◈ &nbsp; Referral Privacy</a>
-  <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">↗ &nbsp; Quick Links</a>
- <a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav>
+  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub lf-current">Registration Email OTP</a>
+  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">Logo Management</a>
+  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">Referral Privacy</a>
+  <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">Quick Links</a>
+ <a href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a></nav>
 </aside><div class="lf-main"><header class="header" style="padding:16px 25px"><button type="button" class="lf-sidebar-toggle" onclick="lfToggleNav()">☰ Menu</button><strong>LumiFlowOn · Admin Settings</strong></header><main class="lf-settings-panel">
 <h1>Registration Email OTP</h1>
 <p>ON: verified email OTP is mandatory for both web and API signup. OFF: normal signup without OTP.</p>
@@ -29,5 +29,5 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 <form method="POST" action="{{ route('admin.registration-otp.update') }}">@csrf
 <input type="hidden" name="enabled" value="0"><label><input type="checkbox" name="enabled" value="1" {{ $enabled ? 'checked' : '' }}> Require email OTP for signup</label>
 <button type="submit">Save setting</button></form>
-<p><a href="{{ route('admin.dashboard') }}">Back to Admin Dashboard</a></p>
+<p><a href="{{ route('admin.dashboard') }}">Dashboard</a></p>
 </main></div></div><script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script></body></html>

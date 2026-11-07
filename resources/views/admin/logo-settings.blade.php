@@ -5,22 +5,22 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 @media(max-width:850px){.lf-sidebar{position:fixed;transform:translateX(-105%);transition:transform .2s;width:256px;box-shadow:0 0 40px #0007}.lf-sidebar.lf-open{transform:translateX(0)}.lf-sidebar-toggle{display:inline-block}.lf-overlay.lf-open{display:block;position:fixed;inset:0;background:#0009;z-index:19}.lf-main .header-inner{justify-content:flex-start!important}.lf-main .container{padding:14px!important}}
 </style></head><body><div class="lf-shell"><div class="lf-overlay" id="lfOverlay" onclick="lfCloseNav()"></div>
 <aside class="lf-sidebar" id="lfSidebar" aria-label="Admin navigation">
- <a class="lf-side-brand" href="{{ route('admin.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn"><span>LumiFlowOn</span></a>
+ <a href="{{ route('admin.dashboard') }}">Dashboard</a>
  <nav class="lf-nav">
-  <a href="{{ route('admin.dashboard') }}" class="">▦ &nbsp; Dashboard</a>
-  <a href="{{ route('admin.members.index') }}">♙ &nbsp; Members</a>
-  <a href="{{ route('admin.magic.index') }}">◇ &nbsp; Magic Matrix</a>
+  <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+  <a href="{{ route('admin.members.index') }}">Members</a>
+  <a href="{{ route('admin.magic.index') }}">Magic Matrix</a>
   <a href="{{ route('admin.staking.index') }}">Staking Control</a>
 <a href="{{ route('admin.deposit-control.index') }}">Deposit Control</a>
-<a href="{{ route('admin.withdrawals.index') }}">▣ &nbsp; Withdrawals</a>
-  <a href="{{ route('admin.income.index') }}">▤ &nbsp; Income Settings</a>
-  <a href="{{ route('admin.unified-funding.index') }}">▥ &nbsp; Funding Audit</a>
+<a href="{{ route('admin.withdrawals.index') }}">Withdrawals</a>
+  <a href="{{ route('admin.income.index') }}">Income Settings</a>
+  <a href="{{ route('admin.unified-funding.index') }}">Funding Audit</a>
   <div class="lf-nav-title">Settings</div>
-  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub ">✉ &nbsp; Registration Email OTP</a>
-  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub lf-current">▧ &nbsp; Logo Management</a>
-  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">◈ &nbsp; Referral Privacy</a>
-  <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">↗ &nbsp; Quick Links</a>
- <a href="{{ route('admin.announcements.index') }}">▣ &nbsp; Popup & Announcement Manager</a><a href="{{ route('admin.members.deletion') }}">♙ &nbsp; User Delete / Retire</a></nav>
+  <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub ">Registration Email OTP</a>
+  <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub lf-current">Logo Management</a>
+  <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">Referral Privacy</a>
+  <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">Quick Links</a>
+ <a href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a></nav>
 </aside><div class="lf-main"><header class="header" style="padding:16px 25px"><button type="button" class="lf-sidebar-toggle" onclick="lfToggleNav()">☰ Menu</button><strong>LumiFlowOn · Logo Management</strong></header><main>
 <style id="LUMIFLOWON_LOGO_FEEDBACK_FIX_V1">
 .logo-feedback{margin:16px 0;padding:14px;border:1px solid #d6af61;border-radius:10px;background:#192f42;color:#fff}
@@ -50,4 +50,4 @@ document.addEventListener('DOMContentLoaded', function(){
    if(button){button.textContent='Uploading logo...';button.disabled=true;}
  });
 });
-</script><p><a href="{{ route('admin.dashboard') }}">Back to Admin Dashboard</a></p><h1>LumiFlowOn Logo Settings</h1>@unless($storageReady)<p role="status">Logo uploads are unavailable until storage setup completes.</p>@endunless<p>Only administrators can change the logo. Updates appear on Login, Admin and Member dashboards.</p><img src="{{ route('lumiflowon.brand.logo') }}?v={{ time() }}" alt="Current LumiFlowOn logo">@if(session('logo_status'))<p class="message">{{ session('logo_status') }}</p>@endif <form action="{{ route('admin.lumiflowon.logo.save') }}" method="post" enctype="multipart/form-data">@csrf<label for="logo">Choose PNG, JPG or WebP logo (maximum 2 MB and 2048 × 2048 pixels)</label><p><input id="logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" required></p><button type="submit" @disabled(!$storageReady)>Save New Logo</button></form><small>Use a trusted image. Previous logo revisions are retained in persistent storage. No financial settings are affected.</small></main></div></div><script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script></body></html>
+</script><p><a href="{{ route('admin.dashboard') }}">Dashboard</a></p><h1>LumiFlowOn Logo Settings</h1>@unless($storageReady)<p role="status">Logo uploads are unavailable until storage setup completes.</p>@endunless<p>Only administrators can change the logo. Updates appear on Login, Admin and Member dashboards.</p><img src="{{ route('lumiflowon.brand.logo') }}?v={{ time() }}" alt="Current LumiFlowOn logo">@if(session('logo_status'))<p class="message">{{ session('logo_status') }}</p>@endif <form action="{{ route('admin.lumiflowon.logo.save') }}" method="post" enctype="multipart/form-data">@csrf<label for="logo">Choose PNG, JPG or WebP logo (maximum 2 MB and 2048 × 2048 pixels)</label><p><input id="logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" required></p><button type="submit" @disabled(!$storageReady)>Save New Logo</button></form><small>Use a trusted image. Previous logo revisions are retained in persistent storage. No financial settings are affected.</small></main></div></div><script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script></body></html>

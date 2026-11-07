@@ -251,15 +251,20 @@ class RegisterController extends Controller
     {
         LoginCaptcha::verify($request);
         $credentials = $request->validate([
-            'username' => ['required', 'string'],
+            'username' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
+        $identifier = trim($credentials['username']);
+        if (str_contains($identifier, '@')) {
+            $matches = User::query()->whereRaw('lower(email)=?', [strtolower($identifier)])->limit(2)->pluck('username');
+            $identifier = $matches->count() === 1 ? $matches[0] : '__invalid_email_login__';
+        }
         // LEOBOT_LOGIN_TIMING_V1 - temporary diagnostic, no personal data
         $lbLoginStart = hrtime(true);
 
         $loginSuccess = Auth::attempt([
-            'username' => $credentials['username'],
+            'username' => $identifier,
             'password' => $credentials['password'],
         ]);
 

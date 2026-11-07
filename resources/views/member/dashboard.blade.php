@@ -13,7 +13,7 @@
 @if($lbPanel)
 <style>.portal-main section{display:none!important}.portal-main #{{ $lbPanel }}{display:block!important}@if(in_array($lbPanel, ['account-settings', 'member-support'], true)).portal-main section.lb-bottom-grid{display:grid!important}.portal-main section.lb-bottom-grid>div:not(#{{ $lbPanel }}){display:none!important}@endif</style>
 @else
-<style>#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,.lb-bottom-grid{display:none}</style>
+<style>#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
 @endif
 </head><body>
 @include('partials.beta-notice')
@@ -51,7 +51,7 @@
         </div>
 </aside><main class="portal-main">
 <header class="portal-topbar"><button id="portal-menu-toggle" class="action mobile-menu" aria-controls="portal-navigation" aria-expanded="false" type="button">☰ Menu</button><a class="portal-brand-mobile" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="Lumiflowon">LUMIFLOWON</a><div class="portal-eyebrow">Member / {{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Overview' }}</div><div class="portal-user"><div class="portal-avatar">{{ mb_substr($member->name, 0, 1) }}</div><div>{{ $member->name }}<small>{{ $member->username }}</small></div></div></header>
-<div class="portal-welcome"><h1>{{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Your financial overview' }}<span>.</span></h1><p>Welcome back, {{ $member->name }}.</p></div>
+<div class="portal-welcome"><h1>{{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Your financial overview' }}<span>.</span></h1>@include('partials.member-qualification',['qualificationMember'=>$member])<p>Welcome back, {{ $member->name }}.</p></div>
 <section id="account-summary" aria-label="Member financial summary">
         <h2>Your Account Summary</h2>
         <div class="grid">
@@ -183,10 +183,11 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>
         <h2>Financial Records</h2>
         <p class="muted">Your available balance and income reserves are shown above. Completed wallet entries appear in the transaction history below; held and reserved amounts are not paid income.</p>
-        <a class="action lb-inline-link" href="{{ route('member.detail', ['panel' => 'wallet-history']) }}">View Wallet Transaction History →</a>
+
     </section>
 
-    <section id="wallet-history" aria-label="Member wallet transaction history">
+    @if($lbPanel==='wallet-history')
+<section id="wallet-history" aria-label="Member wallet transaction history">
         <h2>My Wallet Transaction History</h2>
         <p class="muted">
             Only completed transactions recorded against your member
@@ -226,6 +227,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
             {{ $walletHistory->links() }}
         </div>
     </section>
+@endif
     <section id="referral-link" aria-label="Member referral link">
         <h2>Your Referral Link</h2>
         <div class="card">

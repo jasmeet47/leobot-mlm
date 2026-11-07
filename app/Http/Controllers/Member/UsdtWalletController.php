@@ -8,7 +8,6 @@ use App\Services\UsdtWalletChallengeService;
 use App\Services\UsdtWalletEnrollmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 final class UsdtWalletController extends Controller
@@ -44,39 +43,12 @@ final class UsdtWalletController extends Controller
         Request $request,
         UsdtWalletEnrollmentService $service
     ): JsonResponse {
-        $data = $request->validate([
-            'challenge_id' => ['required', 'integer', 'min:1'],
-            'message' => ['required', 'string', 'max:2048'],
-            'signature' => ['required', 'string', 'max:2048'],
-        ]);
-
-        try {
-            $walletId = $service->enroll(
-                (int) $request->user()->id,
-                (int) $data['challenge_id'],
-                $data['message'],
-                $data['signature']
-            );
-
-            return response()->json([
-                'verified' => true,
-                'wallet_id' => $walletId,
-            ]);
-        } catch (\InvalidArgumentException|\RuntimeException $e) {
-            return response()->json([
-                'message' => 'Wallet verification failed.',
-            ], 422);
-        }
+        return response()->json(['message' => 'Wallet address changes now require account email OTP. Please use the profile address page.'], 410);
     }
 
     public function index(Request $request): JsonResponse
     {
-        $wallets = DB::table('usdt_member_wallets')
-            ->where('user_id', $request->user()->id)
-            ->whereNotNull('verified_at')
-            ->whereNull('revoked_at')
-            ->orderByDesc('id')
-            ->get(['id', 'network', 'address', 'verified_at']);
+        $wallets = MemberPaymentSecurity::wallets($request->user()->id);
 
         return response()->json(['wallets' => $wallets]);
     }

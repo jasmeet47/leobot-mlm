@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
-
 use Tests\TestCase;
 
 class MemberDashboardIncomeTest extends TestCase
@@ -57,9 +56,9 @@ class MemberDashboardIncomeTest extends TestCase
         $unique = Str::lower(Str::random(16));
 
         $id = DB::table('users')->insertGetId([
-            'username' => 'TI' . strtoupper(substr($unique, 0, 10)),
-            'name' => 'Income Test ' . $unique,
-            'email' => $unique . '@example.test',
+            'username' => 'TI'.strtoupper(substr($unique, 0, 10)),
+            'name' => 'Income Test '.$unique,
+            'email' => $unique.'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => Hash::make('123456'),
@@ -74,7 +73,7 @@ class MemberDashboardIncomeTest extends TestCase
 
     private function funding(User $admin): array
     {
-        $reference = 'INCOME-TEST-' . Str::uuid();
+        $reference = 'INCOME-TEST-'.Str::uuid();
 
         $generationId = DB::table('generation_profit_fundings')
             ->insertGetId([
@@ -212,7 +211,7 @@ class MemberDashboardIncomeTest extends TestCase
             })
             ->assertSee('Magic Income')
             ->assertSee('Not allocated')
-            ->assertSee('No completed wallet transactions recorded.');
+            ->assertDontSee('No completed wallet transactions recorded.');
     }
 
     public function test_income_reserves_and_wallet_history_are_member_isolated(): void

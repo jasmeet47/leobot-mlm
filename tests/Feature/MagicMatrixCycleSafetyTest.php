@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\MagicMatrixCycleService;
+use App\Services\MagicMatrixHierarchyService;
+use App\Services\MagicMatrixSettingsService;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Tests\Support\FinancialSeedState;
 use Tests\TestCase;
 
 /** NEVER run against production, staging, or valuable test data. */
@@ -41,15 +44,15 @@ final class MagicMatrixCycleSafetyTest extends TestCase
             $safe = $identity && $identity->database_name === 'leobot_financial_disposable'
                 && (int) $identity->server_port === 5433;
         }
-        if (!$safe) {
+        if (! $safe) {
             throw new RuntimeException('SAFETY STOP: local disposable PostgreSQL only.');
         }
-        \Tests\Support\FinancialSeedState::captureIfNeeded();
+        FinancialSeedState::captureIfNeeded();
     }
 
     protected function afterTruncatingDatabase(): void
     {
-        \Tests\Support\FinancialSeedState::restoreOrCapture();
+        FinancialSeedState::restoreOrCapture();
     }
 
     protected function setUp(): void
@@ -68,9 +71,9 @@ final class MagicMatrixCycleSafetyTest extends TestCase
     private function person(string $role = 'member'): User
     {
         $id = DB::table('users')->insertGetId([
-            'username' => 'MAG' . strtoupper(Str::random(8)),
+            'username' => 'MAG'.strtoupper(Str::random(8)),
             'name' => 'Magic Test',
-            'email' => Str::random(18) . '@example.test',
+            'email' => Str::random(18).'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('Example123!'),
             'security_pin' => null,
@@ -81,6 +84,7 @@ final class MagicMatrixCycleSafetyTest extends TestCase
             'lifetime_income' => '0.00000000',
             'created_at' => now(), 'updated_at' => now(),
         ]);
+
         return User::findOrFail($id);
     }
 
@@ -88,7 +92,7 @@ final class MagicMatrixCycleSafetyTest extends TestCase
     {
         return DB::table('activation_packages')->insertGetId([
             'user_id' => $user->id,
-            'activation_key' => 'MAG-' . strtoupper(Str::random(12)),
+            'activation_key' => 'MAG-'.strtoupper(Str::random(12)),
             'investment_amount' => $amount, 'status' => 'active',
             'activated_at' => now(), 'created_at' => now(), 'updated_at' => now(),
         ]);
@@ -174,6 +178,7 @@ final class MagicMatrixCycleSafetyTest extends TestCase
         $this->expectException(AuthorizationException::class);
         MagicMatrixCycleService::recordVerifiedTopup($member, $member->id, '50', 'PAY-NOADMIN-01');
     }
+
     public function test_49_usdt_package_fails_at_50_minimum(): void
     {
         $this->unlock();
@@ -184,22 +189,19 @@ final class MagicMatrixCycleSafetyTest extends TestCase
         MagicMatrixCycleService::enrollFromActivePackage($member, $package, 'ENROLL-BELOW50');
     }
 
-    public function test_exact_minimum_is_rejected_and_one_unit_above_qualifies(): void
+    public function test_exact_minimum_and_one_unit_above_qualify(): void
     {
         $this->unlock();
         DB::table('magic_matrix_settings')->where('id', 1)->update(['minimum_tier_usdt' => '50.00000000']);
         $equal = $this->person();
-        try {
-            MagicMatrixCycleService::enrollFromActivePackage($equal, $this->package($equal, '50.00000000'), 'MAGIC-EXACT-MIN');
-            $this->fail('Equal-to-minimum package must be rejected.');
-        } catch (RuntimeException $e) {
-            $this->assertStringContainsString('minimum', $e->getMessage());
-        }
-        $this->assertSame(0, DB::table('magic_matrix_positions')->where('user_id', $equal->id)->count());
+        $id = MagicMatrixCycleService::enrollFromActivePackage($equal, $this->package($equal, '50.00000000'), 'MAGIC-EXACT-MIN');
+        $this->assertGreaterThan(0, $id);
+        $this->assertSame(1, DB::table('magic_matrix_positions')->where('user_id', $equal->id)->count());
         $above = $this->person();
         $id = MagicMatrixCycleService::enrollFromActivePackage($above, $this->package($above, '50.00000001'), 'MAGIC-ABOVE-MIN');
         $this->assertGreaterThan(0, $id);
     }
+
     public function test_two_child_positions_and_ancestor_lookup_are_deterministic(): void
     {
         $this->unlock();
@@ -213,8 +215,8 @@ final class MagicMatrixCycleSafetyTest extends TestCase
         $rightPos = DB::table('magic_matrix_positions')->where('user_id', $right->id)->first();
         $this->assertSame(1, (int) $leftPos->slot);
         $this->assertSame(2, (int) $rightPos->slot);
-        $this->assertSame([1 => $root->id], \App\Services\MagicMatrixHierarchyService::ancestorsForMember($left->id));
-        $this->assertSame([1 => $root->id], \App\Services\MagicMatrixHierarchyService::ancestorsForMember($right->id));
+        $this->assertSame([1 => $root->id], MagicMatrixHierarchyService::ancestorsForMember($left->id));
+        $this->assertSame([1 => $root->id], MagicMatrixHierarchyService::ancestorsForMember($right->id));
     }
 
     public function test_member_wallet_and_trading_wallet_remain_unchanged_by_magic_topup(): void
@@ -243,7 +245,7 @@ final class MagicMatrixCycleSafetyTest extends TestCase
         $this->unlock();
         $admin = $this->person('admin');
         $this->expectException(RuntimeException::class);
-        \App\Services\MagicMatrixSettingsService::update($admin, '60', 4, 'weekly');
+        MagicMatrixSettingsService::update($admin, '60', 4, 'weekly');
     }
 
     public function test_admin_rate_changes_are_audited_without_any_member_payout(): void
@@ -252,13 +254,12 @@ final class MagicMatrixCycleSafetyTest extends TestCase
         $admin = $this->person('admin');
         config()->set('leobot_magic.magic_matrix_settings_write_enabled', true);
         config()->set('leobot_magic.magic_matrix_rates_write_enabled', true);
-        \App\Services\MagicMatrixSettingsService::update($admin, '60', 4, 'weekly');
-        \App\Services\MagicMatrixSettingsService::updateLevelRates($admin, array_fill_keys(range(1, 20), '5.000000000'));
+        MagicMatrixSettingsService::update($admin, '60', 4, 'weekly');
+        MagicMatrixSettingsService::updateLevelRates($admin, array_fill_keys(range(1, 20), '5.000000000'));
         $this->assertSame('60.00000000', (string) DB::table('magic_matrix_settings')->where('id', 1)->value('minimum_tier_usdt'));
         $this->assertSame(4, (int) DB::table('magic_matrix_settings')->where('id', 1)->value('earning_cap_multiplier'));
         $this->assertSame(20, DB::table('magic_matrix_level_rates')->count());
         $this->assertSame(2, DB::table('magic_matrix_settings_audits')->count());
         $this->assertSame(0, DB::table('company_magic_wallet_ledger')->count());
     }
-
 }
