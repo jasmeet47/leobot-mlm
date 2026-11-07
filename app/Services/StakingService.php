@@ -29,7 +29,7 @@ final class StakingService
             }
             self::requireApproval();
             $user = User::whereKey($userId)->lockForUpdate()->firstOrFail();
-            if ($user->deleted_at !== null || $user->is_blocked || $user->status !== 'active' || $user->role !== 'member') {
+            if ($user->deleted_at !== null || $user->is_blocked || ! in_array($user->status, ['active', 'inactive'], true) || $user->role !== 'member') {
                 throw new RuntimeException('Member not eligible');
             }
             $existing = DB::table('staking_positions')->where('request_key', $key)->first();
@@ -39,6 +39,9 @@ final class StakingService
                 }
 
                 return (int) $existing->id;
+            }
+            if (! StakingMemberEligibility::canStake($user, $walletType, $amount)) {
+                throw new RuntimeException('Member not eligible');
             }
             $id = DB::table('staking_positions')->insertGetId(['user_id' => $userId, 'amount' => $amount, 'request_key' => $key, 'status' => 'active', 'funding_wallet' => $walletType, 'created_at' => now(), 'updated_at' => now()]);
             WalletService::debit($userId, $walletType, $amount, 'staking_principal', 'staking:'.$key, ['reference_type' => 'staking_position', 'reference_id' => $id]);

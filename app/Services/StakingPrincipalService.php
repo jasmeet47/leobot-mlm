@@ -25,8 +25,8 @@ final class StakingPrincipalService
                 throw new RuntimeException('Principal withdrawal policy must be configured and enabled by an administrator.');
             }
             $user = User::whereKey($member->id)->lockForUpdate()->firstOrFail();
-            if ($user->role !== 'member' || $user->status !== 'active' || $user->is_blocked || $user->deleted_at !== null) {
-                throw new AuthorizationException('Active unblocked member required.');
+            if ($user->role !== 'member' || ! in_array($user->status, ['active', 'inactive'], true) || $user->is_blocked || $user->deleted_at !== null) {
+                throw new AuthorizationException('Unblocked registered member required.');
             }
             $key = strtoupper($requestKey);
             $old = DB::table('withdrawal_requests')->where('request_key', $key)->first();

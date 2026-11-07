@@ -284,4 +284,75 @@ final class MemberPaymentWorkflowTest extends TestCase
         $this->post('/member/withdrawals', $data + ['otp_challenge_id' => $id, 'withdrawal_otp' => $code])->assertSessionHasNoErrors();
         $this->assertDatabaseCount('withdrawal_requests', 1);
     }
+
+    public function test_inactive_registered_member_can_stake_approved_deposit_and_withdraw_principal_without_package(): void
+    {
+        $this->member->forceFill(['status' => 'inactive'])->save();
+        $chain = $this->createStub(UsdtChainVerifier::class);
+        $chain->method('verified')->willReturn(true);
+        $this->app->instance(UsdtChainVerifier::class, $chain);
+        $deposit = VerifiedDepositService::submit($this->member->id, '10', 'BEP20', '0x'.str_repeat('b', 64), 'inactive_realistic_deposit');
+        VerifiedDepositService::approve($this->admin->id, $deposit);
+        DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
+        $service = new StakingService;
+        $stake = $service->create($this->member->id, '10', 'inactive_deposit_stake_1', 'activation_balance');
+        $this->assertSame($stake, $service->create($this->member->id, '10', 'inactive_deposit_stake_1', 'activation_balance'));
+        $this->assertSame('inactive', $this->member->fresh()->status);
+        $data = $this->data(['position_id' => $stake, 'expected_fee_percent' => '5']);
+        [$otp,$code] = $this->issue($data);
+        $withdrawal = Otp::execute($this->member, $data, $otp, $code, fn () => StakingPrincipalService::request($this->member, $stake, '10', $data['request_key'], $this->wallet, '5'));
+        $this->assertDatabaseHas('withdrawal_requests', ['id' => $withdrawal, 'wallet_type' => 'staking_principal', 'net_amount' => '9.5']);
+        $this->assertSame('inactive', $this->member->fresh()->status);
+
+    }
+
+    public function test_inactive_member_cannot_stake_pending_or_unverified_credit_or_reuse_approved_deposit(): void
+    {
+        $this->member->forceFill(['status' => 'inactive'])->save();
+        DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
+        WalletService::credit($this->member->id, 'activation_balance', '100', 'test_fixture', 'unverified_stake_credit');
+        try {
+            (new StakingService)->create($this->member->id, '10', 'unverified_inactive_stake', 'activation_balance');
+            $this->fail('Unverified money accepted');
+        } catch (\RuntimeException) {
+        }
+        $this->assertDatabaseCount('staking_positions', 0);
+        $deposit = VerifiedDepositService::submit($this->member->id, '10', 'BEP20', '0x'.str_repeat('c', 64), 'inactive_pending_deposit');
+        try {
+            (new StakingService)->create($this->member->id, '10', 'pending_inactive_stake', 'activation_balance');
+            $this->fail('Pending receipt accepted');
+        } catch (\RuntimeException) {
+        }
+        $chain = $this->createStub(UsdtChainVerifier::class);
+        $chain->method('verified')->willReturn(true);
+        $this->app->instance(UsdtChainVerifier::class, $chain);
+        VerifiedDepositService::approve($this->admin->id, $deposit);
+        (new StakingService)->create($this->member->id, '10', 'approved_inactive_stake', 'activation_balance');
+        try {
+            (new StakingService)->create($this->member->id, '1', 'spent_inactive_stake_2', 'activation_balance');
+            $this->fail('Approved deposit reused');
+        } catch (\RuntimeException) {
+        }
+        $this->assertDatabaseCount('staking_positions', 1);
+    }
+
+    public function test_other_debits_reduce_inactive_member_verified_deposit_budget(): void
+    {
+        $this->member->forceFill(['status' => 'inactive'])->save();
+        $chain = $this->createStub(UsdtChainVerifier::class);
+        $chain->method('verified')->willReturn(true);
+        $this->app->instance(UsdtChainVerifier::class, $chain);
+        $id = VerifiedDepositService::submit($this->member->id, '10', 'BEP20', '0x'.str_repeat('d', 64), 'inactive_budget_deposit');
+        VerifiedDepositService::approve($this->admin->id, $id);
+        WalletService::debit($this->member->id, 'activation_balance', '5', 'test_transfer', 'budget_already_spent');
+        WalletService::credit($this->member->id, 'activation_balance', '100', 'test_fixture', 'budget_unverified_credit');
+        DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
+        try {
+            (new StakingService)->create($this->member->id, '10', 'inactive_overspend_budget', 'activation_balance');
+            $this->fail('Previously spent deposit reused');
+        } catch (\RuntimeException) {
+        }
+        (new StakingService)->create($this->member->id, '5', 'inactive_remaining_budget', 'activation_balance');
+        $this->assertDatabaseCount('staking_positions',1);
+    }
 }

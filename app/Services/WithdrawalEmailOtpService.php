@@ -25,10 +25,10 @@ final class WithdrawalEmailOtpService
         return hash('sha256', json_encode([$member->id, strtoupper($data['request_key']), bcadd($data['amount'], '0', 8), $wallet->id, $wallet->network, $wallet->address, $position, $data['expected_fee_percent'] ?? null], JSON_THROW_ON_ERROR));
     }
 
-    private static function member(User $member): object
+    private static function member(User $member, bool $principal = false): object
     {
         $row = DB::table('users')->where('id', $member->id)->lockForUpdate()->first();
-        if (! $row || $row->role !== 'member' || $row->status !== 'active' || $row->is_blocked || $row->deleted_at || ! filter_var($row->email, FILTER_VALIDATE_EMAIL)) {
+        if (! $row || $row->role !== 'member' || ! in_array($row->status, $principal ? ['active', 'inactive'] : ['active'], true) || $row->is_blocked || $row->deleted_at || ! filter_var($row->email, FILTER_VALIDATE_EMAIL)) {
             throw new RuntimeException('Active member with a valid account email required.');
         }
 
@@ -48,7 +48,7 @@ final class WithdrawalEmailOtpService
             if (! $settings || ! $settings->member_requests_enabled || (! empty($data['position_id']) && ! $settings->principal_release_enabled)) {
                 throw new RuntimeException('Withdrawal requests are disabled by the administrator.');
             }
-            $user = self::member($member);
+            $user = self::member($member, ! empty($data['position_id']));
             $email = $user->email;
             $last = DB::table('withdrawal_email_challenges')->where('user_id', $member->id)->latest('id')->first();
             if ($last && now()->diffInSeconds($last->created_at, true) < 60) {
@@ -77,7 +77,7 @@ final class WithdrawalEmailOtpService
     public static function execute(User $member, array $data, int $challengeId, string $code, callable $operation): int
     {
         $valid = DB::transaction(function () use ($member, $data, $challengeId, $code): bool {
-            $user = self::member($member);
+            $user = self::member($member, ! empty($data['position_id']));
             $row = DB::table('withdrawal_email_challenges')->where('id', $challengeId)->where('user_id', $member->id)->lockForUpdate()->first();
             if (! $row || $row->consumed_at || now()->gte($row->expires_at) || $row->attempts >= 5 || ! hash_equals($row->email_digest, hash('sha256', $user->email)) || ! hash_equals($row->context_digest, self::context($member, $data))) {
                 return false;
@@ -98,7 +98,7 @@ final class WithdrawalEmailOtpService
             if (! empty($data['position_id'])) {
                 DB::table('withdrawal_settings')->where('id', 1)->lockForUpdate()->first();
             }
-            $user = self::member($member);
+            $user = self::member($member, ! empty($data['position_id']));
             $row = DB::table('withdrawal_email_challenges')->where('id', $challengeId)->where('user_id', $member->id)->lockForUpdate()->first();
             if (! $row || ! $row->verified_at || $row->consumed_at || now()->gte($row->expires_at) || ! hash_equals($row->email_digest, hash('sha256', $user->email)) || ! hash_equals($row->context_digest, self::context($member, $data))) {
                 throw new RuntimeException('Withdrawal OTP already used or details changed.');
