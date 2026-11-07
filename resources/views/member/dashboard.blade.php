@@ -15,10 +15,10 @@
 @else
 <style>#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
 @endif
-</head><body>
+<style>.portal-main :is(strong,b,h1,h2,h3,h4,.value){color:var(--gold)!important}.menu-close,.menu-overlay{display:none}@media(max-width:700px){body.menu-open{overflow:hidden}.portal-sidebar{display:block;position:fixed;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;overflow-y:auto;z-index:102;visibility:hidden;pointer-events:none;transform:translateX(-110%);transition:transform .2s ease}body.menu-open .portal-sidebar{display:block;transform:translateX(0);visibility:visible;pointer-events:auto}.menu-close{display:block;margin:0 0 16px auto;background:transparent;border:1px solid #40516b;color:var(--gold);padding:8px 12px;border-radius:8px}body.menu-open .menu-overlay{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:101;background:#0009;border:0}body.menu-open #portal-menu-toggle{visibility:hidden}}</style></head><body>
 @include('partials.beta-notice')
-<aside class="portal-sidebar" id="portal-navigation" aria-label="Member navigation"><a class="portal-brand" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="Lumiflowon">LUMIFLOWON</a>
-        <div class="sidebar-links" aria-label="Member navigation">
+<button type="button" class="menu-overlay" id="portal-menu-overlay" aria-label="Close navigation"></button><aside class="portal-sidebar" id="portal-navigation" aria-label="Member navigation"><a class="portal-brand" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="Lumiflowon">LUMIFLOWON</a>
+        <button type="button" class="menu-close" id="portal-menu-close" aria-label="Close menu">Close ×</button><div class="sidebar-links" aria-label="Member navigation">
             <!-- LUMIFLOWON_MEMBER_MENU_FOUR_GROUPS_V1 -->
             <div class="lb-menu-group-title" role="heading" aria-level="3">Dashboard</div>
             <a class="action" href="{{ route('member.dashboard') }}">Dashboard Overview</a>
@@ -27,7 +27,7 @@
             <a class="action" href="{{ route('member.detail', ['panel' => 'team-breakdown']) }}">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
             @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-            <a class="action" href="{{ route('member.detail', ['panel' => 'magic-team']) }}" style="color:#86efac!important;border:1px solid #22c55e!important;background:#123526!important;font-weight:700">✨ My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'magic-team']) }}">Magic Team</a>
             @endif
 
             <a class="action" href="{{ route('member.detail', ['panel' => 'direct-referrals']) }}">My Direct Referrals</a>
@@ -72,24 +72,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     : collect();
 @endphp
 
-<section class="lb-quick-links" style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-<h2>LumiFlowOn Quick Links</h2>
 
-<div style="display:flex;gap:12px;flex-wrap:wrap">
-@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
-@php
-  $configuredLink = $dashboardLinks->firstWhere('platform', $platform);
-  $linkUrl = trim((string) ($configuredLink->url ?? ''));
-  $linkValid = filter_var($linkUrl, FILTER_VALIDATE_URL) && strtolower((string) parse_url($linkUrl, PHP_URL_SCHEME)) === 'https';
-@endphp
-@if($configuredLink && $linkValid)
-<a href="{{ $linkUrl }}" target="_blank" rel="noopener noreferrer" style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">{{ ucfirst($platform) }}</a>
-@else
-<span style="padding:12px 18px;background:#263449;color:#b8c4d5;border-radius:8px" title="Admin must configure and enable a valid HTTPS URL">{{ ucfirst($platform) }} · Not configured</span>
-@endif
-@endforeach
-</div>
-</section>
 
 
 @if(isset($magicIncomeSummary) && is_array($magicIncomeSummary))
@@ -117,7 +100,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <!-- /LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->
 @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
-  <h2>My {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team (2×2 Matrix)</h2>
+  <h2>Magic Team</h2>
   @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
     <div class="lb-quick-grid">
       <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
@@ -137,10 +120,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   @endif
 </section>
 @endif
-    <section id="member-profile" class="lb-profile-strip" aria-label="Member profile">
-        <div><span class="lb-eyebrow">MEMBER PROFILE</span><strong>{{ $member->name }}</strong><small>ID: {{ $member->username }}</small></div>
-        <span class="lb-account-status">{{ ucfirst($member->status) }} account</span>
-    </section>
+
 
     @if (session('success'))
         <p class="success" role="status">{{ session('success') }}</p>
@@ -388,11 +368,29 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         <p><a href="{{ route('member.mt5.view') }}">View MT5 Status</a></p>
 </section>
 @endif
+<section class="lb-quick-links" style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
+<h2>LumiFlowOn Quick Links</h2>
+
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+@php
+  $configuredLink = $dashboardLinks->firstWhere('platform', $platform);
+  $linkUrl = trim((string) ($configuredLink->url ?? ''));
+  $linkValid = filter_var($linkUrl, FILTER_VALIDATE_URL) && strtolower((string) parse_url($linkUrl, PHP_URL_SCHEME)) === 'https';
+@endphp
+@if($configuredLink && $linkValid)
+<a href="{{ $linkUrl }}" target="_blank" rel="noopener noreferrer" style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">{{ ucfirst($platform) }}</a>
+@else
+<span style="padding:12px 18px;background:#263449;color:#b8c4d5;border-radius:8px" title="Admin must configure and enable a valid HTTPS URL">{{ ucfirst($platform) }} · Not configured</span>
+@endif
+@endforeach
+</div>
+</section>
 <footer class="portal-footer">LUMIFLOWON &nbsp; / &nbsp; Member portal · USDT</footer></main>
 <script>
 const toggle = document.getElementById('portal-menu-toggle');
-toggle.addEventListener('click', () => { const open = document.body.classList.toggle('menu-open'); toggle.setAttribute('aria-expanded', String(open)); });
-document.addEventListener('keydown', event => { if (event.key === 'Escape') { document.body.classList.remove('menu-open'); toggle.setAttribute('aria-expanded', 'false'); }});
+toggle.addEventListener('click', () => { const open = document.body.classList.toggle('menu-open'); toggle.setAttribute('aria-expanded', String(open)); if(open)document.getElementById('portal-menu-close').focus(); });
+const closeMenu=()=>{document.body.classList.remove('menu-open');toggle.setAttribute('aria-expanded','false');toggle.focus();};document.getElementById('portal-menu-close').addEventListener('click',closeMenu);document.getElementById('portal-menu-overlay').addEventListener('click',closeMenu);document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('menu-open'))closeMenu();});
 const copyButton = document.getElementById('copy-referral-button');
 if (copyButton) copyButton.addEventListener('click', async () => {
     const input = document.getElementById('member-referral-link');

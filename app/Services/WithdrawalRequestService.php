@@ -40,6 +40,7 @@ final class WithdrawalRequestService
         }
 
         return DB::transaction(function () use ($member, $amount, $requestKey, $usdtWalletId): int {
+            DB::table('withdrawal_settings')->where('id', 1)->lockForUpdate()->first();
             $user = DB::table('users')->where('id', $member->getKey())->lockForUpdate()->first();
             if (! $user || ! StakingMemberEligibility::canReceiveIncome($user)) {
                 throw new AuthorizationException('Active unblocked member required.');
@@ -57,6 +58,7 @@ final class WithdrawalRequestService
 
                 return (int) $old->id;
             }
+            WithdrawalMinimumPolicy::assertAmount($amount);
             // Row lock and wallet ownership are checked before any balance is held.
             $wallet = UsdtVerifiedWallet::forWithdrawal((int) $user->id, $usdtWalletId);
             WalletService::debit((int) $user->id, 'available_balance', $amount,

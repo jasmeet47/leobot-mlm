@@ -44,6 +44,7 @@ final class WithdrawalEmailOtpService
         $email = '';
         $destination = '';
         $id = DB::transaction(function () use ($member, $data, $code, &$email, &$destination): int {
+            WithdrawalMinimumPolicy::assertAmount((string) $data['amount']);
             $settings = DB::table('withdrawal_settings')->where('id', 1)->first();
             if (! $settings || ! $settings->member_requests_enabled || (! empty($data['position_id']) && ! $settings->principal_release_enabled)) {
                 throw new RuntimeException('Withdrawal requests are disabled by the administrator.');
@@ -95,9 +96,7 @@ final class WithdrawalEmailOtpService
         }
 
         return DB::transaction(function () use ($member, $data, $challengeId, $operation): int {
-            if (! empty($data['position_id'])) {
-                DB::table('withdrawal_settings')->where('id', 1)->lockForUpdate()->first();
-            }
+            DB::table('withdrawal_settings')->where('id', 1)->lockForUpdate()->first();
             $user = self::member($member, ! empty($data['position_id']));
             $row = DB::table('withdrawal_email_challenges')->where('id', $challengeId)->where('user_id', $member->id)->lockForUpdate()->first();
             if (! $row || ! $row->verified_at || $row->consumed_at || now()->gte($row->expires_at) || ! hash_equals($row->email_digest, hash('sha256', $user->email)) || ! hash_equals($row->context_digest, self::context($member, $data))) {

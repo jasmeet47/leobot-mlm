@@ -61,7 +61,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <h1>Unified Trading Profit  -  Audit &amp; Reserves</h1>
 <p class="notice"><strong>Production HOLD.</strong> Member activation, withdrawals, payouts and generation distribution are not enabled by this page. Funding entry is disabled unless separately approved. Source-of-funds verification must be independently completed before approval.</p>
 <p><strong>Configured rates:</strong> Self {{ $settings->self_profit_percent ?? 'N/A' }}%, Generation {{ $generation->trading_profit_pool_percent ?? 'N/A' }}%, Magic {{ $magic->trading_profit_pool_percent ?? 'N/A' }}%.</p>
-<p><strong>Combined funding switch:</strong> {{ in_array(strtolower((string) ($settings->combined_funding_enabled ?? '')), ['1','t','true','yes','on'], true) ? 'ON' : 'OFF' }}. <strong>Admin entry gate:</strong> {{ $entryEnabled ? 'Approved for this environment' : 'OFF' }}.</p>
+<p><strong>Combined funding switch:</strong> {{ in_array(strtolower((string) ($settings->combined_funding_enabled ?? '')), ['1','t','true','yes','on'], true) ? 'ON' : 'OFF' }}. <strong>Admin entry gate:</strong> {{ $entryEnabled ? 'ON' : 'OFF' }}.</p>
 
 
 </main>

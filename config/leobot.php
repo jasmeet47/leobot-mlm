@@ -6,7 +6,7 @@ return [
     'admin_member_activation_enabled' => (bool) env('LUMIFLOWON_ADMIN_MEMBER_ACTIVATION_ENABLED', false),
     'admin_profit_verification_enabled' => (bool) env('LUMIFLOWON_ADMIN_PROFIT_VERIFICATION_ENABLED', false),
     'magic_pool_funding_enabled' => false,
-    'admin_unified_funding_ui_enabled' => false,
+    'admin_unified_funding_ui_enabled' => (bool) env('LUMIFLOWON_ADMIN_UNIFIED_FUNDING_UI_ENABLED', false),
     'production_financial_approval' => env('LUMIFLOWON_PRODUCTION_FINANCIAL_APPROVAL', false),
     'staking_enabled' => env('LUMIFLOWON_STAKING_ENABLED', false),
     'self_income_settlement_enabled' => (bool) env('LUMIFLOWON_SELF_INCOME_SETTLEMENT_ENABLED', false),

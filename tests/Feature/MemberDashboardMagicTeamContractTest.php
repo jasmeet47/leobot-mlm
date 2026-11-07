@@ -26,7 +26,7 @@ final class MemberDashboardMagicTeamContractTest extends TestCase
         $this->assertIsArray($team);
         $this->assertSame(0, $team['total']);
         $this->assertFalse($team['has_position']);
-        $response->assertSee('2×2 Matrix');
+        $response->assertSee('Magic Team');
     }
 
     public function test_blade_handles_missing_team_without_warnings(): void

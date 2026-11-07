@@ -343,6 +343,7 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
         ->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.reject');
     Route::post('/admin/withdrawals/controls', [WithdrawalAdminController::class, 'updateControls'])->middleware('throttle:5,1')->name('admin.withdrawals.controls');
     Route::post('/admin/withdrawals/{id}/payment', [WithdrawalAdminController::class, 'payment'])->whereNumber('id')->middleware('throttle:5,1')->name('admin.withdrawals.payment');
+    Route::post('/admin/withdrawals/minimum', [WithdrawalAdminController::class, 'updateMinimum'])->middleware('throttle:10,1,withdrawal-minimum')->name('admin.withdrawals.minimum');
     Route::post('/admin/withdrawals/fee', [WithdrawalAdminController::class, 'updateFee'])
         ->middleware('throttle:5,1')->name('admin.withdrawals.fee');
 });

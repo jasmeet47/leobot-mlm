@@ -39,6 +39,7 @@ final class StakingPrincipalService
 
                 return (int) $old->id;
             }
+            WithdrawalMinimumPolicy::assertAmount($amount);
             $position = DB::table('staking_positions')->where('id', $positionId)->where('user_id', $user->id)->lockForUpdate()->first();
             if (! $position || $position->status !== 'active') {
                 throw new RuntimeException('Active member-owned stake required.');

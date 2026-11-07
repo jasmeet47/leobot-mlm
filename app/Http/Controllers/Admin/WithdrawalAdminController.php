@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\WithdrawalMinimumPolicy;
 use App\Services\WithdrawalPaymentConfirmationService;
 use App\Services\WithdrawalRequestService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -44,6 +45,18 @@ final class WithdrawalAdminController extends Controller
         }
 
         return back()->with('status', 'Withdrawal rejected and reserved earnings refunded.');
+    }
+
+    public function updateMinimum(Request $request): RedirectResponse
+    {
+        $d = $request->validate(['minimum_usdt' => 'required|string|max:25']);
+        try {
+            WithdrawalMinimumPolicy::update($request->user(), $d['minimum_usdt']);
+        } catch (RuntimeException|AuthorizationException $e) {
+            return back()->withErrors(['minimum' => $e->getMessage()]);
+        }
+
+        return back()->with('status', 'Minimum withdrawal saved successfully.');
     }
 
     public function updateFee(Request $request): RedirectResponse

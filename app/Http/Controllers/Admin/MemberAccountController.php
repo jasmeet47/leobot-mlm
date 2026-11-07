@@ -56,7 +56,8 @@ final class MemberAccountController extends Controller
 
     public function email(Request $r): RedirectResponse
     {
-        $d = $r->validate(['member_id' => 'required|integer|min:1', 'old_email' => 'required|email|max:255', 'new_email' => 'required|email|max:255|confirmed']);
+        $d = $r->validate(['member_id' => 'required|integer|min:1', 'old_email' => 'required|email|max:255', 'new_email' => 'required|email|max:255']);
+        $d['new_email'] = trim(strtolower($d['new_email']));
         try {
             Accounts::email($r->user(), (int) $d['member_id'], $d['old_email'], $d['new_email']);
         } catch (QueryException $e) {
