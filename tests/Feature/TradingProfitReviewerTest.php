@@ -209,7 +209,7 @@ final class TradingProfitReviewerTest extends TestCase
         ])->assertRedirect('/admin/staking/profit')->assertSessionHasNoErrors();
         $this->actingAs($this->reviewer)->get(route('reviewer.trading-profit.index'))->assertOk()->assertSee('REVIEW-STATEMENT-001');
         $this->post(route('reviewer.trading-profit.attest', $id), ['verified_statement_and_received_funds' => 1, 'evidence_digest' => $this->digest($id)])->assertSessionHasNoErrors();
-        $this->actingAs($this->admin)->get(route('admin.staking.profit.index'))->assertOk()->assertSee($this->reviewer->username);
+        $this->actingAs($this->admin)->get(route('admin.staking.profit.index'))->assertOk()->assertSee('Verify')->assertDontSee('Independent member reviewers');
         $this->post(route('admin.staking.profit.reserve', $id), ['verified_funds_received' => 1])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('staking_profit_statements', ['id' => $id, 'status' => 'reserved', 'verified_by' => $this->reviewer->id]);
         $this->assertSame('member', $this->reviewer->fresh()->role);

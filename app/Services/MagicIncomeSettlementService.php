@@ -54,8 +54,13 @@ final class MagicIncomeSettlementService
             if (! $funding || ! $source || bccomp((string) $funding->magic_percent_snapshot, '3', 9) !== 0) {
                 throw new RuntimeException('Verified unified 3% Magic funding source not found.');
             }
-            if (app()->environment('production') && ! DB::table('staking_profit_statements')->where('profit_sharing_funding_id', $fundingId)->where('status', 'reserved')->where('distribution_version', 'unified_67_30_3')->whereNotNull('verified_by')->whereColumn('verified_by', '<>', 'submitted_by')->exists()) {
-                throw new RuntimeException('Independent trading-profit approval is required for Magic payout.');
+            if (app()->environment('production')) {
+                $statement = DB::table('staking_profit_statements')->where('profit_sharing_funding_id', $fundingId)->where('status', 'reserved')->where('distribution_version', 'unified_67_30_3')->whereNotNull('verified_by')->first();
+                $independent = $statement && (int) $statement->verified_by !== (int) $statement->submitted_by;
+                $manual = $statement && config('leobot.admin_profit_verification_enabled', false) === true && $statement->verification_method === 'admin_manual_confirmation' && DB::table('member_security_audits')->where('actor_id', $statement->verified_by)->where('action', 'profit_admin_verified')->whereRaw("details->>'statement_id' = ?", [(string) $statement->id])->exists();
+                if (! $independent && ! $manual) {
+                    throw new RuntimeException('Verified trading-profit approval is required for Magic payout.');
+                }
             }
             $sourceMember = DB::table('users')->where('id', $sourceUserId)->first();
             if (! $sourceMember || ! StakingMemberEligibility::canReceiveIncome($sourceMember)) {

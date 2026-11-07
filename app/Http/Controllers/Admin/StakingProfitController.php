@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\StakingProfitService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +24,38 @@ final class StakingProfitController extends Controller
         $request->merge(['period' => $request->input('period', 'daily')]);
 
         return app(IncomeDistributionController::class)->submit($request);
+    }
+
+    public function verify(Request $request, int $id): RedirectResponse
+    {
+        try {
+            $statement = DB::table('staking_profit_statements')->find($id);
+            abort_unless($statement, 404);
+            StakingProfitService::verifyByAdmin($request->user(), $id);
+        } catch (QueryException $e) {
+            report($e);
+
+            return back()->withErrors(['profit' => 'Verification could not be saved.']);
+        } catch (\RuntimeException|AuthorizationException $e) {
+            return back()->withErrors(['profit' => $e->getMessage()]);
+        }
+
+        return back()->with('status', 'Profit verified successfully. Approved shares are reserved for distribution.');
+    }
+
+    public function reject(Request $request, int $id): RedirectResponse
+    {
+        try {
+            StakingProfitService::reject($request->user(), $id);
+        } catch (QueryException $e) {
+            report($e);
+
+            return back()->withErrors(['profit' => 'Rejection could not be saved.']);
+        } catch (\RuntimeException|AuthorizationException $e) {
+            return back()->withErrors(['profit' => $e->getMessage()]);
+        }
+
+        return back()->with('status', 'Profit statement rejected successfully.');
     }
 
     public function approve(Request $request, int $id): RedirectResponse

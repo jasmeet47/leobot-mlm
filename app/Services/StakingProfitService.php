@@ -72,19 +72,27 @@ final class StakingProfitService
         self::reserve($admin, $statementId, true);
     }
 
-    private static function reserve(User $reviewer, int $statementId, bool $fromReview): void
+    public static function verifyByAdmin(User $admin, int $statementId): void
+    {
+        if (config('leobot.admin_profit_verification_enabled', false) !== true) {
+            throw new RuntimeException('Direct admin verification is disabled.');
+        }
+        self::reserve($admin, $statementId, false, true);
+    }
+
+    private static function reserve(User $reviewer, int $statementId, bool $fromReview, bool $allowSubmitter = false): void
     {
         self::gate();
-        DB::transaction(function () use ($reviewer, $statementId, $fromReview): void {
+        DB::transaction(function () use ($reviewer, $statementId, $fromReview, $allowSubmitter): void {
             self::admin($reviewer->id);
             $statement = DB::table('staking_profit_statements')->where('id', $statementId)->lockForUpdate()->first();
-            if (! $statement || (! $fromReview && (int) $statement->submitted_by === $reviewer->id)) {
+            if (! $statement || (! $fromReview && ! $allowSubmitter && (int) $statement->submitted_by === $reviewer->id)) {
                 throw new AuthorizationException('Independent trading-profit reviewer required.');
             }
             if (in_array($statement->status, ['credited', 'reserved'], true)) {
                 return;
             }
-            if ($statement->status !== ($fromReview ? 'independently_verified' : 'pending_verification')) {
+            if (! in_array($statement->status, $allowSubmitter ? ['pending_verification', 'independently_verified'] : [$fromReview ? 'independently_verified' : 'pending_verification'], true)) {
                 throw new RuntimeException('Trading statement is not pending.');
             }
             $rows = DB::table('staking_profit_allocations')->where('statement_id', $statementId)->orderBy('user_id')->lockForUpdate()->get();
@@ -151,10 +159,32 @@ final class StakingProfitService
                 'transaction_key' => 'staking-profit:source:'.$statementId, 'reference_type' => 'staking_profit_statement',
                 'reference_id' => $statementId, 'status' => 'completed', 'description' => $statement->evidence_reference,
                 'created_at' => now(), 'updated_at' => now()]);
+            if ($allowSubmitter) {
+                DB::table('member_security_audits')->insert(['actor_id' => $reviewer->id, 'action' => 'profit_admin_verified', 'details' => json_encode(['statement_id' => $statementId, 'submitted_by' => $statement->submitted_by, 'amount' => $statement->amount, 'evidence_digest' => TradingProfitReviewerService::evidenceDigest($statement, $rows), 'same_admin' => (int) $statement->submitted_by === $reviewer->id], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+            }
             DB::table('staking_profit_statements')->where('id', $statementId)->update([
-                'profit_sharing_funding_id' => $fundingId, 'status' => 'reserved', 'verified_by' => $verifiedBy, 'verification_method' => $usesAttestation ? 'independent_member_attestation' : 'independent_admin', 'updated_at' => now(),
+                'profit_sharing_funding_id' => $fundingId, 'status' => 'reserved', 'verified_by' => $verifiedBy, 'verification_method' => $allowSubmitter ? 'admin_manual_confirmation' : ($usesAttestation ? 'independent_member_attestation' : 'independent_admin'), 'updated_at' => now(),
             ]);
         }, 3);
+    }
+
+    public static function reject(User $admin, int $statementId): void
+    {
+        DB::transaction(function () use ($admin, $statementId): void {
+            self::admin($admin->id);
+            $statement = DB::table('staking_profit_statements')->where('id', $statementId)->lockForUpdate()->first();
+            if (! $statement) {
+                throw new RuntimeException('Profit statement not found.');
+            }
+            if ($statement->status === 'rejected') {
+                return;
+            }
+            if (! in_array($statement->status, ['pending_verification', 'independently_verified'], true) || $statement->profit_sharing_funding_id !== null) {
+                throw new RuntimeException('A funded or distributed statement cannot be rejected.');
+            }
+            DB::table('staking_profit_statements')->where('id', $statementId)->update(['status' => 'rejected', 'updated_at' => now()]);
+            DB::table('member_security_audits')->insert(['actor_id' => $admin->id, 'action' => 'profit_statement_rejected', 'details' => json_encode(['statement_id' => $statementId, 'amount' => $statement->amount, 'previous_status' => $statement->status, 'previous_verifier' => $statement->verified_by], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+        });
     }
 
     private static function admin(int $id): void

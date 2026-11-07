@@ -33,7 +33,7 @@ final class IncomeDistributionController extends Controller
             return back()->withInput()->withErrors(['distribution' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Income distribution recorded for independent approval. No wallet payout has been made yet.');
+        return back()->with('status', 'Profit saved successfully. Verify it before distribution.');
     }
 
     public function reserve(Request $r, int $id): RedirectResponse

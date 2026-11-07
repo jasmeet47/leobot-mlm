@@ -8,11 +8,11 @@ h1,h2{color:#f4c66b}a{color:#f4c66b}dt{font-weight:700;color:#f4c66b;margin-top:
 label{display:block;margin:14px 0 5px}input{width:100%;padding:12px;border:1px solid #826c48;background:#091827;color:white;border-radius:8px}
 button{margin-top:18px;padding:12px 20px;background:#b68b41;color:#091827;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
 .error{color:#ffb6b6}
-</style></head><body>@include('partials.lumiflowon-page-brand')<main>
+</style><style>.profile-main{max-width:980px;margin:28px auto;padding:24px}form[action*="password"]{max-width:520px;display:grid;gap:14px;padding:24px;background:#10243a;border:1px solid #344a65;border-radius:16px}form[action*="password"] label{display:block;margin:0;color:#bacce1;font-size:13px}form[action*="password"] input:not([type="checkbox"]){display:block;width:100%;margin-top:8px;padding:12px}form[action*="password"] button{margin-top:6px}section{padding:22px;margin-bottom:24px}h2{margin-top:0}.success{background:#123d30;color:#c4f8e0;border:1px solid #4a9b77;border-radius:12px;padding:15px}</style></head><body>@include('partials.lumiflowon-page-brand')<main>
 <p><a href="{{ route('member.dashboard') }}">Back to Dashboard</a></p>
 <dl><dt>User ID</dt><dd>{{ $member->username }}</dd><dt>Name</dt><dd>{{ $member->name }}</dd>
 <dt>Phone</dt><dd>{{ $member->phone }}</dd><dt>Email</dt><dd>{{ $member->email }}</dd></dl>@include('partials.member-qualification',['qualificationMember'=>$member])
-@if(session('success'))<p role="status">{{ session('success') }}</p>@endif
+@if(session('success'))<p class="success" role="status">{{ session('success') }}</p>@endif
 @if($errors->any())<div class="error" role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
 <section><h2>Withdrawal Wallet Address</h2><p>New withdrawal requests go only to your current verified profile address for the chosen network. Already requested payouts keep their locked address.</p>@forelse($profileWallets as $wallet)<p><strong>{{ $wallet->network }}</strong><br><span style="overflow-wrap:anywhere">{{ $wallet->address }}</span></p>@empty<p>No verified payout address saved yet.</p>@endforelse<p>Address changes: <strong>{{ $walletChangesEnabled?'ON':'OFF — disabled by admin' }}</strong></p>@if($walletChangesEnabled)<a href="{{ route('member.usdt-wallets.page') }}">Add / Update BEP20 or TRC20 wallet address</a>@endif</section><h2>Change Password</h2>
 <form method="POST" action="{{ route('member.profile.password') }}">@csrf

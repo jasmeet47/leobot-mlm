@@ -35,7 +35,7 @@
             <a class="action" href="{{ route('member.detail', ['panel' => 'referral-privacy']) }}">Referral Contact Privacy</a>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Finance</div>
-            @if($canReviewTradingProfit ?? false)<a class="action" href="{{ route('reviewer.trading-profit.index') }}">Independent Profit Review</a>@endif
+            @if(($canReviewTradingProfit ?? false) && !config('leobot.admin_profit_verification_enabled',false))<a class="action" href="{{ route('reviewer.trading-profit.index') }}">Independent Profit Review</a>@endif
             <a class="action" href="{{ route('member.detail', ['panel' => 'income-summary']) }}">Income Details</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'wallet-history']) }}">My Wallet Transaction History</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'financial-records']) }}">Financial Records</a>

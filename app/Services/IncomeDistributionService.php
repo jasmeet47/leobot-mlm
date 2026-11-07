@@ -92,7 +92,7 @@ final class IncomeDistributionService
     public static function distribute(User $admin, int $statementId): void
     {
         if ((app()->environment('production') && (! config('leobot.production_financial_approval', false) || ! config('leobot_magic.production_financial_approval', false))) || ! config('leobot.self_income_settlement_enabled', false) || ! config('leobot.generation_income_settlement_enabled', false) || ! config('leobot_magic.magic_matrix_settlement_enabled', false)) {
-            throw new RuntimeException('Income payout controls are OFF. Independent approval, funded reserves and separately approved payout controls are required; no payout was made.');
+            throw new RuntimeException('Income payout controls are OFF. Admin verification, funded reserves and separately approved payout controls are required; no payout was made.');
         }
         if (! DB::table('income_distribution_requests')->where('statement_id', $statementId)->exists()) {
             throw new RuntimeException('Distribution request not found.');

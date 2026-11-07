@@ -6,12 +6,14 @@ use App\Http\Controllers\Admin\IncomeDistributionController;
 use App\Http\Controllers\Admin\IncomeSettingsController;
 use App\Http\Controllers\Admin\LevelConfigController;
 use App\Http\Controllers\Admin\MagicMatrixAdminController;
+use App\Http\Controllers\Admin\MemberAccountController;
 use App\Http\Controllers\Admin\MemberBlockController;
 use App\Http\Controllers\Admin\MemberManagementController;
 use App\Http\Controllers\Admin\MemberOperationsController;
 use App\Http\Controllers\Admin\MemberRetirementController;
 use App\Http\Controllers\Admin\PasswordOtpSettingsController;
 use App\Http\Controllers\Admin\ReferralPrivacyController;
+use App\Http\Controllers\Admin\StakingProfitController;
 use App\Http\Controllers\Admin\UnifiedFundingController;
 use App\Http\Controllers\Admin\WithdrawalAdminController;
 use App\Http\Controllers\Auth\PasswordOtpController;
@@ -405,12 +407,18 @@ Route::middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->grou
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
     Route::post('/admin/member-deletion', [MemberOperationsController::class, 'delete'])->middleware('throttle:5,1')->name('admin.members.delete-selected');
+    Route::get('/admin/member-access', [MemberAccountController::class, 'index'])->name('admin.member-access');
+    Route::post('/admin/member-access', [MemberAccountController::class, 'status'])->middleware('throttle:10,1,member-access')->name('admin.member-access.save');
+    Route::get('/admin/member-email', [MemberAccountController::class, 'index'])->name('admin.member-email');
+    Route::post('/admin/member-email', [MemberAccountController::class, 'email'])->middleware('throttle:5,1,member-email')->name('admin.member-email.save');
     Route::get('/admin/transfer-controls', [MemberOperationsController::class, 'transfers'])->name('admin.transfer-controls');
     Route::post('/admin/transfer-controls', [MemberOperationsController::class, 'updateTransfers'])->middleware('throttle:10,1')->name('admin.transfer-controls.save');
 });
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
     Route::get('/admin/income-distribution', [IncomeDistributionController::class, 'index'])->name('admin.income-distribution');
+    Route::post('/admin/staking/profit/{id}/verify', [StakingProfitController::class, 'verify'])->whereNumber('id')->middleware('throttle:5,1,profit-verify')->name('admin.staking.profit.verify');
+    Route::post('/admin/staking/profit/{id}/reject', [StakingProfitController::class, 'reject'])->whereNumber('id')->middleware('throttle:5,1,profit-reject')->name('admin.staking.profit.reject');
     Route::post('/admin/income-distribution', [IncomeDistributionController::class, 'submit'])->middleware('throttle:5,1')->name('admin.income-distribution.submit');
     Route::post('/admin/income-distribution/{id}/reserve', [IncomeDistributionController::class, 'reserve'])->whereNumber('id')->middleware('throttle:5,1')->name('admin.income-distribution.reserve');
     Route::post('/admin/income-distribution/{id}/pay', [IncomeDistributionController::class, 'distribute'])->whereNumber('id')->middleware('throttle:5,1')->name('admin.income-distribution.pay');

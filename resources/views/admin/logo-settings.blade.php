@@ -20,7 +20,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub lf-current">Logo Management</a>
   <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">Referral Privacy</a>
   <a href="{{ route('admin.quick-links.index') }}" class="lf-sub">Quick Links</a>
- <a href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a></nav>
+ <a href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a><a href="{{route('admin.member-access')}}">Member Activation</a><a href="{{route('admin.member-email')}}">Change Member Email</a></nav>
 </aside><div class="lf-main"><header class="header" style="padding:16px 25px"><button type="button" class="lf-sidebar-toggle" onclick="lfToggleNav()">☰ Menu</button><strong>LumiFlowOn · Logo Management</strong></header><main>
 <style id="LUMIFLOWON_LOGO_FEEDBACK_FIX_V1">
 .logo-feedback{margin:16px 0;padding:14px;border:1px solid #d6af61;border-radius:10px;background:#192f42;color:#fff}

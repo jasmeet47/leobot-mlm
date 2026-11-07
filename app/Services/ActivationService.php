@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -27,22 +28,64 @@ class ActivationService
      * This method does NOT distribute ROI,
      * Magic Income or Generation Income.
      */
-    public static function activateSelf(
-        User $authenticatedUser,
-        string $amount,
-        string $activationKey
-    ): int {
-        // Fail closed for all callers, including direct service invocations.
-        // Never enable in production without a separate reviewed release.
+    public static function activateSelf(User $authenticatedUser, string $amount, string $activationKey): int
+    {
         if (config('leobot.member_activation_enabled', false) !== true) {
             throw new RuntimeException('Member activation is disabled pending security approval.');
         }
+
+        return self::activate($authenticatedUser, $amount, $activationKey);
+    }
+
+    public static function activateByAdmin(User $admin, User $member, string $amount, string $activationKey): int
+    {
+        if (config('leobot.admin_member_activation_enabled', false) !== true || config('leobot.production_financial_approval', false) !== true) {
+            throw new RuntimeException('Admin activation financial approval is required.');
+        }
+        if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $amount) || bccomp($amount, '1', 8) < 0 || bccomp($amount, self::MAX_AMOUNT, 8) > 0 || ! Str::isUuid($activationKey)) {
+            throw new InvalidArgumentException('Enter a valid activation amount of at least 1 USDT.');
+        }
+
+        return DB::transaction(function () use ($admin, $member, $amount, $activationKey): int {
+            $actor = DB::table('users')->where('id', $admin->id)->lockForUpdate()->first();
+            if (! $actor || ! in_array($actor->role, ['admin', 'super_admin'], true) || $actor->status !== 'active' || $actor->is_blocked || $actor->deleted_at) {
+                throw new AuthorizationException('Active administrator required.');
+            }
+            $target = User::whereKey($member->id)->lockForUpdate()->firstOrFail();
+            if ($target->role !== 'member' || $target->deleted_at || $target->is_blocked) {
+                throw new RuntimeException('An unblocked, current member is required.');
+            }
+            $old = DB::table('activation_packages')->where('activation_key', $activationKey)->first();
+            if ($old && (int) $old->user_id === $target->id && $target->status !== 'active') {
+                throw new RuntimeException('This activation already completed before the account status changed. Find the member again for a new request.');
+            }
+            if (! $old && bccomp(StakingMemberEligibility::verifiedActivationBalance($target->id), $amount, 8) < 0) {
+                throw new RuntimeException('Insufficient unspent verified deposit balance for activation.');
+            }
+            $id = self::activate($target, $amount, $activationKey);
+            if (! $old) {
+                DB::table('member_security_audits')->insert(['actor_id' => $admin->id, 'action' => 'admin_verified_activation', 'details' => json_encode(['user_id' => $target->id, 'package_id' => $id, 'amount' => $amount, 'source' => 'verified_deposit_balance', 'activation_key' => $activationKey], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+                if (config('leobot_magic.magic_matrix_enrollment_enabled', false) === true && (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true) && bccomp($amount, '50', 8) >= 0 && ! DB::table('magic_matrix_positions')->where('user_id', $target->id)->exists()) {
+                    $matrix = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
+                    $global = DB::table('magic_income_settings')->where('id', 1)->first();
+                    if ($matrix && $global && $matrix->enrollment_enabled && $global->magic_enabled && bccomp($amount, (string) $matrix->minimum_tier_usdt, 8) >= 0) {
+                        MagicMatrixCycleService::enrollFromActivePackage($target, $id, 'ADMIN-ACT:'.$id);
+                    }
+                }
+            }
+
+            return $id;
+        }, 3);
+    }
+
+    private static function activate(User $authenticatedUser, string $amount, string $activationKey): int
+    {
         /*
          * Validate the package amount as a decimal string.
          * Never use floating-point calculations for money.
          */
         if (
-            !preg_match(
+            ! preg_match(
                 '/\A\d+(?:\.\d{1,8})?\z/',
                 $amount
             )
@@ -69,7 +112,7 @@ class ActivationService
          * Use a stable UUID to prevent
          * duplicate activation requests.
          */
-        if (!Str::isUuid($activationKey)) {
+        if (! Str::isUuid($activationKey)) {
             throw new InvalidArgumentException(
                 'A valid activation UUID is required.'
             );
@@ -137,7 +180,7 @@ class ActivationService
 
             if (
                 $member->is_blocked ||
-                !in_array(
+                ! in_array(
                     $member->status,
                     ['active', 'inactive'],
                     true
@@ -194,24 +237,19 @@ class ActivationService
                 ->insertGetId([
                     'user_id' => $member->id,
 
-                    'activation_key' =>
-                        $activationKey,
+                    'activation_key' => $activationKey,
 
-                    'investment_amount' =>
-                        $amount,
+                    'investment_amount' => $amount,
 
                     'roi_enabled' => false,
 
                     'roi_percentage' => '0',
 
-                    'roi_distribution_mode' =>
-                        'manual',
+                    'roi_distribution_mode' => 'manual',
 
-                    'roi_cap_multiplier' =>
-                        '3',
+                    'roi_cap_multiplier' => '3',
 
-                    'magic_cap_multiplier' =>
-                        '3',
+                    'magic_cap_multiplier' => '3',
 
                     'roi_income_paid' => '0',
 
@@ -243,17 +281,15 @@ class ActivationService
                 'activation_balance',
                 $amount,
                 'package_activation',
-                'activation:debit:' . $activationKey,
+                'activation:debit:'.$activationKey,
                 [
                     'reference_user_id' => $userId,
 
-                    'reference_type' =>
-                        'activation_package',
+                    'reference_type' => 'activation_package',
 
                     'reference_id' => $packageId,
 
-                    'description' =>
-                        'Package-wise activation wallet debit.',
+                    'description' => 'Package-wise activation wallet debit.',
                 ]
             );
 
@@ -265,8 +301,7 @@ class ActivationService
             DB::table('users')
                 ->where('id', $userId)
                 ->update([
-                    'total_investment' =>
-                        $newInvestment,
+                    'total_investment' => $newInvestment,
 
                     'status' => 'active',
 
@@ -276,7 +311,8 @@ class ActivationService
             /*
              * No commission or income payout here.
              */
-            \App\Services\TeamCounterService::synchronize($userId);
+            TeamCounterService::synchronize($userId);
+
             return (int) $packageId;
         }, 3);
     }
