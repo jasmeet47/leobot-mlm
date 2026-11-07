@@ -67,6 +67,6 @@ final class MemberAccountController extends Controller
             return back()->withErrors(['email' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Email changed successfully. ईमेल सफलतापूर्वक बदल दिया गया है।');
+        return redirect()->route('admin.member-email', ['member' => (string) $d['member_id']])->with('status', 'Email changed successfully. ईमेल सफलतापूर्वक बदल दिया गया है।');
     }
 }

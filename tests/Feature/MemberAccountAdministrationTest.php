@@ -85,7 +85,7 @@ final class MemberAccountAdministrationTest extends TestCase
         DB::table('password_reset_otps')->insert(['user_id' => $this->member->id, 'otp_hash' => Hash::make('123456'), 'attempts' => 0, 'expires_at' => now()->addMinutes(5), 'sent_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
         $old = $this->member->email;
         $this->actingAs($this->admin)->get(route('admin.member-email', ['member' => $this->member->username]))->assertOk()->assertSee($old);
-        $this->post(route('admin.member-email.save'), ['member_id' => $this->member->id, 'old_email' => $old, 'new_email' => 'Changed@example.test', 'new_email_confirmation' => 'Changed@example.test'])->assertSessionHasNoErrors()->assertSessionHas('status');
+        $this->post(route('admin.member-email.save'), ['member_id' => $this->member->id, 'old_email' => $old, 'new_email' => 'Changed@example.test', 'new_email_confirmation' => 'Changed@example.test'])->assertRedirect(route('admin.member-email', ['member' => (string) $this->member->id]))->assertSessionHasNoErrors()->assertSessionHas('status');
         $this->assertSame('changed@example.test', $this->member->fresh()->email);
 
         $this->assertSame(1, (int) $this->member->fresh()->member_login_version);
