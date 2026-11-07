@@ -19,7 +19,7 @@ class SecurityPinControllerTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
@@ -28,17 +28,17 @@ class SecurityPinControllerTest extends TestCase
             && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
+        if (! $identity
             || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
@@ -65,23 +65,17 @@ class SecurityPinControllerTest extends TestCase
         );
 
         $id = DB::table('users')->insertGetId([
-            'username' =>
-                'TX' . substr($unique, 0, 12),
+            'username' => 'TX'.substr($unique, 0, 12),
 
-            'name' =>
-                'Security PIN Test Member',
+            'name' => 'Security PIN Test Member',
 
-            'email' =>
-                $unique . '@example.test',
+            'email' => $unique.'@example.test',
 
-            'phone' =>
-                '9000000000',
+            'phone' => '9000000000',
 
-            'password' =>
-                Hash::make('TestPassword123!'),
+            'password' => Hash::make('TestPassword123!'),
 
-            'security_pin' =>
-                $pin === null
+            'security_pin' => $pin === null
                     ? null
                     : Hash::make($pin),
 
@@ -96,7 +90,7 @@ class SecurityPinControllerTest extends TestCase
         $member = User::findOrFail($id);
 
         RateLimiter::clear(
-            'security-pin:update:' . $member->id
+            'security-pin:update:'.$member->id
         );
 
         return $member;
@@ -106,8 +100,7 @@ class SecurityPinControllerTest extends TestCase
         string $pin = '123456'
     ): array {
         return [
-            'current_password' =>
-                'TestPassword123!',
+            'current_password' => 'TestPassword123!',
 
             'security_pin' => $pin,
 
@@ -331,8 +324,7 @@ class SecurityPinControllerTest extends TestCase
                 array_merge(
                     $this->validData(),
                     [
-                        'user_id' =>
-                            $secondMember->id,
+                        'user_id' => $secondMember->id,
                     ]
                 )
             );
@@ -379,7 +371,7 @@ class SecurityPinControllerTest extends TestCase
     {
         $response = $this->get('/security-pin');
 
-        $response->assertRedirect('/join');
+        $response->assertRedirect('/login');
     }
 
     /*

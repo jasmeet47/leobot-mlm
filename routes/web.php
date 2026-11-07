@@ -67,9 +67,7 @@ Route::post('/register', [
 */
 
 /* LEOBOT_GET_LOGIN_REDIRECT_V1 */
-Route::get('/login', function () {
-    return redirect()->route('register.form');
-})->name('login.form');
+Route::get('/login', [RegisterController::class, 'showRegistrationForm'])->name('login.form');
 Route::post('/login', [
     RegisterController::class,
     'login',
@@ -85,8 +83,9 @@ Route::post('/login', [
 |--------------------------------------------------------------------------
 */
 Route::get('/forgot-password', [PasswordOtpController::class, 'requestForm'])->name('password.otp.request');
-Route::post('/forgot-password', [PasswordOtpController::class, 'send'])->middleware('throttle:3,1')->name('password.otp.send');
+Route::post('/forgot-password', [PasswordOtpController::class, 'send'])->middleware('throttle:3,1,password-reset-send')->name('password.otp.send');
 Route::get('/reset-password-otp', [PasswordOtpController::class, 'resetForm'])->name('password.otp.form');
+Route::post('/reset-password-otp/verify', [PasswordOtpController::class, 'verify'])->middleware('throttle:5,1,password-reset-verify')->name('password.otp.verify');
 Route::post('/reset-password-otp', [PasswordOtpController::class, 'reset'])->middleware('throttle:5,1')->name('password.otp.reset');
 
 /*
@@ -145,7 +144,7 @@ Route::middleware(['auth', 'account.not_blocked'])->group(function () {
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('register.form');
+        return redirect()->route('login.form');
     })->name('logout');
 
     /*

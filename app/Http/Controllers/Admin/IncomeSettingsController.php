@@ -67,11 +67,11 @@ class IncomeSettingsController extends Controller
             ->first();
 
         if (
-            !$roiSettings ||
-            !$magicSettings ||
-            !$generationSettings ||
-            !$investmentSettings ||
-            !$profitSharingSettings
+            ! $roiSettings ||
+            ! $magicSettings ||
+            ! $generationSettings ||
+            ! $investmentSettings ||
+            ! $profitSharingSettings
         ) {
             throw new RuntimeException(
                 'Income settings are missing.'
@@ -129,7 +129,7 @@ class IncomeSettingsController extends Controller
 
             'magic_enabled' => [
                 'required',
-                'in:0',
+                'in:0,1',
             ],
 
             'minimum_activation_usdt' => [
@@ -201,8 +201,7 @@ class IncomeSettingsController extends Controller
         );
         if (bccomp($totalProfitPercent, '100.000000000', 9) !== 0) {
             throw ValidationException::withMessages([
-                'self_profit_percent' =>
-                    'SELF + Generation + Magic percentages must equal exactly 100%.',
+                'self_profit_percent' => 'SELF + Generation + Magic percentages must equal exactly 100%.',
             ]);
         }
 
@@ -239,7 +238,7 @@ class IncomeSettingsController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if (!$roi || !$magic || !$generation || !$investment || !$sharing) {
+            if (! $roi || ! $magic || ! $generation || ! $investment || ! $sharing) {
                 throw new RuntimeException(
                     'Income settings not found.'
                 );
@@ -250,23 +249,18 @@ class IncomeSettingsController extends Controller
                 'roi' => [
                     'roi_enabled' => self::dbEnabled($roi->roi_enabled),
                     'distribution_mode' => $roi->distribution_mode,
-                    'default_roi_percentage' =>
-                        (string) $roi->default_roi_percentage,
+                    'default_roi_percentage' => (string) $roi->default_roi_percentage,
                 ],
 
                 'magic' => [
                     'magic_enabled' => self::dbEnabled($magic->magic_enabled),
-                    'minimum_activation_usdt' =>
-                        (string) $magic->minimum_activation_usdt,
-                    'trading_profit_pool_percent' =>
-                        (string) $magic->trading_profit_pool_percent,
+                    'minimum_activation_usdt' => (string) $magic->minimum_activation_usdt,
+                    'trading_profit_pool_percent' => (string) $magic->trading_profit_pool_percent,
                 ],
 
                 'generation' => [
-                    'generation_enabled' =>
-                        self::dbEnabled($generation->generation_enabled),
-                    'trading_profit_pool_percent' =>
-                        (string) $generation->trading_profit_pool_percent,
+                    'generation_enabled' => self::dbEnabled($generation->generation_enabled),
+                    'trading_profit_pool_percent' => (string) $generation->trading_profit_pool_percent,
                 ],
                 'profit_sharing' => [
                     'self_profit_percent' => (string) $sharing->self_profit_percent,
@@ -274,10 +268,8 @@ class IncomeSettingsController extends Controller
                 ],
                 'investment_distribution' => [
                     'is_enabled' => self::dbEnabled($investment->is_enabled),
-                    'distribution_percent' =>
-                        (string) $investment->distribution_percent,
-                    'max_distribution_level' =>
-                        (int) $investment->max_distribution_level,
+                    'distribution_percent' => (string) $investment->distribution_percent,
+                    'max_distribution_level' => (int) $investment->max_distribution_level,
                 ],
             ];
 
@@ -287,27 +279,26 @@ class IncomeSettingsController extends Controller
                 ->update([
                     'roi_enabled' => false,
 
-                    'distribution_mode' =>
-                        $validated['distribution_mode'],
+                    'distribution_mode' => $validated['distribution_mode'],
 
-                    'default_roi_percentage' =>
-                        $validated['default_roi_percentage'],
+                    'default_roi_percentage' => $validated['default_roi_percentage'],
 
                     'updated_by' => $admin->id,
                     'updated_at' => now(),
                 ]);
 
+            if ((bool) $validated['magic_enabled'] && (! config('leobot_magic.magic_matrix_settings_write_enabled', false) || (app()->environment('production') && ! config('leobot_magic.production_financial_approval', false)))) {
+                throw ValidationException::withMessages(['magic_enabled' => 'Magic financial approval is required.']);
+            }
             // Update Magic Income settings.
             DB::table('magic_income_settings')
                 ->where('id', 1)
                 ->update([
-                    'magic_enabled' => false,
+                    'magic_enabled' => (bool) $validated['magic_enabled'],
 
-                    'minimum_activation_usdt' =>
-                        $validated['minimum_activation_usdt'],
+                    'minimum_activation_usdt' => $validated['minimum_activation_usdt'],
 
-                    'trading_profit_pool_percent' =>
-                        $validated['trading_profit_pool_percent'],
+                    'trading_profit_pool_percent' => $validated['trading_profit_pool_percent'],
 
                     'updated_by' => $admin->id,
                     'updated_at' => now(),
@@ -319,8 +310,7 @@ class IncomeSettingsController extends Controller
                 ->update([
                     'generation_enabled' => false,
 
-                    'trading_profit_pool_percent' =>
-                        $validated['generation_pool_percent'],
+                    'trading_profit_pool_percent' => $validated['generation_pool_percent'],
 
                     'updated_by' => $admin->id,
                     'updated_at' => now(),
@@ -332,8 +322,7 @@ class IncomeSettingsController extends Controller
                 ->where('id', 1)
                 ->update([
                     'is_enabled' => false,
-                    'distribution_percent' =>
-                        $validated['investment_distribution_percent'],
+                    'distribution_percent' => $validated['investment_distribution_percent'],
                     'updated_by' => $admin->id,
                     'updated_at' => now(),
                 ]);
@@ -351,28 +340,23 @@ class IncomeSettingsController extends Controller
                 'roi' => [
                     'roi_enabled' => false,
 
-                    'distribution_mode' =>
-                        $validated['distribution_mode'],
+                    'distribution_mode' => $validated['distribution_mode'],
 
-                    'default_roi_percentage' =>
-                        $validated['default_roi_percentage'],
+                    'default_roi_percentage' => $validated['default_roi_percentage'],
                 ],
 
                 'magic' => [
-                    'magic_enabled' => false,
+                    'magic_enabled' => (bool) $validated['magic_enabled'],
 
-                    'minimum_activation_usdt' =>
-                        $validated['minimum_activation_usdt'],
+                    'minimum_activation_usdt' => $validated['minimum_activation_usdt'],
 
-                    'trading_profit_pool_percent' =>
-                        $validated['trading_profit_pool_percent'],
+                    'trading_profit_pool_percent' => $validated['trading_profit_pool_percent'],
                 ],
 
                 'generation' => [
                     'generation_enabled' => false,
 
-                    'trading_profit_pool_percent' =>
-                        $validated['generation_pool_percent'],
+                    'trading_profit_pool_percent' => $validated['generation_pool_percent'],
                 ],
 
                 'profit_sharing' => [
@@ -381,10 +365,8 @@ class IncomeSettingsController extends Controller
                 ],
                 'investment_distribution' => [
                     'is_enabled' => false,
-                    'distribution_percent' =>
-                        $validated['investment_distribution_percent'],
-                    'max_distribution_level' =>
-                        (int) $investment->max_distribution_level,
+                    'distribution_percent' => $validated['investment_distribution_percent'],
+                    'max_distribution_level' => (int) $investment->max_distribution_level,
                 ],
             ];
 

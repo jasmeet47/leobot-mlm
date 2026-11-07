@@ -529,6 +529,7 @@ body{align-items:flex-start!important;padding:22px 14px!important}
     <div class="forms">
 
 
+        @if($authMode==='login')
         <!-- LOGIN -->
 
         <div class="box">
@@ -597,6 +598,8 @@ body{align-items:flex-start!important;padding:22px 14px!important}
         </div>
 
 
+        @endif
+        @if($authMode==='register')
         <!-- REGISTER -->
 
         <div class="box">
@@ -756,10 +759,10 @@ body{align-items:flex-start!important;padding:22px 14px!important}
             </form>
 
         </div>
-
+        @endif
     </div>
 
-
+    <p style="text-align:center"><a href="{{ route('login.form') }}">Login</a> · <a href="{{ route('register.form') }}">Create Account</a></p>
     <div class="footer">
 
         © {{ date('Y') }} LumiFlowOn

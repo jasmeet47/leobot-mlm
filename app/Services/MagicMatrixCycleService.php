@@ -69,6 +69,36 @@ final class MagicMatrixCycleService
         }, 3);
     }
 
+    public static function enrollFromStake(User $member, int $stakeId): int
+    {
+        self::requireGate('magic_matrix_enrollment_enabled');
+
+        return DB::transaction(function () use ($member, $stakeId): int {
+            $person = self::lockMember($member->id);
+            $settings = self::lockSettings('enrollment_enabled');
+            $stake = DB::table('staking_positions')->where('id', $stakeId)->where('user_id', $person->id)->where('status', 'active')->lockForUpdate()->first();
+            if (! $stake) {
+                throw new RuntimeException('Member-owned active stake required.');
+            }
+            StakingReconciliationService::assertOpeningJournals($stake);
+            $amount = bcsub((string) $stake->amount, (string) $stake->withdrawn_amount, 8);
+            if (bccomp($amount, '50', 8) < 0 || bccomp($amount, (string) $settings->minimum_tier_usdt, 8) < 0) {
+                throw new RuntimeException('One stake must meet the Magic minimum; smaller stakes cannot be added.');
+            }
+            $old = DB::table('magic_matrix_cycles')->where('staking_position_id', $stakeId)->first();
+            if ($old) {
+                return (int) $old->id;
+            }
+            if (DB::table('magic_matrix_positions')->where('user_id', $person->id)->exists()) {
+                throw new RuntimeException('Lifetime matrix position already exists.');
+            }
+            $position = self::newLifetimePosition($person->id, (int) $settings->max_depth);
+            $multiplier = self::capMultiplier($settings->earning_cap_multiplier);
+
+            return DB::table('magic_matrix_cycles')->insertGetId(['user_id' => $person->id, 'position_id' => $position, 'staking_position_id' => $stakeId, 'source_reference' => 'STAKE:'.$stakeId, 'tier_usdt' => $amount, 'earning_basis_usdt' => $amount, 'earning_multiplier' => $multiplier, 'earning_cap_usdt' => self::multiplyMoney($amount, $multiplier), 'magic_paid_usdt' => '0', 'status' => 'active', 'created_at' => now(), 'updated_at' => now()]);
+        });
+    }
+
     /** Read-only quote. Actual amount is re-evaluated atomically when recording payment. */
     public static function quote(int $memberId, ?CarbonImmutable $asOf = null): array
     {
@@ -281,8 +311,8 @@ final class MagicMatrixCycleService
 
     private static function capMultiplier(mixed $value): int
     {
-        if (! in_array((int) $value, [3, 4, 5], true) || (string) $value !== (string) (int) $value) {
-            throw new RuntimeException('Magic earning multiplier must be 3, 4 or 5.');
+        if (((int) $value < 1 || (int) $value > 1000) || (string) $value !== (string) (int) $value) {
+            throw new RuntimeException('Magic earning multiplier must be a whole number from 1 to 1000.');
         }
 
         return (int) $value;

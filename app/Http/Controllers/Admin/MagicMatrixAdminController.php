@@ -95,7 +95,7 @@ final class MagicMatrixAdminController extends Controller
         abort_unless(config('leobot_magic.magic_matrix_settings_write_enabled', false) === true, 404);
         $data = $request->validate([
             'minimum_usdt' => ['required', 'regex:/\A\d+(?:\.\d{1,8})?\z/D'],
-            'earning_multiplier' => ['required', 'integer', 'in:3,4,5'],
+            'earning_multiplier' => ['required', 'integer', 'between:1,1000'],
             'frequency' => ['required', 'in:manual,daily,weekly,monthly'],
         ]);
         try {
@@ -113,6 +113,7 @@ final class MagicMatrixAdminController extends Controller
         abort_unless(config('leobot_magic.magic_matrix_settings_write_enabled', false) === true &&
             (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true), 404);
         $data = $request->validate([
+            'global_enabled' => ['sometimes', 'boolean'],
             'enrollment_enabled' => ['required', 'boolean'],
             'topup_enabled' => ['required', 'boolean'],
             'settlement_enabled' => ['required', 'boolean'],
@@ -120,20 +121,25 @@ final class MagicMatrixAdminController extends Controller
         DB::transaction(function () use ($request, $data): void {
             $actor = DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
             if (! $actor || ! in_array($actor->role, ['admin', 'super_admin'], true) ||
-                $actor->status !== 'active' || in_array(strtolower((string) $actor->is_blocked), ['1', 't', 'true'], true)) {
+                $actor->status !== 'active' || $actor->deleted_at !== null || in_array(strtolower((string) $actor->is_blocked), ['1', 't', 'true'], true)) {
                 throw new AuthorizationException('Active unblocked admin required.');
             }
             $settings = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
             if (! $settings) {
                 throw new RuntimeException('Settings missing.');
             }
+            $global = DB::table('magic_income_settings')->where('id', 1)->lockForUpdate()->first();
             $before = [];
             $after = [];
             foreach (['enrollment_enabled', 'topup_enabled', 'settlement_enabled'] as $key) {
                 $before[$key] = (bool) $settings->{$key};
                 $after[$key] = (bool) $data[$key];
             }
-            DB::table('magic_matrix_settings')->where('id', 1)->update($after + [
+            $before['global_enabled'] = (bool) $global->magic_enabled;
+            $after['global_enabled'] = (bool) ($data['global_enabled'] ?? $global->magic_enabled);
+            DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => $after['global_enabled'], 'updated_by' => $actor->id, 'updated_at' => now()]);
+            $matrixAfter = array_diff_key($after, ['global_enabled' => true]);
+            DB::table('magic_matrix_settings')->where('id', 1)->update($matrixAfter + [
                 'updated_by' => $actor->id, 'updated_at' => now(),
             ]);
             DB::table('magic_matrix_settings_audits')->insert([

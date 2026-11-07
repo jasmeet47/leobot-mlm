@@ -18,7 +18,7 @@ class AdminMemberManagementTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
@@ -27,17 +27,17 @@ class AdminMemberManagementTest extends TestCase
             && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
+        if (! $identity
             || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
@@ -55,9 +55,9 @@ class AdminMemberManagementTest extends TestCase
         ?string $sponsorUserId = null
     ): User {
         $id = DB::table('users')->insertGetId([
-            'username' => $username ?? 'MEM' . Str::upper(Str::random(10)),
+            'username' => $username ?? 'MEM'.Str::upper(Str::random(10)),
             'name' => 'Member Test User',
-            'email' => Str::uuid() . '@example.test',
+            'email' => Str::uuid().'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
@@ -85,7 +85,7 @@ class AdminMemberManagementTest extends TestCase
     public function test_guest_cannot_view_direct_referrals(): void
     {
         $member = $this->createUser();
-        $this->get(route('admin.members.referrals', $member->id))->assertRedirect('/join');
+        $this->get(route('admin.members.referrals', $member->id))->assertRedirect('/login');
     }
 
     public function test_regular_member_cannot_view_direct_referrals(): void
@@ -143,13 +143,13 @@ class AdminMemberManagementTest extends TestCase
 
         $url = route('admin.members.referrals', $sponsor->id);
         $this->actingAs($admin)
-            ->get($url . '?search=' . urlencode('REF%'))
+            ->get($url.'?search='.urlencode('REF%'))
             ->assertOk()
             ->assertSee('REF%SPECIAL')
             ->assertDontSee('REFXSPECIAL');
 
         $this->actingAs($admin)
-            ->get($url . '?search=' . urlencode('REF_'))
+            ->get($url.'?search='.urlencode('REF_'))
             ->assertOk()
             ->assertSee('REF_SPECIAL')
             ->assertDontSee('REFYSPECIAL');
@@ -160,7 +160,7 @@ class AdminMemberManagementTest extends TestCase
         $admin = $this->createUser('admin');
         $member = $this->createUser();
         $this->actingAs($admin)
-            ->getJson(route('admin.members.referrals', $member->id) . '?search=' . str_repeat('A', 101))
+            ->getJson(route('admin.members.referrals', $member->id).'?search='.str_repeat('A', 101))
             ->assertStatus(422)
             ->assertJsonValidationErrors('search');
     }
@@ -181,7 +181,7 @@ class AdminMemberManagementTest extends TestCase
             ->assertDontSee('TEAMUSER005');
 
         $this->actingAs($admin)
-            ->get($url . '?page=2')
+            ->get($url.'?page=2')
             ->assertOk()
             ->assertSee('TEAMUSER005')
             ->assertDontSee('TEAMUSER025');
@@ -207,9 +207,10 @@ class AdminMemberManagementTest extends TestCase
             ->assertDontSee('security_pin')
             ->assertDontSee('TestPassword123!');
     }
+
     public function test_guest_cannot_access_members(): void
     {
-        $this->get('/admin/members')->assertRedirect('/join');
+        $this->get('/admin/members')->assertRedirect('/login');
     }
 
     public function test_member_cannot_access_members(): void
@@ -282,7 +283,7 @@ class AdminMemberManagementTest extends TestCase
         $member = $this->createUser();
 
         $this->get(route('admin.members.show', $member->id))
-            ->assertRedirect('/join');
+            ->assertRedirect('/login');
     }
 
     public function test_regular_member_cannot_view_member_details(): void
@@ -403,7 +404,7 @@ class AdminMemberManagementTest extends TestCase
         $this->createUser('member', 'active', 'PERCENTXUSER');
 
         $this->actingAs($admin)
-            ->get('/admin/members?search=' . urlencode('PERCENT%'))
+            ->get('/admin/members?search='.urlencode('PERCENT%'))
             ->assertOk()
             ->assertSee('PERCENT%USER')
             ->assertDontSee('PERCENTXUSER');
@@ -417,7 +418,7 @@ class AdminMemberManagementTest extends TestCase
         $this->createUser('member', 'active', 'UNDERXSCORE');
 
         $this->actingAs($admin)
-            ->get('/admin/members?search=' . urlencode('UNDER_'))
+            ->get('/admin/members?search='.urlencode('UNDER_'))
             ->assertOk()
             ->assertSee('UNDER_SCORE')
             ->assertDontSee('UNDERXSCORE');
@@ -428,7 +429,7 @@ class AdminMemberManagementTest extends TestCase
         $admin = $this->createUser('admin');
 
         $this->actingAs($admin)
-            ->getJson('/admin/members?search=' . str_repeat('A', 101))
+            ->getJson('/admin/members?search='.str_repeat('A', 101))
             ->assertStatus(422)
             ->assertJsonValidationErrors('search');
     }

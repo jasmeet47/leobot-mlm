@@ -54,6 +54,9 @@ final class MagicIncomeSettlementService
             if (! $funding || ! $source || bccomp((string) $funding->magic_percent_snapshot, '3', 9) !== 0) {
                 throw new RuntimeException('Verified unified 3% Magic funding source not found.');
             }
+            if (app()->environment('production') && ! DB::table('staking_profit_statements')->where('profit_sharing_funding_id', $fundingId)->where('status', 'reserved')->where('distribution_version', 'unified_67_30_3')->whereNotNull('verified_by')->whereColumn('verified_by', '<>', 'submitted_by')->exists()) {
+                throw new RuntimeException('Independent trading-profit approval is required for Magic payout.');
+            }
             $sourceMember = DB::table('users')->where('id', $sourceUserId)->first();
             if (! $sourceMember || ! StakingMemberEligibility::canReceiveIncome($sourceMember)) {
                 throw new RuntimeException('Blocked or inactive trading source cannot generate new Magic income.');

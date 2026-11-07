@@ -63,16 +63,18 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <button type="submit">Save visible levels</button>
 </form></section>
 <section><h2>Magic Settings</h2>
-<p>Global Magic: <strong>{{ ($global?->magic_enabled ?? false) ? 'ON' : 'OFF' }}</strong> (controlled separately in Income Settings).</p>
+<p>Global Magic: <strong>{{ ($global?->magic_enabled ?? false) ? 'ON' : 'OFF' }}</strong></p>
 <p>Matrix Enrollment: {{($settings?->enrollment_enabled??false)?'ON':'OFF'}}; Re-Topup: {{($settings?->topup_enabled??false)?'ON':'OFF'}}; Settlement: {{($settings?->settlement_enabled??false)?'ON':'OFF'}}</p>
 <form method="post" action="{{route('admin.magic.policy')}}">@csrf
 <label>Minimum qualifying investment (USDT) <input name="minimum_usdt" value="{{old('minimum_usdt',$settings?->minimum_tier_usdt??'50')}}" required></label>
-<label>Magic earning cap <select name="earning_multiplier">@foreach([3,4,5] as $m)<option value="{{$m}}" @selected((int)($settings?->earning_cap_multiplier??3)===$m)>{{$m}}├ù</option>@endforeach</select></label>
+<label>Magic earning cap (x)<input name="earning_multiplier" type="number" min="1" max="1000" step="1" value="{{ old('earning_multiplier',$settings?->earning_cap_multiplier??3) }}" list="magic-caps" required><datalist id="magic-caps"><option value="3">3x</option><option value="4">4x</option><option value="5">5x</option><option value="10">10x</option></datalist></label><p>New cycles use this cap. Existing cycle caps keep their recorded value.</p>
 <label>Distribution frequency (manual only until scheduler reviewed) <select name="frequency">@foreach(['manual','daily','weekly','monthly'] as $f)<option value="{{$f}}" @selected(($settings?->frequency??'manual')===$f)>{{$f}}</option>@endforeach</select></label>
 <button @disabled(!$canEdit)>Save policy</button></form>
+@foreach(['global_enabled'=>'Global Magic','enrollment_enabled'=>'Matrix Enrollment','topup_enabled'=>'Re-Topup','settlement_enabled'=>'Settlement'] as $toggle=>$label)
+@php($current=$toggle==='global_enabled'?(bool)($global?->magic_enabled??false):(bool)($settings?->$toggle??false))
 <form method="post" action="{{route('admin.magic.switches')}}">@csrf
-@foreach(['enrollment_enabled'=>'Enrollment','topup_enabled'=>'Re-Topup','settlement_enabled'=>'Settlement'] as $key=>$label)<label>{{$label}} <select name="{{$key}}"><option value="0" @selected(!($settings?->$key??false))>OFF</option><option value="1" @selected((bool)($settings?->$key??false))>ON</option></select></label>@endforeach
-<button @disabled(!$canEdit)>Update database switches</button><small>Code and production approval gates still apply.</small></form></section>
+@foreach(['global_enabled','enrollment_enabled','topup_enabled','settlement_enabled'] as $field)<input type="hidden" name="{{$field}}" value="{{$field===$toggle?(int)!$current:($field==='global_enabled'?(int)($global?->magic_enabled??false):(int)($settings?->$field??false))}}">@endforeach
+<button @disabled(!$canEdit)>{{$label}}: {{$current?'ON — Turn OFF':'OFF — Turn ON'}}</button></form>@endforeach</section>
 <section><h2>20-Level Magic Pool Rate Table</h2><p>Proposed: equal <strong>5% on each level</strong> = 100%. Not a guarantee of member earnings. Empty/ineligible positions remain held.</p>
 <form method="post" action="{{route('admin.magic.rates')}}">@csrf
 <table><thead><tr><th>Level</th><th>Percentage of source ID's Magic allocation</th></tr></thead><tbody>

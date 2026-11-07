@@ -146,7 +146,7 @@ final class UnifiedProfitSharingService
             if (! self::yes($settings->combined_funding_enabled)) {
                 throw new RuntimeException('Combined funding is OFF; this phase must be approved before use.');
             }
-            if (self::yes($generation->generation_enabled) || self::yes($magic->magic_enabled)) {
+            if (self::yes($generation->generation_enabled) || (self::yes($magic->magic_enabled) && (config('leobot_magic.magic_matrix_settlement_enabled', false) !== true || (app()->environment('production') && config('leobot_magic.production_financial_approval', false) !== true)))) {
                 throw new RuntimeException('Generation and Magic payout switches must remain OFF.');
             }
 

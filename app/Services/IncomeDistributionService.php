@@ -53,7 +53,7 @@ final class IncomeDistributionService
         return $result;
     }
 
-    public static function submit(User $admin, string $amount, string $reference, string $period, string $date): int
+    public static function submit(User $admin, string $amount, string $reference, string $period, string $date, ?string $endDate = null, ?string $submissionToken = null): int
     {
         if (! preg_match('/\A(?:0|[1-9]\d*)(?:\.\d{1,8})?\z/D', $amount) || bccomp($amount, '0', 8) <= 0 || bccomp($amount, '999999999999.99999999', 8) > 0) {
             throw new RuntimeException('Enter a valid positive realized profit amount.');
@@ -62,14 +62,14 @@ final class IncomeDistributionService
             throw new RuntimeException('Invalid distribution period.');
         }
 
-        return DB::transaction(function () use ($admin, $amount, $reference, $period, $date): int {
+        return DB::transaction(function () use ($admin, $amount, $reference, $period, $date, $endDate, $submissionToken): int {
             $actor = DB::table('users')->where('id', $admin->id)->lockForUpdate()->first();
             if (! $actor || ! in_array($actor->role, ['admin', 'super_admin'], true) || $actor->status !== 'active' || $actor->is_blocked || $actor->deleted_at) {
                 throw new RuntimeException('Active administrator required.');
             }
-            $old = DB::table('staking_profit_statements as s')->join('income_distribution_requests as r', 'r.statement_id', '=', 's.id')->where('s.evidence_reference', strtoupper(trim($reference)))->select('s.*', 'r.period', 'r.period_date')->first();
+            $old = DB::table('staking_profit_statements as s')->join('income_distribution_requests as r', 'r.statement_id', '=', 's.id')->where('s.evidence_reference', strtoupper(trim($reference)))->select('s.*', 'r.period', 'r.period_date', 'r.period_end_date')->first();
             if ($old) {
-                if ($old->period !== $period || substr($old->period_date, 0, 10) !== $date || (int) $old->submitted_by !== $admin->id || bccomp((string) $old->amount, $amount, 8) !== 0) {
+                if (($old->period_end_date ?? substr($old->period_date, 0, 10)) !== ($endDate ?? $date) || $old->period !== $period || substr($old->period_date, 0, 10) !== $date || (int) $old->submitted_by !== $admin->id || bccomp((string) $old->amount, $amount, 8) !== 0) {
                     throw new RuntimeException('Distribution reference reused with different details.');
                 }
 
@@ -83,7 +83,7 @@ final class IncomeDistributionService
             if (DB::table('income_distribution_requests')->where('statement_id', $id)->exists()) {
                 throw new RuntimeException('Statement already belongs to another distribution.');
             }
-            DB::table('income_distribution_requests')->insert(['statement_id' => $id, 'period' => $period, 'period_date' => $date, 'submitted_by' => $admin->id, 'created_at' => now()]);
+            DB::table('income_distribution_requests')->insert(['statement_id' => $id, 'period' => $period, 'period_date' => $date, 'period_end_date' => $endDate ?? $date, 'submission_token' => $submissionToken, 'submitted_by' => $admin->id, 'created_at' => now()]);
 
             return $id;
         });

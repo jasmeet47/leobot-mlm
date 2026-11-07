@@ -54,6 +54,8 @@ final class FlexibleStakingMigrationTest extends TestCase
             $table->foreignId('statement_id')->unique()->constrained('staking_profit_statements');
             $table->string('period', 10);
             $table->date('period_date');
+            $table->date('period_end_date')->nullable();
+            $table->uuid('submission_token')->nullable()->unique();
             $table->foreignId('submitted_by')->constrained('users');
             $table->timestamp('created_at');
         });

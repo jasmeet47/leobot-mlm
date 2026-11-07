@@ -18,7 +18,7 @@ class LevelConfigSecurityTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
@@ -27,17 +27,17 @@ class LevelConfigSecurityTest extends TestCase
             && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
+        if (! $identity
             || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
@@ -72,7 +72,7 @@ class LevelConfigSecurityTest extends TestCase
     public function test_guest_cannot_view_level_settings(): void
     {
         $this->get(route('admin.levels.index'))
-            ->assertRedirect('/join');
+            ->assertRedirect('/login');
     }
 
     public function test_member_named_admin_cannot_view_level_settings(): void

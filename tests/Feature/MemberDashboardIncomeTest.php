@@ -194,7 +194,7 @@ class MemberDashboardIncomeTest extends TestCase
     public function test_guest_cannot_read_income_dashboard(): void
     {
         $this->get('/member/dashboard')
-            ->assertRedirect('/join');
+            ->assertRedirect('/login');
     }
 
     public function test_empty_member_income_is_zero_and_magic_is_not_allocated(): void

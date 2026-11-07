@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -12,13 +12,13 @@ use Tests\TestCase;
 
 class MemberDashboardSafetyTest extends TestCase
 {
-    use \Illuminate\Foundation\Testing\DatabaseTransactions {
+    use DatabaseTransactions {
         beginDatabaseTransaction as private beginSafeTransaction;
     }
 
     public function beginDatabaseTransaction(): void
     {
-        $connection = \Illuminate\Support\Facades\DB::connection();
+        $connection = DB::connection();
         $config = $connection->getConfig();
 
         $safe = app()->environment('testing')
@@ -29,7 +29,7 @@ class MemberDashboardSafetyTest extends TestCase
             && empty($config['url']);
 
         if ($safe) {
-            $identity = \Illuminate\Support\Facades\DB::selectOne(
+            $identity = DB::selectOne(
                 'SELECT current_database() AS database_name, inet_server_port() AS server_port'
             );
 
@@ -54,9 +54,9 @@ class MemberDashboardSafetyTest extends TestCase
         $unique = Str::lower(Str::random(16));
 
         $id = DB::table('users')->insertGetId([
-            'username' => 'TX' . strtoupper(substr($unique, 0, 10)),
-            'name' => 'Dashboard Test ' . $unique,
-            'email' => $unique . '@example.test',
+            'username' => 'TX'.strtoupper(substr($unique, 0, 10)),
+            'name' => 'Dashboard Test '.$unique,
+            'email' => $unique.'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => $pin === null
@@ -74,7 +74,7 @@ class MemberDashboardSafetyTest extends TestCase
     public function test_guest_cannot_open_dashboard(): void
     {
         $this->get('/member/dashboard')
-            ->assertRedirect('/join');
+            ->assertRedirect('/login');
     }
 
     public function test_member_without_pin_is_sent_to_pin_setup(): void
@@ -260,7 +260,7 @@ class MemberDashboardSafetyTest extends TestCase
 
         $this->actingAs($member)
             ->post('/logout')
-            ->assertRedirect(route('register.form'));
+            ->assertRedirect(route('login.form'));
 
         $this->assertGuest();
     }

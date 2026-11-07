@@ -51,6 +51,14 @@ final class StakingService
                 'transaction_key' => 'staking:principal:'.$key, 'reference_type' => 'staking_position', 'reference_id' => $id,
                 'status' => 'completed', 'created_at' => now(), 'updated_at' => now()]);
 
+            if (config('leobot_magic.magic_matrix_enrollment_enabled', false) === true && (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true) && bccomp($amount, '50', 8) >= 0 && ! DB::table('magic_matrix_positions')->where('user_id', $userId)->exists()) {
+                $matrix = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
+                $global = DB::table('magic_income_settings')->where('id', 1)->first();
+                if ($matrix && $global && $matrix->enrollment_enabled && $global->magic_enabled && bccomp($amount, (string) $matrix->minimum_tier_usdt, 8) >= 0) {
+                    MagicMatrixCycleService::enrollFromStake($user, $id);
+                }
+            }
+
             return $id;
         }, 3);
     }

@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prepend(MeasureFullLoginLifecycle::class);
         $middleware->prepend(CanonicalPublicDomain::class);
-        $middleware->redirectGuestsTo('/join');
+        $middleware->redirectGuestsTo('/login');
         $middleware->appendToGroup('web', [AdminSaveFeedback::class, DisplayAnnouncements::class]);
 
         /*
@@ -49,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['withdrawal_otp', 'email_otp']);
+        $exceptions->dontFlash(['withdrawal_otp', 'email_otp', 'otp']);
         $exceptions->render(function (QueryException $error, Request $request) {
             if ($request->is('admin/*') && ! $request->isMethod('GET') && ! $request->expectsJson()) {
                 return response()->view('admin.save-error', ['failureMessage' => 'Your changes could not be saved. Please try again.'], 500);

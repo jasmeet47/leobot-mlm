@@ -47,7 +47,7 @@ final class AnnouncementManagementTest extends TestCase
 
     public function test_guest_member_and_blocked_admin_cannot_manage(): void
     {
-        $this->get(route('admin.announcements.index'))->assertRedirect('/join');
+        $this->get(route('admin.announcements.index'))->assertRedirect('/login');
         foreach ([['role' => 'member', 'status' => 'active'], ['role' => 'admin', 'status' => 'active', 'is_blocked' => true], ['role' => 'admin', 'status' => 'inactive']] as $values) {
             $user = User::factory()->create($values);
             $r = $this->actingAs($user)->post(route('admin.announcements.save'), $this->payload());

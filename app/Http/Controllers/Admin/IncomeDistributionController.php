@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\IncomeDistributionService as Distribution;
 use App\Services\StakingProfitService;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -21,9 +22,9 @@ final class IncomeDistributionController extends Controller
 
     public function submit(Request $r): RedirectResponse
     {
-        $d = $r->validate(['amount' => ['required', 'string', 'max:25'], 'evidence_reference' => 'required|string|min:8|max:100', 'period' => 'required|in:daily,weekly,monthly', 'period_date' => 'required|date_format:Y-m-d', 'realized_profit_confirmed' => 'accepted']);
+        $d = $r->validate(['amount' => ['required', 'string', 'max:25'], 'submission_token' => 'required|uuid', 'period' => 'required|in:daily,weekly,monthly', 'period_date' => 'required|date_format:d/m/Y', 'period_end_date' => 'required|date_format:d/m/Y|after_or_equal:period_date', 'realized_profit_confirmed' => 'accepted']);
         try {
-            Distribution::submit($r->user(), $d['amount'], $d['evidence_reference'], $d['period'], $d['period_date']);
+            Distribution::submit($r->user(), $d['amount'], 'AUTO-'.$d['submission_token'], $d['period'], CarbonImmutable::createFromFormat('!d/m/Y', $d['period_date'])->format('Y-m-d'), CarbonImmutable::createFromFormat('!d/m/Y', $d['period_end_date'])->format('Y-m-d'), $d['submission_token']);
         } catch (QueryException $e) {
             report($e);
 

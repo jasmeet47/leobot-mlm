@@ -392,6 +392,9 @@ main .bg-white textarea {
                     Magic Income System
                 </label>
 
+                @if(config('leobot_magic.magic_matrix_settings_write_enabled',false))
+                <input type="hidden" name="magic_enabled" value="{{(int)$safetySwitchStates['magic']}}"><p>Global Magic: {{$safetySwitchStates['magic']?'ON':'OFF'}}. <a href="{{route('admin.magic.index')}}">Change with Magic ON/OFF buttons</a></p>
+                @else
                 <input type="hidden" name="magic_enabled" value="0">
                 <p class="help">
                     Magic payout switch: <strong>LOCKED OFF</strong>.
@@ -404,6 +407,7 @@ main .bg-white textarea {
                     Magic Income starts OFF until
                     the payout system is fully tested.
                 </p>
+                @endif
 
             </div>
 

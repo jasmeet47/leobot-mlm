@@ -14,18 +14,18 @@ final class MagicMatrixSettingsService
     public static function update(User $admin, string $minimumUsdt, int $earningMultiplier, string $frequency): void
     {
         self::requireWriteApproval();
-        if (!preg_match('/\A(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?\z/D', $minimumUsdt)
+        if (! preg_match('/\A(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?\z/D', $minimumUsdt)
             || bccomp($minimumUsdt, '50', 8) < 0
             || bccomp($minimumUsdt, '999999999999.99999999', 8) > 0
-            || !in_array($earningMultiplier, [3, 4, 5], true)
-            || !in_array($frequency, ['manual', 'daily', 'weekly', 'monthly'], true)) {
+            || ($earningMultiplier < 1 || $earningMultiplier > 1000)
+            || ! in_array($frequency, ['manual', 'daily', 'weekly', 'monthly'], true)) {
             throw new InvalidArgumentException('Invalid Magic policy.');
         }
 
         DB::transaction(function () use ($admin, $minimumUsdt, $earningMultiplier, $frequency): void {
             self::assertAdmin($admin);
             $setting = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
-            if (!$setting) {
+            if (! $setting) {
                 throw new RuntimeException('Matrix settings missing.');
             }
             $before = json_encode([
@@ -62,7 +62,7 @@ final class MagicMatrixSettingsService
         }
         $total = '0.000000000';
         foreach ($rates as $rate) {
-            if (!is_string($rate) || !preg_match('/\A(?:0|[1-9][0-9]*)(?:\.[0-9]{1,9})?\z/D', $rate)
+            if (! is_string($rate) || ! preg_match('/\A(?:0|[1-9][0-9]*)(?:\.[0-9]{1,9})?\z/D', $rate)
                 || bccomp($rate, '100', 9) > 0) {
                 throw new InvalidArgumentException('Invalid matrix level percent.');
             }
@@ -75,7 +75,7 @@ final class MagicMatrixSettingsService
         DB::transaction(function () use ($admin, $rates): void {
             self::assertAdmin($admin);
             $settings = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
-            if (!$settings) {
+            if (! $settings) {
                 throw new RuntimeException('Matrix settings missing.');
             }
             $prior = DB::table('magic_matrix_level_rates')->orderBy('level')->get();
@@ -118,12 +118,12 @@ final class MagicMatrixSettingsService
 
     private static function assertAdmin(User $admin): void
     {
-        if (!$admin->exists) {
+        if (! $admin->exists) {
             throw new AuthorizationException('Persisted admin required.');
         }
         $user = DB::table('users')->where('id', $admin->id)->lockForUpdate()->first();
-        if (!$user || !in_array((string) $user->role, ['admin', 'super_admin'], true)
-            || $user->status !== 'active'
+        if (! $user || ! in_array((string) $user->role, ['admin', 'super_admin'], true)
+            || $user->deleted_at !== null || $user->status !== 'active'
             || in_array(strtolower((string) $user->is_blocked), ['1', 't', 'true'], true)) {
             throw new AuthorizationException('Active unblocked admin required.');
         }

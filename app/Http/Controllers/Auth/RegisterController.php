@@ -46,7 +46,9 @@ class RegisterController extends Controller
         $registrationOtpEnabled = app(RegistrationEmailOtpService::class)->enabled();
         $loginCaptcha = config('leobot_auth.captcha_enabled', true) ? LoginCaptcha::issue($request) : null;
 
-        return view('auth-page', compact('referralCode', 'sponsorName', 'registrationOtpEnabled', 'loginCaptcha'));
+        $authMode = $request->routeIs('login.form') ? 'login' : 'register';
+
+        return view('auth-page', compact('authMode', 'referralCode', 'sponsorName', 'registrationOtpEnabled', 'loginCaptcha'));
     }
 
     /**
@@ -196,7 +198,7 @@ class RegisterController extends Controller
         $request->session()->put('member_login_version', (int) $user->member_login_version);
         $request->session()->regenerate();
 
-        return back()->with([
+        return redirect()->route('login.form')->with([
             'success_reg' => true,
             'new_username' => $user->username,
             'ref_link' => $referralLink,

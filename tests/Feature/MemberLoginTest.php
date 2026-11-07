@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -18,7 +17,7 @@ class MemberLoginTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
@@ -27,17 +26,17 @@ class MemberLoginTest extends TestCase
             && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
+        if (! $identity
             || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
@@ -101,13 +100,13 @@ class MemberLoginTest extends TestCase
         $this->createMember();
 
         $response = $this
-            ->from('/join')
+            ->from('/login')
             ->post('/login', [
                 'username' => 'TX987654',
                 'password' => 'WrongPassword123!',
             ]);
 
-        $response->assertRedirect('/join');
+        $response->assertRedirect('/login');
 
         $response->assertSessionHasErrors(
             'username'
@@ -123,13 +122,13 @@ class MemberLoginTest extends TestCase
     public function test_unknown_username_cannot_login(): void
     {
         $response = $this
-            ->from('/join')
+            ->from('/login')
             ->post('/login', [
                 'username' => 'TX000000',
                 'password' => 'TestPassword123!',
             ]);
 
-        $response->assertRedirect('/join');
+        $response->assertRedirect('/login');
 
         $response->assertSessionHasErrors(
             'username'
@@ -137,18 +136,17 @@ class MemberLoginTest extends TestCase
 
         $this->assertGuest();
     }
+
     public function test_blocked_active_member_cannot_create_web_session(): void
     {
         $member = $this->createMember();
         DB::table('users')->where('id', $member->id)->update(['status' => 'active', 'is_blocked' => true]);
 
-        $this->from('/join')->post('/login', [
+        $this->from('/login')->post('/login', [
             'username' => $member->username,
             'password' => 'TestPassword123!',
-        ])->assertRedirect('/join')->assertSessionHasErrors('username');
+        ])->assertRedirect('/login')->assertSessionHasErrors('username');
 
         $this->assertGuest();
     }
-
-
 }

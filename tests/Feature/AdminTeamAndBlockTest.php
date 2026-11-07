@@ -18,7 +18,7 @@ class AdminTeamAndBlockTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
@@ -27,17 +27,17 @@ class AdminTeamAndBlockTest extends TestCase
             && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
+        if (! $identity
             || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
@@ -51,9 +51,9 @@ class AdminTeamAndBlockTest extends TestCase
     private function makeUser(string $role = 'member', string $status = 'active', ?string $username = null, ?User $sponsor = null): User
     {
         $id = DB::table('users')->insertGetId([
-            'username' => $username ?? ('USR' . Str::upper(Str::random(10))),
+            'username' => $username ?? ('USR'.Str::upper(Str::random(10))),
             'name' => 'Test Account',
-            'email' => Str::uuid() . '@example.test',
+            'email' => Str::uuid().'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('TestPassword123!'),
             'security_pin' => null,
@@ -63,6 +63,7 @@ class AdminTeamAndBlockTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
         return User::findOrFail($id);
     }
 
@@ -70,7 +71,7 @@ class AdminTeamAndBlockTest extends TestCase
     {
         $member = $this->makeUser();
         $url = route('admin.members.team-levels', $member->id);
-        $this->get($url)->assertRedirect('/join');
+        $this->get($url)->assertRedirect('/login');
         $this->actingAs($this->makeUser())->get($url)->assertForbidden();
         $this->actingAs($this->makeUser('admin', 'inactive'))->get($url)->assertForbidden();
     }
@@ -86,7 +87,7 @@ class AdminTeamAndBlockTest extends TestCase
 
         foreach (['admin', 'super_admin'] as $role) {
             $this->actingAs($this->makeUser($role))
-                ->get($url . '?level=2')->assertOk()
+                ->get($url.'?level=2')->assertOk()
                 ->assertSee('Level 1: 1')
                 ->assertSee('Level 2: 1')
                 ->assertSee('LEVELTWO')
@@ -103,7 +104,7 @@ class AdminTeamAndBlockTest extends TestCase
             $parent = $this->makeUser('member', 'active', sprintf('DEPTH%03d', $i), $parent);
         }
         $this->actingAs($this->makeUser('admin'))
-            ->get(route('admin.members.team-levels', $root->id) . '?level=51')
+            ->get(route('admin.members.team-levels', $root->id).'?level=51')
             ->assertOk()->assertSee('DEPTH051')->assertDontSee('DEPTH052');
     }
 
@@ -114,11 +115,11 @@ class AdminTeamAndBlockTest extends TestCase
         $this->makeUser('member', 'active', 'TEAMAXONE', $root);
         $this->makeUser('member', 'active', 'TEAMB_TWO', $root);
         $this->makeUser('member', 'active', 'TEAMBXTWO', $root);
-        $url = route('admin.members.team-levels', $root->id) . '?level=1&search=';
+        $url = route('admin.members.team-levels', $root->id).'?level=1&search=';
         $admin = $this->makeUser('admin');
-        $this->actingAs($admin)->get($url . urlencode('TEAMA%'))
+        $this->actingAs($admin)->get($url.urlencode('TEAMA%'))
             ->assertOk()->assertSee('TEAMA%ONE')->assertDontSee('TEAMAXONE');
-        $this->actingAs($admin)->get($url . urlencode('TEAMB_'))
+        $this->actingAs($admin)->get($url.urlencode('TEAMB_'))
             ->assertOk()->assertSee('TEAMB_TWO')->assertDontSee('TEAMBXTWO');
     }
 
@@ -131,9 +132,9 @@ class AdminTeamAndBlockTest extends TestCase
         $url = route('admin.members.team-levels', $root->id);
         $this->actingAs($this->makeUser('admin'))
             ->get($url)->assertOk()->assertSee('LVLPAGE025')->assertDontSee('LVLPAGE005');
-        $this->get($url . '?page=2')->assertOk()->assertSee('LVLPAGE005')->assertDontSee('LVLPAGE025');
-        $this->getJson($url . '?level=52')->assertStatus(422)->assertJsonValidationErrors('level');
-        $this->getJson($url . '?search=' . str_repeat('A', 101))
+        $this->get($url.'?page=2')->assertOk()->assertSee('LVLPAGE005')->assertDontSee('LVLPAGE025');
+        $this->getJson($url.'?level=52')->assertStatus(422)->assertJsonValidationErrors('level');
+        $this->getJson($url.'?search='.str_repeat('A', 101))
             ->assertStatus(422)->assertJsonValidationErrors('search');
     }
 
@@ -153,7 +154,7 @@ class AdminTeamAndBlockTest extends TestCase
     {
         $target = $this->makeUser();
         $url = route('admin.members.block', $target->id);
-        $this->post($url, ['reason' => 'Review required'])->assertRedirect('/join');
+        $this->post($url, ['reason' => 'Review required'])->assertRedirect('/login');
         $this->actingAs($this->makeUser())->post($url, ['reason' => 'Review required'])->assertForbidden();
         $this->actingAs($this->makeUser('admin', 'inactive'))
             ->post($url, ['reason' => 'Review required'])->assertForbidden();
@@ -216,9 +217,9 @@ class AdminTeamAndBlockTest extends TestCase
     {
         $target = $this->makeUser('member', 'active', 'BLOCKEDLOGIN');
         DB::table('users')->where('id', $target->id)->update(['is_blocked' => true]);
-        $this->from('/join')->post('/login', [
+        $this->from('/login')->post('/login', [
             'username' => $target->username, 'password' => 'TestPassword123!',
-        ])->assertRedirect('/join')->assertSessionHasErrors('username');
+        ])->assertRedirect('/login')->assertSessionHasErrors('username');
         $this->assertGuest();
         $this->postJson('/api/login', [
             'login' => $target->username, 'password' => 'TestPassword123!',

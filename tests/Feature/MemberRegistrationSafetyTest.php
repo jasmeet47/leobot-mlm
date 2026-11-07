@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class MemberRegistrationSafetyTest extends TestCase
@@ -18,7 +17,7 @@ class MemberRegistrationSafetyTest extends TestCase
     public function refreshDatabase(): void
     {
         $name = config('database.default');
-        $cfg = config('database.connections.' . $name, []);
+        $cfg = config('database.connections.'.$name, []);
 
         $safe = app()->environment('testing')
             && $name === 'pgsql'
@@ -27,17 +26,17 @@ class MemberRegistrationSafetyTest extends TestCase
             && ($cfg['database'] ?? '') === 'leobot_financial_disposable'
             && empty($cfg['url']);
 
-        if (!$safe) {
+        if (! $safe) {
             throw new \RuntimeException(
                 'SAFETY STOP: Disposable PostgreSQL required.'
             );
         }
 
-        $identity = \Illuminate\Support\Facades\DB::selectOne(
+        $identity = DB::selectOne(
             'SELECT current_database() AS database_name, inet_server_port() AS server_port'
         );
 
-        if (!$identity
+        if (! $identity
             || $identity->database_name !== 'leobot_financial_disposable'
             || (int) $identity->server_port !== 5433) {
             throw new \RuntimeException(
@@ -55,7 +54,7 @@ class MemberRegistrationSafetyTest extends TestCase
             'sponsor_id' => null,
             'sponsor_user_id' => null,
             'name' => 'Test Sponsor',
-            'email' => strtolower($username) . '@example.test',
+            'email' => strtolower($username).'@example.test',
             'phone' => '9000000000',
             'password' => Hash::make('Password12345!'),
             'security_pin' => null,
@@ -105,7 +104,7 @@ class MemberRegistrationSafetyTest extends TestCase
     {
         $sponsor = $this->sponsor();
         $response = $this->from('/join')->post('/register', $this->data());
-        $response->assertRedirect('/join')->assertSessionHasNoErrors()
+        $response->assertRedirect('/login')->assertSessionHasNoErrors()
             ->assertSessionHas('success_reg', true)
             ->assertSessionHas('new_username');
 
@@ -183,7 +182,7 @@ class MemberRegistrationSafetyTest extends TestCase
     {
         $row = DB::table('users')->where('id', $memberId)->first();
         foreach (['activation_balance', 'available_balance', 'total_investment', 'lifetime_income'] as $field) {
-            $this->assertSame(0, bccomp((string) $row->{$field}, '0', 8), $field . ' must start at zero');
+            $this->assertSame(0, bccomp((string) $row->{$field}, '0', 8), $field.' must start at zero');
         }
         $this->assertDatabaseCount('financial_ledger', 0);
     }
@@ -216,5 +215,4 @@ class MemberRegistrationSafetyTest extends TestCase
         $this->postJson('/api/register', [])
             ->assertStatus(429);
     }
-
 }

@@ -7,7 +7,6 @@ use App\Services\StakingProfitService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 final class StakingProfitController extends Controller
@@ -20,23 +19,9 @@ final class StakingProfitController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate(['amount' => ['required', 'string', 'max:30'],
-            'evidence_reference' => ['required', 'string', 'max:100'], 'allocations' => ['required', 'string', 'max:50000'],
-            'realized_profit_confirmed' => ['accepted']]);
-        $allocations = [];
-        foreach (preg_split('/\R/', trim($data['allocations'])) as $line) {
-            if (! preg_match('/\A([1-9]\d*):\s*(\d+(?:\.\d{1,8})?)\z/D', trim($line), $match) || isset($allocations[(int) $match[1]])) {
-                throw ValidationException::withMessages(['allocations' => 'Use one unique member ID: amount per line.']);
-            }
-            $allocations[(int) $match[1]] = $match[2];
-        }
-        try {
-            StakingProfitService::submit($request->user(), $data['amount'], $data['evidence_reference'], $allocations);
-        } catch (\RuntimeException $e) {
-            return back()->withInput()->withErrors(['profit' => $e->getMessage()]);
-        }
+        $request->merge(['period' => $request->input('period', 'daily')]);
 
-        return back()->with('status', 'Statement recorded; an independent administrator or specifically authorized member reviewer must verify the realized profit and received funds.');
+        return app(IncomeDistributionController::class)->submit($request);
     }
 
     public function approve(Request $request, int $id): RedirectResponse

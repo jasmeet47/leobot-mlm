@@ -70,7 +70,7 @@ class AdminDashboardSecurityTest extends TestCase
 
     public function test_guest_cannot_access_dashboard(): void
     {
-        $this->get('/admin/dashboard')->assertRedirect('/join');
+        $this->get('/admin/dashboard')->assertRedirect('/login');
     }
 
     public function test_member_cannot_access_dashboard(): void
