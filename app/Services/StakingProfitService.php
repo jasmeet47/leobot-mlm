@@ -168,6 +168,23 @@ final class StakingProfitService
         }, 3);
     }
 
+    public static function manualApprovalMatches(object $statement, iterable $allocations): bool
+    {
+        if (($statement->verification_method ?? null) !== 'admin_manual_confirmation' || ! $statement->verified_by || $statement->distribution_version !== 'unified_67_30_3') {
+            return false;
+        }
+        $digest = TradingProfitReviewerService::evidenceDigest($statement, $allocations);
+        $audits = DB::table('member_security_audits')->where('actor_id', $statement->verified_by)->where('action', 'profit_admin_verified')->whereRaw("details->>'statement_id' = ?", [(string) $statement->id])->get();
+        foreach ($audits as $audit) {
+            $proof = json_decode($audit->details, true);
+            if (is_array($proof) && isset($proof['amount'],$proof['evidence_digest'],$proof['submitted_by'],$proof['same_admin']) && is_string($proof['amount']) && preg_match('/\A\d+(?:\.\d{1,8})?\z/D', $proof['amount']) && is_string($proof['evidence_digest']) && hash_equals($digest, $proof['evidence_digest']) && (int) $proof['submitted_by'] === (int) $statement->submitted_by && bccomp($proof['amount'], (string) $statement->amount, 8) === 0 && $proof['same_admin'] === ((int) $statement->verified_by === (int) $statement->submitted_by)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function reject(User $admin, int $statementId): void
     {
         DB::transaction(function () use ($admin, $statementId): void {

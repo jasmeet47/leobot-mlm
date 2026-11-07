@@ -153,4 +153,24 @@ final class StakingProfitTest extends TestCase
         $this->expectExceptionMessage('Trading-profit distribution is disabled.');
         StakingProfitService::submit($this->admin, '10', 'TRADING-RECEIPT-001', [$this->member->id => '10']);
     }
+
+    public function test_audited_same_admin_approval_reconciles_and_missing_or_changed_audit_is_detected(): void
+    {
+        config(['leobot.admin_profit_verification_enabled' => true]);
+        $id = StakingProfitService::submit($this->admin, '100', 'AUDITED-OWNER-RECONCILE-001', [$this->member->id => '100']);
+        StakingProfitService::verifyByAdmin($this->admin, $id);
+        $report = StakingReconciliationService::inspect();
+        $this->assertTrue($report['accounting_passed'], json_encode($report['issues']));
+        config(['leobot.admin_profit_verification_enabled' => false]);
+        $this->assertTrue(StakingReconciliationService::inspect()['accounting_passed'], 'Historical approvals do not depend on the current entry switch.');
+        $audit = DB::table('member_security_audits')->where('action', 'profit_admin_verified')->first();
+        $proof = json_decode($audit->details, true);
+        $proof['evidence_digest'] = str_repeat('0', 64);
+        DB::table('member_security_audits')->where('id', $audit->id)->update(['details' => json_encode($proof)]);
+        $this->assertFalse(StakingReconciliationService::inspect()['accounting_passed']);
+        DB::table('member_security_audits')->where('id', $audit->id)->update(['details' => $audit->details]);
+        $this->assertTrue(StakingReconciliationService::inspect()['accounting_passed']);
+        DB::table('member_security_audits')->where('id', $audit->id)->delete();
+        $this->assertFalse(StakingReconciliationService::inspect()['accounting_passed']);
+    }
 }

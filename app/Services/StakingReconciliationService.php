@@ -124,10 +124,11 @@ final class StakingReconciliationService
                     $issues[] = 'Profit statement '.$statement->id.': immutable independent review does not match the evidence.';
                 }
                 $source = DB::table('financial_ledger')->where('transaction_key', 'staking-profit:source:'.$statement->id)->first();
+                $approvalMatches = $statement->verified_by && (($statement->verification_method ?? null) === 'admin_manual_confirmation' ? StakingProfitService::manualApprovalMatches($statement, $allocations) : (int) $statement->verified_by !== (int) $statement->submitted_by);
                 if (bccomp($sum, (string) $statement->amount, 8) !== 0 || (in_array($statement->status, ['credited', 'reserved'], true)
-                    && (! $statement->verified_by || (int) $statement->verified_by === (int) $statement->submitted_by
+                    && (! $approvalMatches
                         || ! self::entry($source, null, 'external_trading_profit', '-'.$statement->amount)))) {
-                    $issues[] = 'Profit statement '.$statement->id.': source total or independent review does not reconcile.';
+                    $issues[] = 'Profit statement '.$statement->id.': source total or recorded approval does not reconcile.';
                 }
             }
         });

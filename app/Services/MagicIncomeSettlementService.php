@@ -56,8 +56,8 @@ final class MagicIncomeSettlementService
             }
             if (app()->environment('production')) {
                 $statement = DB::table('staking_profit_statements')->where('profit_sharing_funding_id', $fundingId)->where('status', 'reserved')->where('distribution_version', 'unified_67_30_3')->whereNotNull('verified_by')->first();
-                $independent = $statement && (int) $statement->verified_by !== (int) $statement->submitted_by;
-                $manual = $statement && config('leobot.admin_profit_verification_enabled', false) === true && $statement->verification_method === 'admin_manual_confirmation' && DB::table('member_security_audits')->where('actor_id', $statement->verified_by)->where('action', 'profit_admin_verified')->whereRaw("details->>'statement_id' = ?", [(string) $statement->id])->exists();
+                $independent = $statement && $statement->verification_method !== 'admin_manual_confirmation' && (int) $statement->verified_by !== (int) $statement->submitted_by;
+                $manual = $statement && config('leobot.admin_profit_verification_enabled', false) === true && StakingProfitService::manualApprovalMatches($statement, DB::table('staking_profit_allocations')->where('statement_id', $statement->id)->get());
                 if (! $independent && ! $manual) {
                     throw new RuntimeException('Verified trading-profit approval is required for Magic payout.');
                 }
