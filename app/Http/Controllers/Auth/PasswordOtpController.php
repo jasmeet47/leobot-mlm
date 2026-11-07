@@ -61,7 +61,11 @@ class PasswordOtpController extends Controller
 
         // Persist the replacement code before attempting delivery.
         // Previous code is invalidated as soon as the new code is saved.
-        DB::transaction(function () use ($user, $otpHash, $now) {
+        $prepared = DB::transaction(function () use ($user, $otpHash, $now): bool {
+            $fresh = DB::table('users')->where('id', $user->id)->lockForUpdate()->first();
+            if (! $fresh || $fresh->is_blocked || $fresh->deleted_at || ! in_array($fresh->status, ['active', 'inactive'], true) || ! hash_equals((string) $fresh->email, (string) $user->email)) {
+                return false;
+            }
             DB::table('password_reset_otps')->updateOrInsert(['user_id' => $user->id], [
                 'otp_hash' => $otpHash, 'attempts' => 0,
                 'expires_at' => $now->copy()->addMinutes(5), 'sent_at' => $now,
@@ -70,7 +74,12 @@ class PasswordOtpController extends Controller
             DB::table('password_reset_security_events')->insert([
                 'user_id' => $user->id, 'event' => 'otp_sent', 'created_at' => $now,
             ]);
+
+            return true;
         });
+        if (! $prepared) {
+            return redirect()->route('password.otp.form')->with('reset_login', $identifier)->with('status', $message);
+        }
         try {
             Mail::raw(
                 'Your LUMIFLOWON password reset code is '.$otp.'. It expires in 5 minutes. Never share it.',

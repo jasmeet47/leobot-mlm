@@ -15,6 +15,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -200,5 +201,24 @@ final class MemberAccountAdministrationTest extends TestCase
         } finally {
             DB::statement('ALTER TABLE member_security_audits DROP CONSTRAINT activation_audit_test');
         }
+    }
+
+    public function test_email_changed_during_password_reset_lookup_cannot_issue_old_email_otp(): void
+    {
+        config(['mail.default' => 'smtp']);
+        DB::table('leobot_password_security_settings')->where('id', 1)->update(['enabled' => true]);
+        Mail::shouldReceive('raw')->never();
+        $changed = false;
+        $email = $this->member->email;
+        DB::listen(function ($query) use (&$changed, $email): void {
+            if (! $changed && str_contains(strtolower($query->sql), 'lower(email)') && in_array(strtolower($email), $query->bindings, true)) {
+                $changed = true;
+                Accounts::email($this->admin, $this->member->id, $email, 'changed-during-reset@example.test');
+            }
+        });
+        $this->post(route('password.otp.send'), ['login' => $email])->assertRedirect(route('password.otp.form'))->assertSessionHasNoErrors();
+        $this->assertTrue($changed);
+        $this->assertSame('changed-during-reset@example.test', $this->member->fresh()->email);
+        $this->assertDatabaseCount('password_reset_otps', 0);
     }
 }
