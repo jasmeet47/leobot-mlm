@@ -24,6 +24,6 @@ final class StakingMemberEligibility
             ->where('l.user_id', $member->id)->where('l.entry_type', 'verified_deposit')->where('l.wallet_type', 'activation_balance')->where('l.status', 'completed')->where('l.reference_type', 'member_deposit_request')->where('d.status', 'approved')->whereRaw("l.transaction_key = 'deposit:credit:' || d.id::text")->whereColumn('l.amount', 'd.amount')->where('l.amount', '>', 0)->sum('l.amount');
         $used = (string) DB::table('financial_ledger')->where('user_id', $member->id)->where('wallet_type', 'activation_balance')->where('status', 'completed')->where('amount', '<', 0)->sum('amount');
 
-        return bccomp(bcsub($verified, $used, 8), $amount, 8) >= 0;
+        return bccomp(bcadd($verified, $used, 8), $amount, 8) >= 0;
     }
 }

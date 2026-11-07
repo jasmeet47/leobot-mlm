@@ -262,6 +262,9 @@ final class MemberPaymentWorkflowTest extends TestCase
         $challenge = app(UsdtWalletChallengeService::class)->issue($this->member->id, 'BEP20', '0x'.str_repeat('6', 40));
         $new = app(UsdtWalletEnrollmentService::class)->enroll($this->member->id, $challenge['challenge_id'], $challenge['message'], 'test-only-signature');
         $this->assertSame($new, MemberPaymentSecurity::selectedId($this->member->id, 'BEP20'));
+        $audit = json_decode(DB::table('member_security_audits')->where('actor_id', $this->member->id)->where('action', 'profile_wallet_verified')->latest('id')->value('details'), true);
+        $this->assertSame($this->wallet, $audit['before_wallet_id']);
+        $this->assertSame($new, $audit['wallet_id']);
         $this->assertSame(1, MemberPaymentSecurity::wallets($this->member->id)->count());
         try {
             $this->execute($this->data(), $id, $code);
@@ -353,6 +356,6 @@ final class MemberPaymentWorkflowTest extends TestCase
         } catch (\RuntimeException) {
         }
         (new StakingService)->create($this->member->id, '5', 'inactive_remaining_budget', 'activation_balance');
-        $this->assertDatabaseCount('staking_positions',1);
+        $this->assertDatabaseCount('staking_positions', 1);
     }
 }

@@ -44,6 +44,7 @@ final class UsdtWalletEnrollmentService
 
             $network = (string) $challenge->network;
             $address = (string) $challenge->address;
+            $profileBefore = ['wallet_id' => MemberPaymentSecurity::selectedId($userId, $network)];
 
             UsdtPaymentEvidence::assertAddress($network, $address);
 
@@ -76,7 +77,7 @@ final class UsdtWalletEnrollmentService
                         'updated_at' => now('UTC'),
                     ]);
 
-                MemberPaymentSecurity::select($userId, (int) $existing->id, $network);
+                MemberPaymentSecurity::select($userId, (int) $existing->id, $network, $profileBefore);
 
                 return (int) $existing->id;
             }
@@ -93,7 +94,7 @@ final class UsdtWalletEnrollmentService
                     'created_at' => now('UTC'),
                     'updated_at' => now('UTC'),
                 ]);
-            MemberPaymentSecurity::select($userId, $walletId, $network);
+            MemberPaymentSecurity::select($userId, $walletId, $network, $profileBefore);
 
             return $walletId;
         }, 3);
