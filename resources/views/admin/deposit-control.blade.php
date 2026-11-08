@@ -1,10 +1,10 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn — Deposit Control</title>@include('partials.lumiflowon-financial-theme')</head><body style="font:16px system-ui;max-width:1100px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Deposit Control</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn — Deposit Control</title>@include('partials.lumiflowon-financial-theme')@include('partials.deposit-qr-style')</head><body style="font:16px system-ui;max-width:1100px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Deposit Control</h1>
 <p>Save the official USDT receiving address and matching QR separately for each network.</p>
 
 
 @unless($ready)<p>Receiving address settings are unavailable until setup completes.</p>@endunless
 @foreach($destinations as $network => $destination)<section style="padding:20px;margin:20px 0"><h2>{{ $network }} USDT</h2>
-@if($destination['has_qr'])<img src="{{ route('admin.deposit-control.qr', $destination['id']) }}" alt="{{ $network }} receiving QR" style="max-width:220px;width:100%;background:white">@endif
+@if($destination['has_qr'])<div class="deposit-qr"><div class="deposit-qr-frame"><img src="{{ route('admin.deposit-control.qr', $destination['id']) }}" alt="{{ $network }} receiving QR"></div></div>@endif
 <form method="post" enctype="multipart/form-data" action="{{ route('admin.deposit-control.update', $network) }}">@csrf
 <input type="hidden" name="expected_revision" value="{{ $destination['id'] ?? 0 }}">
 <label style="display:block">Receiving address <input style="width:100%" name="address" value="{{ $destination['address'] }}" required maxlength="100" spellcheck="false" autocomplete="off"></label>
