@@ -53,6 +53,8 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
+Route::get('/admin/login', [RegisterController::class, 'showRegistrationForm'])->name('admin.login');
+
 Route::get('/join', [
     RegisterController::class,
     'showRegistrationForm',

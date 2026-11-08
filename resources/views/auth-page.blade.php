@@ -1,9 +1,9 @@
 @extends('layouts.auth')
-@section('title',$authMode==='login'?'Login':'Create Account')
+@section('title',($adminLogin??false)?'Admin Login':($authMode==='login'?'Login':'Create Account'))
 @section('card-class',$authMode==='register'?'wide':'')
 @section('content')
-<div class="auth-kicker">LumiFlowOn ACCOUNT</div>
-<h1>{{$authMode==='login'?'Welcome back':'Create your account'}}</h1>
+<div class="auth-kicker">LumiFlowOn {{($adminLogin??false)?'ADMIN ACCESS':'ACCOUNT'}}</div>@if(($adminLogin??false)&&auth()->check())<p class="auth-feedback">Currently signed in as <strong>{{auth()->user()->username}}</strong>. Enter your administrator credentials below to switch accounts securely.</p>@endif
+<h1>{{($adminLogin??false)?'Admin Login':($authMode==='login'?'Welcome back':'Create your account')}}</h1>
 <p class="auth-intro">{{$authMode==='login'?'Sign in with your User ID or email.':'Enter your details and verify your email to get started.'}}</p>
 @if($errors->any())<div class="auth-feedback error" role="alert"><strong>Please check your details</strong><ul>@foreach($errors->all() as $error)<li>{{$error}}</li>@endforeach</ul></div>@endif
 @if(session('status'))<div class="auth-feedback" role="status">{{session('status')}}</div>@endif
@@ -15,6 +15,7 @@
             >
 
                 @csrf
+                @if($adminLogin??false)<input type="hidden" name="portal" value="admin">@endif
 
                 <div class="form-group">
 
@@ -59,7 +60,7 @@
                 </button>
 
             </form>
-<p class="auth-bottom"><a href="{{route('password.otp.request')}}">Forgot Password?</a></p><div class="auth-divider"></div><p class="auth-bottom">New to LumiFlowOn? <a href="{{route('register.form')}}">Create Account</a></p>
+<p class="auth-bottom"><a href="{{($adminLogin??false)?route('login.form'):route('admin.login')}}">{{($adminLogin??false)?'Member Login':'Admin Login'}}</a></p><p class="auth-bottom"><a href="{{route('password.otp.request')}}">Forgot Password?</a></p><div class="auth-divider"></div><p class="auth-bottom">New to LumiFlowOn? <a href="{{route('register.form')}}">Create Account</a></p>
 @else
 @if($referralCode)<div class="sponsor" id="leobotReferralBanner">Sponsor ID: <strong>{{$referralCode}}</strong>@if($sponsorName)<br>Sponsor: {{$sponsorName}}@endif</div>@endif
 <form class="register-grid" method="POST" action="{{route('register.submit')}}">@csrf

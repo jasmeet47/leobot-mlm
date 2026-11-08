@@ -112,7 +112,7 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
     <div class="wrap">
         <header>
             <div class="brand">LumiFlowOn</div>
-            <a class="toplink" href="{{ route('login.form') }}">Member Access</a>
+            <nav style="display:flex;gap:20px"><a class="toplink" href="{{route('login.form')}}">Member Login</a><a class="toplink" href="{{route('admin.login')}}">Admin Login</a></nav>
         </header>
 
         <main>
@@ -125,15 +125,16 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 
             <div class="actions">
                 @auth
-                    @if (auth()->user()->status === 'active' && !auth()->user()->is_blocked)
-                        @if (in_array(auth()->user()->role, ['admin', 'super_admin'], true))
-                            <a class="btn" href="{{ route('admin.dashboard') }}">Open Admin Dashboard</a>
-                        @else
-                            <a class="btn" href="{{ route('member.dashboard') }}">Open Member Dashboard</a>
-                        @endif
+                    @php($account=auth()->user())
+                    @if(!$account->is_blocked && $account->deleted_at===null && $account->status==='active' && in_array($account->role,['admin','super_admin'],true))
+                        <a class="btn" href="{{route('admin.dashboard')}}">Open Admin Dashboard</a>
+                    @elseif(!$account->is_blocked && $account->deleted_at===null && $account->role==='member' && in_array($account->status,['active','inactive'],true))
+                        <a class="btn" href="{{\App\Http\Middleware\EnsureMemberPin::hasConfiguredPin($account)?route('member.dashboard'):route('security-pin.form')}}">Open Member Dashboard</a>
+                        @if($account->status==='inactive')<p role="status">Financial activation is pending. Your Member account remains accessible.</p>@endif
                     @else
-                        <p role="status">Your account access is currently restricted.</p>
+                        <p role="status">Your account access is currently restricted. Sign in with another authorized account or contact your administrator.</p>
                     @endif
+                    <form method="post" action="{{route('logout')}}">@csrf<button class="btn secondary" style="font:inherit;cursor:pointer">Logout / Switch Account</button></form>
                 @else
                     <a class="btn" href="{{ route('login.form') }}">Login</a>
                     <a class="btn" href="{{ route('register.form') }}">Sign Up</a>

@@ -48,9 +48,10 @@ class RegisterController extends Controller
         $registrationOtpEnabled = app(RegistrationEmailOtpService::class)->enabled();
         $loginCaptcha = config('leobot_auth.captcha_enabled', true) ? LoginCaptcha::issue($request) : null;
 
-        $authMode = $request->routeIs('login.form') ? 'login' : 'register';
+        $adminLogin = $request->routeIs('admin.login') || $request->query('portal') === 'admin';
+        $authMode = $request->routeIs('login.form', 'admin.login') ? 'login' : 'register';
 
-        return view('auth-page', compact('authMode', 'referralCode', 'sponsorName', 'registrationOtpEnabled', 'loginCaptcha'));
+        return view('auth-page', compact('authMode', 'adminLogin', 'referralCode', 'sponsorName', 'registrationOtpEnabled', 'loginCaptcha'));
     }
 
     /**
@@ -255,10 +256,9 @@ class RegisterController extends Controller
         ]);
 
         $identifier = trim($credentials['username']);
-        if (str_contains($identifier, '@')) {
-            $matches = User::query()->whereRaw('lower(email)=?', [strtolower($identifier)])->limit(2)->pluck('username');
-            $identifier = $matches->count() === 1 ? $matches[0] : '__invalid_email_login__';
-        }
+        $column = str_contains($identifier, '@') ? 'email' : 'username';
+        $matches = User::query()->whereRaw('lower('.$column.')=?', [strtolower($identifier)])->limit(2)->pluck('username');
+        $identifier = $matches->count() === 1 ? $matches[0] : '__invalid_login_identifier__';
         // LEOBOT_LOGIN_TIMING_V1 - temporary diagnostic, no personal data
         $lbLoginStart = hrtime(true);
 
@@ -282,6 +282,14 @@ class RegisterController extends Controller
                 return back()->withErrors([
                     'username' => 'Invalid username or password.',
                 ])->withInput($request->only('username'));
+            }
+
+            if ($request->input('portal') === 'admin' && ($user->status !== 'active' || ! in_array($user->role, ['admin', 'super_admin'], true))) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors(['username' => 'Admin Login requires an active administrator account. Company and Member accounts must use Member Login.'])->withInput($request->only('username'));
             }
 
             $request->session()->regenerate();
