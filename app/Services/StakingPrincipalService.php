@@ -75,6 +75,7 @@ final class StakingPrincipalService
                 'withdrawn_amount' => bcadd((string) $position->withdrawn_amount, $amount, 8), 'updated_at' => now(),
             ]);
             self::journal($user->id, $positionId, $id, '-'.$amount, $before, bcsub($before, $amount, 8), 'hold');
+            TeamCounterService::synchronize((int) $user->id);
             DB::table('withdrawal_events')->insert(['withdrawal_request_id' => $id, 'actor_user_id' => $user->id,
                 'event_type' => 'principal_requested', 'created_at' => now()]);
 
@@ -106,6 +107,7 @@ final class StakingPrincipalService
         ]);
         self::journal((int) $withdrawal->user_id, (int) $position->id, (int) $withdrawal->id, (string) $withdrawal->gross_amount,
             $before, bcadd($before, (string) $withdrawal->gross_amount, 8), 'refund');
+        TeamCounterService::synchronize((int) $withdrawal->user_id);
     }
 
     private static function journal(int $userId, int $positionId, int $withdrawalId, string $amount, string $before, string $after, string $action): void

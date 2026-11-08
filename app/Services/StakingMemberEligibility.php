@@ -13,6 +13,11 @@ final class StakingMemberEligibility
             return false;
         }
         if ($member->status === 'active') {
+            $stakingActivation = $wallet === 'activation_balance' && DB::table('member_security_audits')->whereIn('action', ['funded_staking_member_activated', 'staking_member_status_repaired'])->whereRaw("details->>'user_id' = ?", [(string) $member->id])->exists();
+            if ($stakingActivation) {
+                return bccomp(self::verifiedActivationBalance((int) $member->id), $amount, 8) >= 0;
+            }
+
             return true;
         }
         if ($wallet !== 'activation_balance') {

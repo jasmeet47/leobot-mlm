@@ -51,9 +51,42 @@ final class StakingService
                 'transaction_key' => 'staking:principal:'.$key, 'reference_type' => 'staking_position', 'reference_id' => $id,
                 'status' => 'completed', 'created_at' => now(), 'updated_at' => now()]);
 
+            if ($user->status === 'inactive') {
+                DB::table('users')->where('id', $userId)->update(['status' => 'active', 'updated_at' => now()]);
+                DB::table('member_security_audits')->insert(['actor_id' => $userId, 'action' => 'funded_staking_member_activated', 'details' => json_encode(['user_id' => $userId, 'staking_position_id' => $id, 'wallet_amount_changed' => false], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+            }
+            TeamCounterService::synchronize($userId);
             MagicMatrixEnrollmentService::synchronize($userId);
 
             return $id;
+        }, 3);
+    }
+
+    public static function repairMemberReporting(User $admin, int $memberId): void
+    {
+        DB::transaction(function () use ($admin, $memberId): void {
+            $actor = User::whereKey($admin->id)->lockForUpdate()->firstOrFail();
+            if (! in_array($actor->role, ['admin', 'super_admin'], true) || $actor->status !== 'active' || $actor->is_blocked || $actor->deleted_at) {
+                throw new AuthorizationException('Active administrator required.');
+            }
+            $member = User::whereKey($memberId)->lockForUpdate()->firstOrFail();
+            if ($member->role !== 'member' || $member->is_blocked || $member->deleted_at || ! in_array($member->status, ['active', 'inactive'], true)) {
+                throw new RuntimeException('Current unblocked member required.');
+            }
+            $stake = DB::table('staking_positions')->where('user_id', $memberId)->where('status', 'active')->whereRaw('amount > withdrawn_amount')->orderByDesc('created_at')->orderByDesc('id')->lockForUpdate()->first();
+            if (! $stake) {
+                throw new RuntimeException('Funded remaining staking principal required.');
+            }
+            StakingReconciliationService::assertOpeningJournals($stake);
+            if ($member->status === 'inactive') {
+                $manualInactive = DB::table('member_security_audits')->where('action', 'admin_member_status')->whereRaw("details->>'user_id' = ?", [(string) $memberId])->whereRaw("details->>'after' = ?", ['inactive'])->where('created_at', '>=', $stake->created_at)->exists();
+                if ($manualInactive) {
+                    throw new RuntimeException('Administrator deliberately set this account inactive after staking; manual review required.');
+                }
+                DB::table('users')->where('id', $memberId)->update(['status' => 'active', 'updated_at' => now()]);
+                DB::table('member_security_audits')->insert(['actor_id' => $admin->id, 'action' => 'staking_member_status_repaired', 'details' => json_encode(['user_id' => $memberId, 'staking_position_id' => $stake->id, 'before' => 'inactive', 'after' => 'active', 'wallet_amount_changed' => false], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+            }
+            TeamCounterService::synchronize($memberId);
         }, 3);
     }
 

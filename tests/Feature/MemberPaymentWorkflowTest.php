@@ -300,12 +300,12 @@ final class MemberPaymentWorkflowTest extends TestCase
         $service = new StakingService;
         $stake = $service->create($this->member->id, '10', 'inactive_deposit_stake_1', 'activation_balance');
         $this->assertSame($stake, $service->create($this->member->id, '10', 'inactive_deposit_stake_1', 'activation_balance'));
-        $this->assertSame('inactive', $this->member->fresh()->status);
+        $this->assertSame('active', $this->member->fresh()->status);
         $data = $this->data(['position_id' => $stake, 'expected_fee_percent' => '5']);
         [$otp,$code] = $this->issue($data);
         $withdrawal = Otp::execute($this->member, $data, $otp, $code, fn () => StakingPrincipalService::request($this->member, $stake, '10', $data['request_key'], $this->wallet, '5'));
         $this->assertDatabaseHas('withdrawal_requests', ['id' => $withdrawal, 'wallet_type' => 'staking_principal', 'net_amount' => '9.5']);
-        $this->assertSame('inactive', $this->member->fresh()->status);
+        $this->assertSame('active', $this->member->fresh()->status);
 
     }
 

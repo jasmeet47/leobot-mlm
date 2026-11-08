@@ -16,8 +16,11 @@ use RuntimeException;
 final class TeamCounterService
 {
     private const MAX_LEVEL = 51;
+
     private const SCALE = 8;
+
     private const CHUNK_SIZE = 400;
+
     private const MAX_BUSINESS = '99999999999999999999.99999999'; // DECIMAL(28,8)
 
     public static function synchronize(int $memberId): void
@@ -35,7 +38,7 @@ final class TeamCounterService
             $parentId = $member->sponsor_user_id === null
                 ? null : (int) $member->sponsor_user_id;
 
-            $business = self::activePackageBusiness($memberId);
+            $business = self::activeBusiness($memberId);
             $active = $member->status === 'active';
 
             $now = now();
@@ -53,7 +56,7 @@ final class TeamCounterService
                 ->where('user_id', $memberId)
                 ->lockForUpdate()->first();
 
-            if (!$state) {
+            if (! $state) {
                 throw new RuntimeException('Team sync state is missing.');
             }
 
@@ -67,8 +70,8 @@ final class TeamCounterService
 
             $wasCounted = self::dbBool($state->is_counted);
             $wasActive = $wasCounted && self::dbBool($state->is_active);
-            $wasInactive = $wasCounted && !self::dbBool($state->is_active);
-            $isInactive = !$active;
+            $wasInactive = $wasCounted && ! self::dbBool($state->is_active);
+            $isInactive = ! $active;
 
             $activeDelta = (int) $active - (int) $wasActive;
             $inactiveDelta = (int) $isInactive - (int) $wasInactive;
@@ -111,7 +114,7 @@ final class TeamCounterService
 
             $parent = DB::table('users')->where('id', $parentId)
                 ->select('id', 'sponsor_user_id')->first();
-            if (!$parent) {
+            if (! $parent) {
                 throw new RuntimeException('Broken sponsor relationship.');
             }
             $ancestors[] = [(int) $parent->id, $level];
@@ -122,7 +125,7 @@ final class TeamCounterService
         return $ancestors;
     }
 
-    private static function activePackageBusiness(int $memberId): string
+    private static function activeBusiness(int $memberId): string
     {
         $business = '0.00000000';
         // Iterate decimal *strings*; SQLite's native SUM can use floating
@@ -135,7 +138,7 @@ final class TeamCounterService
             ->chunkById(self::CHUNK_SIZE, function ($rows) use (&$business): void {
                 foreach ($rows as $row) {
                     $amount = (string) $row->investment_amount;
-                    if (!preg_match('/\A\d+(?:\.\d{1,8})?\z/', $amount) ||
+                    if (! preg_match('/\A\d+(?:\.\d{1,8})?\z/', $amount) ||
                         bccomp($amount, '0', self::SCALE) < 0) {
                         throw new RuntimeException('Invalid active package business.');
                     }
@@ -145,6 +148,16 @@ final class TeamCounterService
                     }
                 }
             });
+
+        $stakes = DB::table('staking_positions as p')->where('p.user_id', $memberId)->where('p.status', 'active')->whereRaw('p.amount > p.withdrawn_amount')->whereExists(function ($query): void {
+            $query->selectRaw('1')->from('financial_ledger as l')->whereColumn('l.user_id', 'p.user_id')->whereColumn('l.reference_id', 'p.id')->where('l.reference_type', 'staking_position')->where('l.wallet_type', 'staking_principal')->where('l.status', 'completed')->whereColumn('l.amount', 'p.amount')->whereRaw("l.transaction_key = 'staking:principal:' || p.request_key");
+        })->orderBy('p.id')->get(['p.amount', 'p.withdrawn_amount']);
+        foreach ($stakes as $stake) {
+            $business = bcadd($business, bcsub((string) $stake->amount, (string) $stake->withdrawn_amount, self::SCALE), self::SCALE);
+            if (bccomp($business, self::MAX_BUSINESS, self::SCALE) > 0) {
+                throw new RuntimeException('Active team business exceeds storage limit.');
+            }
+        }
 
         return $business;
     }
@@ -177,7 +190,7 @@ final class TeamCounterService
             ->where('user_id', $ancestorId)
             ->where('level', $level)
             ->lockForUpdate()->first();
-        if (!$row) {
+        if (! $row) {
             throw new RuntimeException('Team counter row missing.');
         }
 
