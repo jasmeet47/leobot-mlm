@@ -1,6 +1,6 @@
 <!-- Leobot MLM Advanced Generation Sidebar Menu -->
 <div class="sidebar" style="background: #090d16; min-height: 100vh; width: 260px; padding: 20px; border-right: 1px solid rgba(255,255,255,0.1); font-family: 'Segoe UI', sans-serif;">
-    
+
     <!-- αñ¼αÑìαñ░αñ╛αñéαñí/αñ▓αÑïαñùαÑï αñ╣αÑçαñíαñ░ -->
     <div class="brand-logo text-center mb-4 pb-3" style="border-bottom: 1px dashed rgba(56, 189, 240, 0.3);">
         <h3 style="color: #38bdf8; font-weight: 700; letter-spacing: 1px; font-size: 20px;">≡ƒñû LumiFlowOn ADMIN</h3>
@@ -9,7 +9,7 @@
 
     <!-- αñ«αÑçαñ¿αÑé αñ▓αñ┐αñéαñòαÑìαñ╕ αñòαÑÇ αñ▓αñ┐αñ╕αÑìαñƒ -->
     <ul class="nav flex-column" style="list-style: none; padding: 0; margin: 0;">
-        
+
         <!-- αñ╡αñ┐αñ¡αñ╛αñù 1: αñ«αÑüαñûαÑìαñ» αñôαñ╡αñ░αñ╡αÑìαñ»αÑé -->
         <li class="nav-item-header" style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; margin-top: 15px; letter-spacing: 0.5px;">
             ≡ƒôè CORE OVERVIEW

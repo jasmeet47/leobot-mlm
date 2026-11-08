@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deposits &amp; Transfers | Lumiflowon</title>
+<title>Deposits &amp; Transfers | LumiFlowOn</title>
 <style>
 :root{color-scheme:dark;--bg:#080f1e;--panel:#101e32;--tile:#172a43;--border:#30445f;--text:#edf4ff;--muted:#a6bad0;--gold:#f2bf61;--green:#4ddbb1}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173455 0%,#0a1526 45%,#070d18 100%) fixed;color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}
@@ -10,10 +10,10 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 </style>
 @include('partials.lumiflowon-financial-theme')</head>
 <body>@include('partials.lumiflowon-financial-nav')<main>
-<header class="top"><div><div class="brand">LUMIFLOWON</div><div class="eyebrow">Member Portal / Financial Requests</div></div><a class="back" href="{{ url('/member/dashboard') }}">← Member Dashboard</a></header>
+<header class="top"><div><div class="brand">LumiFlowOn</div><div class="eyebrow">Member Portal / Financial Requests</div></div><a class="back" href="{{ url('/member/dashboard') }}">← Member Dashboard</a></header>
 <h1>Deposits &amp; Transfers</h1>
-<p class="lead">Submit deposit evidence for independent review and manage member-to-member transfers when authorized.</p>
-<div class="notice"><strong>Safety:</strong> External USDT payments require independent admin verification. Do not send funds without confirming the official destination. A submitted request is not an approved deposit.</div>
+
+
 @if(session('status'))<div class="notice success" role="status">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="notice errors" role="alert"><strong>Request could not be completed:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <div class="layout">
@@ -31,12 +31,12 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 <label class="field"><span>Blockchain transaction hash</span><input name="tx_hash" maxlength="150" value="{{ old('tx_hash') }}" placeholder="Verified transaction hash" autocomplete="off" required></label>
 <input type="hidden" name="receiving_address" id="deposit-address-quote" value="{{ $destinations['TRC20']['address'] }}"><input type="hidden" name="request_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}"><button type="submit">Submit evidence for review</button></form>
 @else<p role="status">Deposits are currently disabled. Do not send funds until deposit verification is available.</p>@endif</section>
-<section class="panel" aria-labelledby="transfer-title"><h2 id="transfer-title">Transfer available funds</h2><p class="hint">Transfers are only permitted when enabled by an administrator. No balance is estimated or invented here.</p>
+<section class="panel" aria-labelledby="transfer-title"><h2 id="transfer-title">Transfer available funds</h2>
 @include('partials.member-transfer-form')</section>
 </div>
-<section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on Lumiflowon database records.</p>
+<section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on LumiFlowOn database records.</p>
 @if($deposits->isEmpty())<div class="empty">No deposit requests yet.</div>@else<div class="table-wrap"><table><thead><tr><th>ID</th><th>Amount (USDT)</th><th>Network</th><th>Status</th></tr></thead><tbody>@foreach($deposits as $d)<tr><td>{{ $d->id }}</td><td>{{ $d->amount }}</td><td>{{ $d->network }}</td><td><span class="tag">{{ ucfirst($d->status) }}</span></td></tr>@endforeach</tbody></table></div>@endif
-</section><p class="footer">Lumiflowon · Your deposit and transfer history.</p>
+</section><p class="footer">LumiFlowOn · Your deposit and transfer history.</p>
 </main>@if($depositsOpen)<script>
 const destinations=@json($destinations);const network=document.querySelector('select[name=network]');const quote=document.getElementById('deposit-address-quote');if(network&&quote){const syncQuote=()=>{quote.value=destinations[network.value].address;};syncQuote();network.addEventListener('change',syncQuote);}
 document.querySelectorAll('[data-copy-address]').forEach(button=>button.addEventListener('click',async()=>{const key=button.dataset.copyAddress,input=document.getElementById('deposit-address-'+key),status=document.getElementById('copy-status-'+key);let copied=false;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(input.value);copied=true;}}catch(error){}if(!copied){input.focus();input.select();try{copied=document.execCommand('copy');}catch(error){}}status.textContent=copied?'Address copied successfully.':'Copy failed. Select and copy the address manually.';status.style.color=copied?'#22c55e':'#fca5a5';}));

@@ -99,6 +99,10 @@ final class IncomeDistributionService
         }
         StakingProfitService::reserveReviewed($admin, $statementId);
         $statement = DB::table('staking_profit_statements')->find($statementId);
+        $allocations = DB::table('staking_profit_allocations')->where('statement_id', $statementId)->get();
+        if ($statement->status !== 'reserved' || ! $statement->verified_by || ($statement->verification_method === 'admin_manual_confirmation' ? ! StakingProfitService::manualApprovalMatches($statement, $allocations) : (int) $statement->verified_by === (int) $statement->submitted_by)) {
+            throw new RuntimeException('Recorded trading-profit approval is invalid. No payout was made.');
+        }
         $fund = DB::table('profit_sharing_fundings')->find($statement->profit_sharing_funding_id);
         GenerationAllocationService::allocate($admin, (int) $fund->generation_funding_id);
         DB::transaction(function () use ($admin, $fund, $statementId): void {

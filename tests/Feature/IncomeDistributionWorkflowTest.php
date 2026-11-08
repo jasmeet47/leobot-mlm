@@ -28,6 +28,20 @@ final class IncomeDistributionWorkflowTest extends TestCase
 
     public function test_independently_reserved_income_pays_self_once_and_holds_unqualified_network_shares(): void
     {
+        $this->runSettlementWorkflow(false);
+    }
+
+    public function test_audited_same_admin_approval_pays_once_and_rejects_tampered_approval(): void
+    {
+        $this->runSettlementWorkflow(true);
+        DB::table('member_security_audits')->where('action', 'profit_admin_verified')->delete();
+        $admin = User::where('role', 'admin')->orderBy('id')->firstOrFail();
+        $this->expectExceptionMessage('Recorded trading-profit approval is invalid.');
+        IncomeDistributionService::distribute($admin, (int) DB::table('staking_profit_statements')->value('id'));
+    }
+
+    private function runSettlementWorkflow(bool $sameAdmin): void
+    {
         config(['leobot.production_financial_approval' => true, 'leobot.staking_enabled' => true, 'leobot.staking_profit_enabled' => true, 'leobot.self_income_settlement_enabled' => true, 'leobot.generation_income_settlement_enabled' => true, 'leobot_magic.magic_matrix_settlement_enabled' => true]);
         DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
         DB::table('profit_sharing_settings')->where('id', 1)->update(['combined_funding_enabled' => true]);
@@ -38,7 +52,12 @@ final class IncomeDistributionWorkflowTest extends TestCase
         app(StakingService::class)->create($member->id, '50', 'distribution_workflow_stake');
         $id = IncomeDistributionService::submit($admin, '100', 'DISTRIBUTION-WORKFLOW-001', 'monthly', '2026-11-07');
         $this->assertSame('0.00000000', $member->fresh()->available_balance);
-        StakingProfitService::approve($reviewer, $id);
+        config(['leobot.admin_profit_verification_enabled' => true]);
+        if ($sameAdmin) {
+            StakingProfitService::verifyByAdmin($admin, $id);
+        } else {
+            StakingProfitService::approve($reviewer, $id);
+        }
         DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => true]);
         DB::table('magic_matrix_settings')->where('id', 1)->update(['settlement_enabled' => true]);
         DB::table('magic_matrix_level_rates')->update(['pool_percent' => '5']);

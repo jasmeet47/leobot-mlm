@@ -53,6 +53,24 @@ final class IncomeDistributionController extends Controller
         return back()->with('status', 'Approved profit reserved 67% Self / 30% 51-Level / 3% Magic. Wallet payouts remain subject to payout controls and qualifications.');
     }
 
+    public function verifyAndDistribute(Request $r, int $id): RedirectResponse
+    {
+        $r->validate(['verified_funds_received' => 'accepted']);
+        abort_unless(DB::table('income_distribution_requests')->where('statement_id', $id)->exists(), 404);
+        try {
+            StakingProfitService::verifyByAdmin($r->user(), $id);
+            Distribution::distribute($r->user(), $id);
+        } catch (QueryException $e) {
+            report($e);
+
+            return back()->withErrors(['distribution' => 'Wallet payout failed. Verified funds remain reserved; retry distribution without creating another profit statement.']);
+        } catch (\RuntimeException|AuthorizationException $e) {
+            return back()->withErrors(['distribution' => $e->getMessage().' No new payout committed; check the statement status before retrying.']);
+        }
+
+        return back()->with('status', 'Profit verified and qualified income credited successfully. Ineligible shares remain held.');
+    }
+
     public function distribute(Request $r, int $id): RedirectResponse
     {
         $r->validate(['verified_funds_received' => 'accepted']);

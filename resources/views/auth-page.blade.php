@@ -2,7 +2,7 @@
 @section('title',$authMode==='login'?'Login':'Create Account')
 @section('card-class',$authMode==='register'?'wide':'')
 @section('content')
-<div class="auth-kicker">LUMIFLOWON ACCOUNT</div>
+<div class="auth-kicker">LumiFlowOn ACCOUNT</div>
 <h1>{{$authMode==='login'?'Welcome back':'Create your account'}}</h1>
 <p class="auth-intro">{{$authMode==='login'?'Sign in with your User ID or email.':'Enter your details and verify your email to get started.'}}</p>
 @if($errors->any())<div class="auth-feedback error" role="alert"><strong>Please check your details</strong><ul>@foreach($errors->all() as $error)<li>{{$error}}</li>@endforeach</ul></div>@endif
@@ -59,7 +59,7 @@
                 </button>
 
             </form>
-<p class="auth-bottom"><a href="{{route('password.otp.request')}}">Forgot Password?</a></p><div class="auth-divider"></div><p class="auth-bottom">New to LUMIFLOWON? <a href="{{route('register.form')}}">Create Account</a></p>
+<p class="auth-bottom"><a href="{{route('password.otp.request')}}">Forgot Password?</a></p><div class="auth-divider"></div><p class="auth-bottom">New to LumiFlowOn? <a href="{{route('register.form')}}">Create Account</a></p>
 @else
 @if($referralCode)<div class="sponsor" id="leobotReferralBanner">Sponsor ID: <strong>{{$referralCode}}</strong>@if($sponsorName)<br>Sponsor: {{$sponsorName}}@endif</div>@endif
 <form class="register-grid" method="POST" action="{{route('register.submit')}}">@csrf

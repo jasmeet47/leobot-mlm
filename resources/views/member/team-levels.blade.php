@@ -46,5 +46,5 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 <tr><td>{{ $person->username }}</td><td>{{ $person->name }}</td><td>{{ $person->created_at ? \Illuminate\Support\Carbon::parse($person->created_at)->format('d M Y') : 'N/A' }}</td><td class="{{ $person->status === 'active' ? 'active-status' : 'inactive-status' }}">{{ $person->status === 'active' ? 'Active' : 'Inactive' }}</td></tr>
 @empty<tr><td colspan="4">No members found on this level.</td></tr>@endforelse
 </tbody></table></div><div class="pagination">{{ $teamMembers->links() }}</div>
-<p class="muted">No contact details, investment data, wallet balances or commissions are exposed.</p></section>
+</section>
 </main></body></html>

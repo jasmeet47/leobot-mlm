@@ -29,6 +29,7 @@ use App\Http\Controllers\Member\UsdtWalletController;
 use App\Http\Controllers\Member\WithdrawalMemberController;
 use App\Http\Controllers\Member\WithdrawalOtpController;
 use App\Http\Controllers\Mt5DisplayController;
+use App\Http\Controllers\SupportMessageController;
 use App\Http\Middleware\EnsureMemberPin;
 use App\Http\Middleware\MeasureLoginRequest;
 use App\Services\MemberPaymentSecurity;
@@ -98,6 +99,7 @@ Route::post('/reset-password-otp', [PasswordOtpController::class, 'reset'])->mid
 
 Route::middleware(['auth', 'account.not_blocked'])->group(function () {
     // Read-only 51-level member viewer: authenticated user is the only root.
+    Route::post('/member/support', [SupportMessageController::class, 'store'])->middleware([EnsureMemberPin::class, 'throttle:3,1,support'])->name('member.support.store');
     Route::get('/member/team-levels', [MemberTeamViewerController::class, 'index'])
         ->middleware(EnsureMemberPin::class)
         ->name('member.team-levels');
@@ -417,6 +419,8 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): 
 });
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
+    Route::get('/admin/support', [SupportMessageController::class, 'index'])->name('admin.support.index');
+    Route::post('/admin/staking/profit/{id}/verify-distribute', [IncomeDistributionController::class, 'verifyAndDistribute'])->whereNumber('id')->middleware('throttle:5,1,profit-pay')->name('admin.staking.profit.verify-distribute');
     Route::get('/admin/income-distribution', [IncomeDistributionController::class, 'index'])->name('admin.income-distribution');
     Route::post('/admin/staking/profit/{id}/verify', [StakingProfitController::class, 'verify'])->whereNumber('id')->middleware('throttle:5,1,profit-verify')->name('admin.staking.profit.verify');
     Route::post('/admin/staking/profit/{id}/reject', [StakingProfitController::class, 'reject'])->whereNumber('id')->middleware('throttle:5,1,profit-reject')->name('admin.staking.profit.reject');

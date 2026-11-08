@@ -270,7 +270,14 @@ class MemberDashboardController extends Controller
             ->orderByDesc('id')
             ->paginate(10, ['*'], 'wallet_page');
 
+        $verifiedDepositTotal = (string) DB::table('member_deposit_requests as d')->join('financial_ledger as l', function ($join): void {
+            $join->on('l.reference_id', '=', 'd.id')->on('l.user_id', '=', 'd.user_id');
+        })->where('d.user_id', $member->id)->where('d.status', 'approved')->where('l.entry_type', 'verified_deposit')->where('l.reference_type', 'member_deposit_request')->where('l.wallet_type', 'activation_balance')->where('l.status', 'completed')->whereColumn('l.amount', 'd.amount')->whereRaw("l.transaction_key = 'deposit:credit:' || d.id::text")->sum('l.amount');
+        $levelIncome = DB::table('financial_ledger')->where('user_id', $member->id)->where('wallet_type', 'available_balance')->where('entry_type', 'generation_income_settlement')->where('status', 'completed')->whereBetween('level', [1, 51])->groupBy('level')->selectRaw('level,SUM(amount) as total')->pluck('total', 'level');
+
         return view('member.dashboard', [
+            'verifiedDepositTotal' => bcadd($verifiedDepositTotal, '0', 8),
+            'levelIncome' => $levelIncome,
             'member' => $member,
             'canReviewTradingProfit' => TradingProfitReviewerService::canReview((int) $member->id),
             'teamSummary' => $teamSummary,

@@ -258,7 +258,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">Logo Management</a>
   <a href="{{ route('admin.referral-privacy.index') }}" class="lf-sub">Referral Privacy</a>
   <a href="{{ route('admin.quick-links.index') }}">Quick Links</a>
- <a href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a><a href="{{route('admin.member-access')}}">Member Activation</a><a href="{{route('admin.member-email')}}">Change Member Email</a></nav>
+ <a style="color:white" href="{{ route('admin.members.deletion') }}">Delete Member ID</a><a href="{{ route('admin.transfer-controls') }}">Transfer Controls</a><a href="{{ route('admin.income-distribution') }}">Income Distribution</a><a href="{{route('admin.member-access')}}">Member Activation</a><a href="{{route('admin.member-email')}}">Change Member Email</a></nav>
 </aside>
 <div class="lf-main">
 
@@ -472,5 +472,4 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 
 </div></div>
 <script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script>
-<section style="margin:20px;padding:20px;border:1px solid #6579a0;border-radius:14px"><h2>Communication & Member Management</h2><a href="{{ route('admin.members.deletion') }}">Delete Member ID</a></section><section style="margin:20px;padding:20px"><a href="{{ route('admin.members.deletion') }}">Delete Member ID</a></section><section style="margin:20px;padding:20px"><h2>Member Accounts</h2><a href="{{route('admin.member-access')}}">Member Activation</a> · <a href="{{route('admin.member-email')}}">Change Member Email</a></section></body>
-</html>
+<style>.management-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin:24px}.management-card{padding:24px;border:1px solid #40516b;border-radius:14px;background:#101b2e}.management-actions{display:flex;gap:12px;flex-wrap:wrap}.management-actions a{display:inline-block;padding:12px 16px;border:1px solid #40516b;border-radius:8px;color:#fff!important;background:#1b2b42}.management-actions a:hover{border-color:#e9c583}</style><div class="management-grid"><section class="management-card"><h2>Communication & Member Management</h2><div class="management-actions"><a href="{{route('admin.support.index')}}">Support Inbox</a><a href="{{route('admin.announcements.index')}}">Announcements</a><a href="{{route('admin.members.deletion')}}">Delete Member ID</a></div></section><section class="management-card"><h2>Member Accounts</h2><div class="management-actions"><a href="{{route('admin.member-access')}}">Member Activation</a><a href="{{route('admin.member-email')}}">Change Member Email</a></div></section></div></body></html>

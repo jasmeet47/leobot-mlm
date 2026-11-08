@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Independent Profit Review</title>@include('partials.lumiflowon-financial-theme')</head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn — Independent Profit Review</title>@include('partials.lumiflowon-financial-theme')</head>
 <body style="font:16px/1.6 system-ui;max-width:1000px;margin:auto;padding:24px">@include('partials.lumiflowon-page-brand')
 <h1>Independent Trading-Profit Review</h1><p><a href="{{ route('member.dashboard') }}">Member dashboard</a></p>
 <p>Review only actual realized trading statements and independently confirm funds received. Review records do not pay a wallet or authorize future returns. Statements that include your own profit are excluded.</p>

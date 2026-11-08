@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lumiflowon — Deposit Control</title>@include('partials.lumiflowon-financial-theme')</head><body style="font:16px system-ui;max-width:1100px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Deposit Control</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn — Deposit Control</title>@include('partials.lumiflowon-financial-theme')</head><body style="font:16px system-ui;max-width:1100px;margin:auto;padding:24px">@include('partials.lumiflowon-financial-nav')<h1>Deposit Control</h1>
 <p>Save the official USDT receiving address and matching QR separately for each network.</p>
 
 

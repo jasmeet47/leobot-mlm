@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUMIFLOWON — Member Dashboard</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LumiFlowOn — Member Dashboard</title>
 <style>
-:root{color-scheme:dark;--bg:#080e1a;--surface:#101b2e;--line:#24324a;--muted:#97a7bd;--text:#edf2fa;--gold:#e9c583;--green:#64dfb6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}button,a,input,summary{outline-offset:4px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold)}.portal-sidebar{position:fixed;inset:0 auto 0 0;width:245px;background:#0c1525;border-right:1px solid var(--line);padding:25px 17px;overflow:auto}.portal-brand{display:flex;align-items:center;gap:10px;padding:0 9px 25px;font-weight:800;letter-spacing:.09em;color:var(--gold)}.portal-brand img{width:38px;height:38px;object-fit:contain}.sidebar-links{display:flex;flex-direction:column;gap:3px}.lb-menu-group-title{color:#778aa5;font-size:10px;text-transform:uppercase;letter-spacing:.15em;padding:21px 12px 6px}.sidebar-links .action{display:block;padding:9px 12px;border:0;border-radius:7px;background:none;font-size:12px;text-align:left;width:100%;color:#bdcadc;cursor:pointer}.sidebar-links .action:hover{background:#192942;color:white}.portal-main{margin-left:245px;padding:26px clamp(18px,3.5vw,54px) 70px;max-width:1650px}.portal-topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:24px;border-bottom:1px solid var(--line)}.portal-eyebrow,.lb-eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}.portal-user{display:flex;gap:11px;align-items:center}.portal-avatar{width:36px;height:36px;display:grid;place-items:center;background:#273953;border:1px solid #405575;border-radius:50%;font-weight:700;color:var(--gold)}.portal-user small{display:block;color:var(--muted);font-size:11px}.portal-welcome{padding:26px 0 5px}.portal-welcome h1{margin:0;font-size:clamp(25px,3vw,36px);letter-spacing:-.04em;font-weight:600}.portal-welcome p{color:var(--muted);margin:7px 0}.portal-welcome span{color:var(--gold)}section{margin:24px 0}h2{font-size:17px;font-weight:600;margin:0 0 15px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.card{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:21px;min-width:0}.label,.muted,.unit{color:var(--muted)}.label{font-size:12px}.value{font-size:clamp(18px,2.1vw,26px);font-weight:600;letter-spacing:-.035em;overflow-wrap:anywhere;margin:9px 0 3px}.unit{font-size:11px}.lb-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.lb-quick-link{background:linear-gradient(140deg,#1a2a42,#111d30);border:1px solid #30425f;border-radius:11px;padding:17px;display:flex;flex-direction:column;gap:4px;min-width:0}.lb-quick-link strong{font-weight:600;font-size:15px}.lb-quick-link small{font-size:11px;color:var(--muted)}a.lb-quick-link:hover{border-color:var(--gold)}.action{display:inline-block;background:#1c2b42;border:1px solid #374c69;border-radius:7px;padding:9px 14px;color:var(--text);cursor:pointer}.action:hover{border-color:var(--gold)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;background:var(--surface)}th,td{padding:13px 17px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line);font-size:12px}th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}tr:last-child td{border:0}.success{color:var(--green)}[role="status"]{color:var(--green)}.lb-profile-strip{display:flex;justify-content:space-between;gap:15px;align-items:center;border:1px solid var(--line);padding:19px;border-radius:12px}.lb-profile-strip strong,.lb-profile-strip small{display:block}.lb-profile-strip small{color:var(--muted)}.lb-account-status{border:1px solid #36564c;background:#15352e;padding:5px 10px;border-radius:20px;color:var(--green);font-size:11px}.lb-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.lb-small-tag{font-size:11px;color:var(--muted)}.mobile-menu{display:none}.lb-quick-links{border-color:var(--line)!important;background:var(--surface)}.portal-footer{margin-top:35px;font-size:11px;color:#7588a2;border-top:1px solid var(--line);padding-top:18px}svg{max-width:100%}
+:root{color-scheme:dark;--bg:#080e1a;--surface:#101b2e;--line:#24324a;--muted:#97a7bd;--text:#edf2fa;--gold:#e9c583;--green:#64dfb6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}button,a,input,summary{outline-offset:4px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold)}.portal-sidebar{position:fixed;inset:0 auto 0 0;width:245px;background:#0c1525;border-right:1px solid var(--line);padding:25px 17px;overflow:auto}.portal-brand{display:flex;align-items:center;gap:10px;padding:0 9px 25px;font-weight:800;letter-spacing:.09em;color:var(--gold)}.portal-brand img{width:38px;height:38px;object-fit:contain}.sidebar-links{display:flex;flex-direction:column;gap:3px}.lb-menu-group-title{color:#778aa5;font-size:10px;text-transform:uppercase;letter-spacing:.15em;padding:21px 12px 6px}.sidebar-links .action{display:block;padding:9px 12px;border:0;border-radius:7px;background:none;font-size:12px;text-align:left;width:100%;color:#bdcadc;cursor:pointer}.sidebar-links .action:hover{background:#192942;color:white}.portal-main{margin-left:245px;padding:26px clamp(18px,3.5vw,54px) 70px;max-width:1650px}.portal-topbar{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:24px;border-bottom:1px solid var(--line)}.portal-eyebrow,.lb-eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}.portal-user{display:flex;gap:11px;align-items:center}.portal-avatar{width:36px;height:36px;display:grid;place-items:center;background:#273953;border:1px solid #405575;border-radius:50%;font-weight:700;color:var(--gold)}.portal-user small{display:block;color:var(--muted);font-size:11px}.portal-welcome{padding:26px 0 5px}.portal-welcome h1{margin:0;font-size:clamp(25px,3vw,36px);letter-spacing:-.04em;font-weight:600}.portal-welcome p{color:#a7f3d0;margin:7px 0}.portal-welcome span{color:var(--gold)}section{margin:24px 0}h2{font-size:17px;font-weight:600;margin:0 0 15px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.card{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:21px;min-width:0}.label,.muted,.unit{color:var(--muted)}.label{font-size:12px}.value{font-size:clamp(18px,2.1vw,26px);font-weight:600;letter-spacing:-.035em;overflow-wrap:anywhere;margin:9px 0 3px}.unit{font-size:11px}.lb-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.lb-quick-link{background:linear-gradient(140deg,#1a2a42,#111d30);border:1px solid #30425f;border-radius:11px;padding:17px;display:flex;flex-direction:column;gap:4px;min-width:0}.lb-quick-link strong{font-weight:600;font-size:15px}.lb-quick-link small{font-size:11px;color:var(--muted)}a.lb-quick-link:hover{border-color:var(--gold)}.action{display:inline-block;background:#1c2b42;border:1px solid #374c69;border-radius:7px;padding:9px 14px;color:var(--text);cursor:pointer}.action:hover{border-color:var(--gold)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;background:var(--surface)}th,td{padding:13px 17px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line);font-size:12px}th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}tr:last-child td{border:0}.success{color:var(--green)}[role="status"]{color:var(--green)}.lb-profile-strip{display:flex;justify-content:space-between;gap:15px;align-items:center;border:1px solid var(--line);padding:19px;border-radius:12px}.lb-profile-strip strong,.lb-profile-strip small{display:block}.lb-profile-strip small{color:var(--muted)}.lb-account-status{border:1px solid #36564c;background:#15352e;padding:5px 10px;border-radius:20px;color:var(--green);font-size:11px}.lb-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.lb-small-tag{font-size:11px;color:var(--muted)}.mobile-menu{display:none}.lb-quick-links{border-color:var(--line)!important;background:var(--surface)}.portal-footer{margin-top:35px;font-size:11px;color:#7588a2;border-top:1px solid var(--line);padding-top:18px}svg{max-width:100%}
 @media(min-width:1000px){#account-summary .card:first-child{background:linear-gradient(125deg,#263957,#17263b);border-color:#516483}}
 @media(max-width:1000px){.portal-sidebar{width:210px}.portal-main{margin-left:210px}.portal-user>div:last-child{display:none}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.portal-sidebar{display:none;position:relative;width:100%;border-right:0;border-bottom:1px solid var(--line)}body.menu-open .portal-sidebar{display:block}.portal-main{margin-left:0;padding:17px 16px 40px}.mobile-menu{display:inline-flex}.portal-topbar{padding-bottom:17px}.portal-welcome{padding-top:22px}.card{padding:16px}.value{font-size:19px}.lb-bottom-grid{grid-template-columns:1fr}.lb-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-brand-mobile{display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;letter-spacing:.06em}.portal-brand-mobile img{width:30px;height:30px;object-fit:contain}.lb-profile-strip{align-items:flex-start}.portal-avatar{width:30px;height:30px}.portal-topbar{flex-wrap:wrap}.portal-user{margin-left:auto}}
@@ -17,7 +17,7 @@
 @endif
 <style>.portal-main :is(strong,b,h1,h2,h3,h4,.value){color:var(--gold)!important}.menu-close,.menu-overlay{display:none}@media(max-width:700px){body.menu-open{overflow:hidden}.portal-sidebar{display:block;position:fixed;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;overflow-y:auto;z-index:102;visibility:hidden;pointer-events:none;transform:translateX(-110%);transition:transform .2s ease}body.menu-open .portal-sidebar{display:block;transform:translateX(0);visibility:visible;pointer-events:auto}.menu-close{display:block;margin:0 0 16px auto;background:transparent;border:1px solid #40516b;color:var(--gold);padding:8px 12px;border-radius:8px}body.menu-open .menu-overlay{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:101;background:#0009;border:0}body.menu-open #portal-menu-toggle{visibility:hidden}}</style></head><body>
 @include('partials.beta-notice')
-<button type="button" class="menu-overlay" id="portal-menu-overlay" aria-label="Close navigation"></button><aside class="portal-sidebar" id="portal-navigation" aria-label="Member navigation"><a class="portal-brand" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="Lumiflowon">LUMIFLOWON</a>
+<button type="button" class="menu-overlay" id="portal-menu-overlay" aria-label="Close navigation"></button><aside class="portal-sidebar" id="portal-navigation" aria-label="Member navigation"><a class="portal-brand" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn">LumiFlowOn</a>
         <button type="button" class="menu-close" id="portal-menu-close" aria-label="Close menu">Close ×</button><div class="sidebar-links" aria-label="Member navigation">
             <!-- LUMIFLOWON_MEMBER_MENU_FOUR_GROUPS_V1 -->
             <div class="lb-menu-group-title" role="heading" aria-level="3">Dashboard</div>
@@ -41,7 +41,7 @@
             <a class="action" href="{{ route('member.detail', ['panel' => 'financial-records']) }}">Financial Records</a>
             <a class="action" href="{{ route('member.usdt-wallets.page') }}">USDT Wallet</a>
             <a class="action" href="{{ route('member.withdrawals.index') }}">Withdrawals</a>
-            <a class="action" href="{{ route('member.deposit-transfer.index') }}">Deposit / Fund Transfer (status &amp; requests)</a>
+            <a class="action" href="{{ route('member.deposit-transfer.index') }}">Deposits & Transfers</a>
 
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Account</div>
             <a class="action" href="{{ route('member.profile') }}">Profile</a>
@@ -50,10 +50,10 @@
             <form method="POST" action="{{ route('logout') }}">@csrf<button class="action" type="submit">Logout</button></form>
         </div>
 </aside><main class="portal-main">
-<header class="portal-topbar"><button id="portal-menu-toggle" class="action mobile-menu" aria-controls="portal-navigation" aria-expanded="false" type="button">☰ Menu</button><a class="portal-brand-mobile" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="Lumiflowon">LUMIFLOWON</a><div class="portal-eyebrow">Member / {{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Overview' }}</div><div class="portal-user"><div class="portal-avatar">{{ mb_substr($member->name, 0, 1) }}</div><div>{{ $member->name }}<small>{{ $member->username }}</small></div></div></header>
+<header class="portal-topbar"><button id="portal-menu-toggle" class="action mobile-menu" aria-controls="portal-navigation" aria-expanded="false" type="button">☰ Menu</button><a class="portal-brand-mobile" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn">LumiFlowOn</a><div class="portal-eyebrow">Member / {{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Overview' }}</div><div class="portal-user"><div class="portal-avatar">{{ mb_substr($member->name, 0, 1) }}</div><div>{{ $member->name }}<small>{{ $member->username }}</small></div></div></header>
 <div class="portal-welcome"><h1>{{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Your financial overview' }}<span>.</span></h1>@include('partials.member-qualification',['qualificationMember'=>$member])<p>Welcome back, {{ $member->name }}.</p></div>
 <section id="account-summary" aria-label="Member financial summary">
-        <h2>Your Account Summary</h2>
+        <h2>Your Account Summary</h2><div class="card" id="verified-deposit-total"><div class="label">Total Verified Deposits</div><div class="value">{{ $verifiedDepositTotal }} USDT</div><small>Approved deposits · separate from remaining balance and staking</small></div>
         <div class="grid">
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Activation Balance</div><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
@@ -127,10 +127,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     @endif
     <section id="income-summary" aria-label="Member income summary">
         <h2>My Income Summary</h2>
-        <p class="muted">
-            Reserved and held amounts are not paid income and are not
-            included in your available wallet balance.
-        </p>
+
 
         <div class="grid">
             <div class="card">
@@ -162,17 +159,14 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     <section id="financial-records" class="lb-records-overview" aria-label="Financial records">
         <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>
         <h2>Financial Records</h2>
-        <p class="muted">Your available balance and income reserves are shown above. Completed wallet entries appear in the transaction history below; held and reserved amounts are not paid income.</p>
+
 
     </section>
 
     @if($lbPanel==='wallet-history')
 <section id="wallet-history" aria-label="Member wallet transaction history">
         <h2>My Wallet Transaction History</h2>
-        <p class="muted">
-            Only completed transactions recorded against your member
-            wallet are listed. Reserve movements are excluded.
-        </p>
+
 
         <div class="table-wrap">
             <table>
@@ -234,12 +228,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     <section id="referral-privacy" aria-label="Referral Contact Privacy">
         <h2>Referral Contact Privacy</h2>
         <div class="card">
-            <p class="muted">
-                Choose whether your direct sponsor may see your full
-                phone number or email address. Full details are shared
-                only when you give permission AND the admin enables
-                full visibility. You can withdraw permission anytime. Your direct sponsor can see masked or full contact details only with your consent and when the admin enables the corresponding
-            </p>
+
 
             <form method="POST"
                   action="{{ route('member.referral-contact-consent.update') }}">
@@ -323,7 +312,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         <h2>51-Level Team Breakdown</h2>
         <div class="table-wrap">
             <table>
-                <thead><tr><th scope="col">Level</th><th scope="col">Active</th><th scope="col">Inactive</th><th scope="col">Team Business (USDT)</th></tr></thead>
+                <thead><tr><th scope="col">Level</th><th scope="col">Active</th><th scope="col">Inactive</th><th scope="col">Team Business (USDT)</th><th scope="col">Level Income Paid (USDT)</th></tr></thead>
                 <tbody>
                 @for ($level = 1; $level <= 51; $level++)
                     @php
@@ -333,7 +322,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                         <td>Level {{ $level }}</td>
                         <td>{{ (int) ($entry->active_count ?? 0) }}</td>
                         <td>{{ (int) ($entry->inactive_count ?? 0) }}</td>
-                        <td>{{ bcadd((string) ($entry->total_business ?? '0'), '0', 8) }}</td>
+                        <td>{{ bcadd((string) ($entry->total_business ?? '0'), '0', 8) }}</td><td>{{ bcadd((string) ($levelIncome->get($level) ?? '0'), '0', 8) }}</td>
                     </tr>
                 @endfor
                 </tbody>
@@ -350,7 +339,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         <div id="member-support" class="card lb-info-card">
             <span class="lb-eyebrow">MEMBER ASSISTANCE</span>
             <h2>Support</h2>
-            <p class="muted">For assistance, use the official LumiFlowOn support contact provided by your administrator. No support channel is configured on this dashboard.</p>
+            <form method="post" action="{{ route('member.support.store') }}">@csrf<label for="support-message">Your message</label><textarea id="support-message" name="message" rows="5" minlength="5" maxlength="4000" required style="display:block;width:100%;padding:12px;background:#101b2e;color:white;border:1px solid #40516b;border-radius:8px"></textarea><button class="action" style="margin-top:12px">Send message</button></form>@if(session('support_status'))<p role="status">{{session('support_status')}}</p>@endif @error('message')<p role="alert">{{$message}}</p>@enderror
         </div>
     </section>
 
@@ -373,20 +362,11 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 
 <div style="display:flex;gap:12px;flex-wrap:wrap">
 @foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
-@php
-  $configuredLink = $dashboardLinks->firstWhere('platform', $platform);
-  $linkUrl = trim((string) ($configuredLink->url ?? ''));
-  $linkValid = filter_var($linkUrl, FILTER_VALIDATE_URL) && strtolower((string) parse_url($linkUrl, PHP_URL_SCHEME)) === 'https';
-@endphp
-@if($configuredLink && $linkValid)
-<a href="{{ $linkUrl }}" target="_blank" rel="noopener noreferrer" style="padding:12px 18px;background:#1e293b;color:white;border-radius:8px">{{ ucfirst($platform) }}</a>
-@else
-<span style="padding:12px 18px;background:#263449;color:#b8c4d5;border-radius:8px" title="Admin must configure and enable a valid HTTPS URL">{{ ucfirst($platform) }} · Not configured</span>
-@endif
+<span class="lb-quick-link" style="min-width:150px"><span aria-hidden="true" style="font-size:28px;color:var(--gold)">@include('partials.social-icon', ['platform'=>$platform])</span><strong>{{ $platform==='pdf'?'PDF':ucfirst($platform) }}</strong><small>Coming soon</small></span>
 @endforeach
 </div>
 </section>
-<footer class="portal-footer">LUMIFLOWON &nbsp; / &nbsp; Member portal · USDT</footer></main>
+<footer class="portal-footer">LumiFlowOn</footer></main>
 <script>
 const toggle = document.getElementById('portal-menu-toggle');
 toggle.addEventListener('click', () => { const open = document.body.classList.toggle('menu-open'); toggle.setAttribute('aria-expanded', String(open)); if(open)document.getElementById('portal-menu-close').focus(); });
