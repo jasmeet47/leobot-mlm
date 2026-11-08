@@ -62,7 +62,7 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 </select></label>
 <button type="submit">Save visible levels</button>
 </form></section>
-<section><h2>Magic Settings</h2>
+<section><h2>Matrix Placement</h2><p>Check an activated member and complete a missing lifetime position from one existing funded activation or stake. Smaller amounts are never combined.</p><form method="get"><label>User ID / Email<input name="member" value="{{request('member')}}" maxlength="255" required placeholder="TX656935"></label><button>Check placement</button></form>@if($enrollmentLookupError)<p role="alert">{{$enrollmentLookupError}}</p>@endif @if($enrollmentMember)<h3>{{$enrollmentMember->username}} · {{$enrollmentMember->name}}</h3><p>{{$enrollmentState['reason']}}</p>@if($enrollmentState['can_place'])<p>Funded source: {{$enrollmentState['source']['type']}} #{{$enrollmentState['source']['id']}} · {{$enrollmentState['source']['amount']}} USDT</p><form method="post" action="{{route('admin.magic.enroll')}}">@csrf<input type="hidden" name="member_id" value="{{$enrollmentMember->id}}"><button @disabled(!$canEnroll)>Place qualified member</button></form>@endif @endif</section><section><h2>Magic Settings</h2>
 <p>Global Magic: <strong>{{ ($global?->magic_enabled ?? false) ? 'ON' : 'OFF' }}</strong></p>
 <p>Matrix Enrollment: {{($settings?->enrollment_enabled??false)?'ON':'OFF'}}; Re-Topup: {{($settings?->topup_enabled??false)?'ON':'OFF'}}; Settlement: {{($settings?->settlement_enabled??false)?'ON':'OFF'}}</p>
 <form method="post" action="{{route('admin.magic.policy')}}">@csrf

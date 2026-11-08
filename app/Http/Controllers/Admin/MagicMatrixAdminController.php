@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\MagicIncomeSettlementService;
+use App\Services\MagicMatrixEnrollmentService;
 use App\Services\MagicMatrixSettingsService;
+use App\Services\MemberAccountAdministration;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +19,28 @@ final class MagicMatrixAdminController extends Controller
 {
     public function index(): View
     {
+        $query = request()->validate(['member' => 'nullable|string|max:255']);
+        $enrollmentMember = null;
+        $enrollmentState = null;
+        $enrollmentLookupError = null;
+        if (filled($query['member'] ?? null)) {
+            try {
+                $enrollmentMember = MemberAccountAdministration::find($query['member']);
+                if ($enrollmentMember) {
+                    $enrollmentState = MagicMatrixEnrollmentService::inspect((int) $enrollmentMember->id);
+                } else {
+                    $enrollmentLookupError = 'No member found. Check the User ID.';
+                }
+            } catch (RuntimeException $error) {
+                $enrollmentLookupError = $error->getMessage();
+            }
+        }
+
         return view('admin.magic-matrix', [
+            'enrollmentMember' => $enrollmentMember,
+            'enrollmentState' => $enrollmentState,
+            'enrollmentLookupError' => $enrollmentLookupError,
+            'canEnroll' => config('leobot_magic.magic_matrix_enrollment_enabled', false) === true && (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true),
             'settings' => DB::table('magic_matrix_settings')->where('id', 1)->first(),
             'global' => DB::table('magic_income_settings')->where('id', 1)->first(),
             'rates' => DB::table('magic_matrix_level_rates')->orderBy('level')->get(),
@@ -150,6 +173,23 @@ final class MagicMatrixAdminController extends Controller
         }, 3);
 
         return back()->with('status', 'Database Matrix switches updated; global and code approval gates still apply.');
+    }
+
+    public function enroll(Request $request): RedirectResponse
+    {
+        abort_unless(config('leobot_magic.magic_matrix_enrollment_enabled', false) === true && (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true), 404);
+        $data = $request->validate(['member_id' => 'required|integer|min:1']);
+        try {
+            $cycle = MagicMatrixEnrollmentService::synchronize((int) $data['member_id'], $request->user());
+        } catch (QueryException $error) {
+            report($error);
+
+            return back()->withErrors(['enrollment' => 'Matrix placement could not be saved. No wallet debit or payout was made.']);
+        } catch (RuntimeException|AuthorizationException $error) {
+            return back()->withErrors(['enrollment' => $error->getMessage()]);
+        }
+
+        return back()->with('status', 'Magic Matrix placement verified successfully. Cycle #'.$cycle.'. No additional wallet debit or payout.');
     }
 
     public function settle(Request $request): RedirectResponse

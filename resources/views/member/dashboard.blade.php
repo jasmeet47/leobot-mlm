@@ -102,6 +102,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
   <h2>Magic Team</h2>
+  @if($magicEnrollmentState??null)<p class="muted">{{$magicEnrollmentState['reason']}}</p>@endif
   @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
     <div class="lb-quick-grid">
       <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>

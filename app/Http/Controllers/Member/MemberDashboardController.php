@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Services\MagicIncomeReportService;
+use App\Services\MagicMatrixEnrollmentService;
 use App\Services\MagicMatrixTeamReadService;
 use App\Services\TradingProfitReviewerService;
 use Illuminate\Http\Request;
@@ -279,6 +280,7 @@ class MemberDashboardController extends Controller
         $activeStaking = (string) DB::table('staking_positions')->where('user_id', $member->id)->where('status', 'active')->selectRaw('COALESCE(SUM(amount-withdrawn_amount),0) as total')->value('total');
 
         return view('member.dashboard', [
+            'magicEnrollmentState' => $request->route('panel') === 'magic-team' ? MagicMatrixEnrollmentService::inspect((int) $member->id) : null,
             'activeActivation' => bcadd($activeActivation, '0', 8),
             'activeStaking' => bcadd($activeStaking, '0', 8),
             'currentInvestment' => bcadd($activeActivation, $activeStaking, 8),

@@ -60,7 +60,7 @@
                 </button>
 
             </form>
-<p class="auth-bottom"><a href="{{($adminLogin??false)?route('login.form'):route('admin.login')}}">{{($adminLogin??false)?'Member Login':'Admin Login'}}</a></p><p class="auth-bottom"><a href="{{route('password.otp.request')}}">Forgot Password?</a></p><div class="auth-divider"></div><p class="auth-bottom">New to LumiFlowOn? <a href="{{route('register.form')}}">Create Account</a></p>
+@if($adminLogin??false)<p class="auth-bottom"><a href="{{route('login.form')}}">Member Login</a></p>@endif<p class="auth-bottom"><a href="{{route('password.otp.request')}}">Forgot Password?</a></p><div class="auth-divider"></div><p class="auth-bottom">New to LumiFlowOn? <a href="{{route('register.form')}}">Create Account</a></p>
 @else
 @if($referralCode)<div class="sponsor" id="leobotReferralBanner">Sponsor ID: <strong>{{$referralCode}}</strong>@if($sponsorName)<br>Sponsor: {{$sponsorName}}@endif</div>@endif
 <form class="register-grid" method="POST" action="{{route('register.submit')}}">@csrf

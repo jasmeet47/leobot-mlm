@@ -65,13 +65,7 @@ class ActivationService
             $id = self::activate($target, $amount, $activationKey);
             if (! $old) {
                 DB::table('member_security_audits')->insert(['actor_id' => $admin->id, 'action' => 'admin_verified_activation', 'details' => json_encode(['user_id' => $target->id, 'package_id' => $id, 'amount' => $amount, 'source' => 'verified_deposit_balance', 'activation_key' => $activationKey], JSON_THROW_ON_ERROR), 'created_at' => now()]);
-                if (config('leobot_magic.magic_matrix_enrollment_enabled', false) === true && (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true) && bccomp($amount, '50', 8) >= 0 && ! DB::table('magic_matrix_positions')->where('user_id', $target->id)->exists()) {
-                    $matrix = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
-                    $global = DB::table('magic_income_settings')->where('id', 1)->first();
-                    if ($matrix && $global && $matrix->enrollment_enabled && $global->magic_enabled && bccomp($amount, (string) $matrix->minimum_tier_usdt, 8) >= 0) {
-                        MagicMatrixCycleService::enrollFromActivePackage($target, $id, 'ADMIN-ACT:'.$id);
-                    }
-                }
+
             }
 
             return $id;
@@ -312,6 +306,7 @@ class ActivationService
              * No commission or income payout here.
              */
             TeamCounterService::synchronize($userId);
+            MagicMatrixEnrollmentService::synchronize($userId);
 
             return (int) $packageId;
         }, 3);

@@ -337,6 +337,7 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function () {
         ->middleware('throttle:5,1')->name('admin.magic.rates');
     Route::post('/admin/magic-matrix/switches', [MagicMatrixAdminController::class, 'updateSwitches'])
         ->middleware('throttle:5,1')->name('admin.magic.switches');
+    Route::post('/admin/magic-matrix/enroll', [MagicMatrixAdminController::class, 'enroll'])->middleware('throttle:5,1,magic-enroll')->name('admin.magic.enroll');
     Route::post('/admin/magic-matrix/settle', [MagicMatrixAdminController::class, 'settle'])
         ->middleware('throttle:3,1')->name('admin.magic.settle');
     Route::get('/admin/withdrawals', [WithdrawalAdminController::class, 'index'])
