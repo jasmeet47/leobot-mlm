@@ -12,9 +12,13 @@ final class MemberAccountAdministration
 {
     public static function find(string $identifier): ?object
     {
-        $identifier = trim($identifier);
-        $rows = DB::table('users')->where('role', 'member')->whereNull('deleted_at')->where(function ($q) use ($identifier): void {
-            $q->whereRaw('lower(username)=?', [Str::lower($identifier)])->orWhereRaw('lower(email)=?', [Str::lower($identifier)]);
+        $identifier = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', trim($identifier));
+        $publicId = preg_replace('/\s+/u', '', Str::upper($identifier));
+        if (ctype_digit($publicId)) {
+            $publicId = 'TX'.$publicId;
+        }
+        $rows = DB::table('users')->where('role', 'member')->whereNull('deleted_at')->where(function ($q) use ($identifier, $publicId): void {
+            $q->whereRaw('lower(username)=?', [Str::lower($publicId)])->orWhereRaw('lower(email)=?', [Str::lower($identifier)]);
             if (ctype_digit($identifier)) {
                 $q->orWhere('id', (int) $identifier);
             }

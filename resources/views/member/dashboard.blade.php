@@ -56,10 +56,11 @@
         <h2>Your Account Summary</h2><div class="card" id="verified-deposit-total"><div class="label">Total Verified Deposits</div><div class="value">{{ $verifiedDepositTotal }} USDT</div><small>Approved deposits · separate from remaining balance and staking</small></div>
         <div class="grid">
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
-            <div class="card"><div class="label">Activation Balance</div><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
-            <div class="card"><div class="label">Total Investment</div><div class="value">{{ bcadd((string) ($member->total_investment ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
+            <div class="card"><div class="label">Activation Balance</div><small>Unspent activation wallet</small><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
+            <div class="card"><div class="label">Total Investment</div><small>Active packages + remaining staking</small><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
         </div>
+<div class="grid" style="margin-top:14px"><div class="card"><div class="label">Active Activation Packages</div><div class="value">{{$activeActivation}} USDT</div></div><div class="card"><div class="label">Active Staking Principal</div><div class="value">{{$activeStaking}} USDT</div></div></div>
     </section>
 
 <!-- LUMIFLOWON_MT5_UI_FIXED -->

@@ -312,39 +312,6 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   @endif
 </section>
 
-<!-- LUMIFLOWON_MT5_UI_FIXED -->
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-<h2>Dashboard Quick Links</h2>
-<p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
-@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
-<span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
-@endforeach
-</div>
-<p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>
-<a href="{{ route('admin.quick-links.index') }}">Quick Links</a>
-</section>
-<section style="margin:20px 0;padding:20px;border:1px solid #64748b;border-radius:12px">
-    <h2>MT5 Live Trading Display</h2>
-    <p>View-only. Trading and settlement actions are not available.</p>
-
-    @php
-        $mt5Enabled = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
-            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
-    @endphp
-
-    <p>Display: <strong>{{ $mt5Enabled ? 'ON' : 'OFF' }}</strong></p>
-    <p>Live connection: Not configured</p>
-
-    <form method="POST" action="{{ route('admin.mt5.toggle') }}">
-        @csrf
-        <input type="hidden" name="enabled" value="{{ $mt5Enabled ? 0 : 1 }}">
-        <button type="submit">{{ $mt5Enabled ? 'Turn OFF MT5 Display' : 'Turn ON MT5 Display' }}</button>
-    </form>
-
-    <p><a href="{{ route('admin.mt5.view') }}">View MT5 Status (JSON)</a></p>
-</section>
-
 <section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
   <div class="lb-terminal-head">
     <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>
@@ -472,4 +439,37 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 
 </div></div>
 <script>function lfToggleNav(){document.getElementById('lfSidebar')?.classList.toggle('lf-open');document.getElementById('lfOverlay')?.classList.toggle('lf-open')}function lfCloseNav(){document.getElementById('lfSidebar')?.classList.remove('lf-open');document.getElementById('lfOverlay')?.classList.remove('lf-open')}</script>
-<style>.management-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin:24px}.management-card{padding:24px;border:1px solid #40516b;border-radius:14px;background:#101b2e}.management-actions{display:flex;gap:12px;flex-wrap:wrap}.management-actions a{display:inline-block;padding:12px 16px;border:1px solid #40516b;border-radius:8px;color:#fff!important;background:#1b2b42}.management-actions a:hover{border-color:#e9c583}</style><div class="management-grid"><section class="management-card"><h2>Communication & Member Management</h2><div class="management-actions"><a href="{{route('admin.support.index')}}">Support Inbox</a><a href="{{route('admin.announcements.index')}}">Announcements</a><a href="{{route('admin.members.deletion')}}">Delete Member ID</a></div></section><section class="management-card"><h2>Member Accounts</h2><div class="management-actions"><a href="{{route('admin.member-access')}}">Member Activation</a><a href="{{route('admin.member-email')}}">Change Member Email</a></div></section></div></body></html>
+<style>.management-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin:24px}.management-card{padding:24px;border:1px solid #40516b;border-radius:14px;background:#101b2e}.management-actions{display:flex;gap:12px;flex-wrap:wrap}.management-actions a{display:inline-block;padding:12px 16px;border:1px solid #40516b;border-radius:8px;color:#fff!important;background:#1b2b42}.management-actions a:hover{border-color:#e9c583}</style><div class="management-grid"><section class="management-card"><h2>Communication & Member Management</h2><div class="management-actions"><a href="{{route('admin.support.index')}}">Support Inbox</a><a href="{{route('admin.announcements.index')}}">Announcements</a><a href="{{route('admin.members.deletion')}}">Delete Member ID</a></div></section><section class="management-card"><h2>Member Accounts</h2><div class="management-actions"><a href="{{route('admin.member-access')}}">Member Activation</a><a href="{{route('admin.member-email')}}">Change Member Email</a></div></section></div><style>.display-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin:24px}.display-control-card{padding:26px;border:1px solid #40516b;border-radius:16px;background:linear-gradient(135deg,#172941,#0d192b)}.display-control-card h2{color:#e9c583}.display-control-card a{color:#fff!important;text-decoration:none;background:#1b2b42}.display-control-card button{background:#e9c583;color:#142034;font-weight:700}.display-control-card a,.display-control-card button{display:inline-block;padding:12px 18px;border:1px solid #52637b;border-radius:8px;margin-top:8px}</style><div class="display-controls"><!-- LUMIFLOWON_MT5_UI_FIXED -->
+<section class="display-control-card">
+<h2>Dashboard Quick Links</h2>
+<p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+@foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+<span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
+@endforeach
+</div>
+<p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>
+<a href="{{ route('admin.quick-links.index') }}">Quick Links</a>
+</section>
+<section class="display-control-card">
+    <h2>MT5 Live Trading Display</h2>
+    <p>View-only. Trading and settlement actions are not available.</p>
+
+    @php
+        $mt5Enabled = \Illuminate\Support\Facades\Schema::hasTable('mt5_display_settings')
+            && (bool) \Illuminate\Support\Facades\DB::table('mt5_display_settings')->where('id', 1)->value('enabled');
+    @endphp
+
+    <p>Display: <strong>{{ $mt5Enabled ? 'ON' : 'OFF' }}</strong></p>
+    <p>Live connection: Not configured</p>
+
+    <form method="POST" action="{{ route('admin.mt5.toggle') }}">
+        @csrf
+        <input type="hidden" name="enabled" value="{{ $mt5Enabled ? 0 : 1 }}">
+        <button type="submit">{{ $mt5Enabled ? 'Turn OFF MT5 Display' : 'Turn ON MT5 Display' }}</button>
+    </form>
+
+    <p><a href="{{ route('admin.mt5.view') }}">View MT5 Status (JSON)</a></p>
+</section>
+
+</div></body></html>

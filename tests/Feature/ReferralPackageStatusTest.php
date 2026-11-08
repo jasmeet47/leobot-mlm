@@ -263,6 +263,6 @@ class ReferralPackageStatusTest extends TestCase
             ->get(route('member.dashboard'))
             ->assertOk();
 
-        $this->assertSame(2, $packageQueries, 'One batched referral lookup plus one own Magic qualification lookup; no per-referral queries.');
+        $this->assertSame(3, $packageQueries, 'One batched referral lookup, one own investment total and one own Magic qualification lookup; no per-referral queries.');
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'company_referral_enabled' => (bool) env('LUMIFLOWON_COMPANY_REFERRAL_ENABLED', false),
     // Fail closed. Enabling any financial operation requires a separate review.
     'member_activation_enabled' => false,
     'admin_member_activation_enabled' => (bool) env('LUMIFLOWON_ADMIN_MEMBER_ACTIVATION_ENABLED', false),

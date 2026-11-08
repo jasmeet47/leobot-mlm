@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\CompanyReferralService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -48,6 +49,16 @@ final class PrepareBetaRelease extends Command
         }
         if ($this->call('migrate', ['--force' => true, '--no-interaction' => true]) !== self::SUCCESS) {
             return self::FAILURE;
+        }
+        if (config('leobot.company_referral_enabled', false) === true) {
+            $email = (string) getenv('LUMIFLOWON_BETA_COMPANY_OWNER_EMAIL');
+            if (! str_ends_with($email, '@example.test')) {
+                $this->error('Beta company account requires a disposable example.test owner.');
+
+                return self::FAILURE;
+            }
+            CompanyReferralService::prepare($email);
+            $this->info('Company referral mapping verified in isolated Beta; no funding or admin role granted.');
         }
         $this->info('LUMIFLOWON_BETA_RELEASE: identity verified; additive migrations completed; live finance disabled.');
 

@@ -18,6 +18,22 @@ class MemberProfileController extends Controller
         return view('member.profile', ['member' => $request->user(), 'profileWallets' => MemberPaymentSecurity::wallets($request->user()->id), 'walletChangesEnabled' => MemberPaymentSecurity::changesEnabled()]);
     }
 
+    public function correctDetails(Request $request): RedirectResponse
+    {
+        $request->merge(['phone' => preg_replace('/[ ()-]/', '', (string) $request->input('phone'))]);
+        $data = $request->validate(['name' => 'required|string|max:255', 'phone' => ['required', 'string', 'regex:/\A\+?[0-9]{7,15}\z/D'], 'current_password' => ['required', 'current_password:web']]);
+        DB::transaction(function () use ($request, $data): void {
+            $member = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            abort_unless($member->role === 'member' && $member->deleted_at === null && ! $member->is_blocked, 403);
+            abort_unless(Hash::check($data['current_password'], $member->password), 422);
+            $before = ['name' => $member->name, 'phone' => $member->phone];
+            $member->forceFill(['name' => $data['name'], 'phone' => $data['phone']])->save();
+            DB::table('member_security_audits')->insert(['actor_id' => $member->id, 'action' => 'member_profile_corrected', 'details' => json_encode(['before' => $before, 'after' => ['name' => $member->name, 'phone' => $member->phone]], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+        });
+
+        return back()->with('success', 'Your name and mobile number were corrected successfully.');
+    }
+
     public function updatePassword(Request $request): RedirectResponse
     {
         $data = $request->validate(['current_password' => ['required', 'current_password:web'],

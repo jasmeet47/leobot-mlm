@@ -30,6 +30,7 @@ Route::middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->grou
     Route::get('/member/page/{panel}', [MemberDashboardController::class, 'index'])
         ->where('panel', 'team-breakdown|magic-team|direct-referrals|referral-privacy|income-summary|wallet-history|financial-records|member-profile|account-settings|member-support')->name('member.detail');
     Route::get('/member/profile', [MemberProfileController::class, 'index'])->name('member.profile');
+    Route::post('/member/profile/details', [MemberProfileController::class, 'correctDetails'])->middleware('throttle:5,1,profile-details')->name('member.profile.details');
     Route::post('/member/profile/password', [MemberProfileController::class, 'updatePassword'])->middleware('throttle:5,1')->name('member.profile.password');
     Route::get('/member/magic-income/details', [MagicIncomeDetailsController::class, 'index'])->name('member.magic-income.details');
 });

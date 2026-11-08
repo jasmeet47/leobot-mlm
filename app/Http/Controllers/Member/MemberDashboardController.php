@@ -275,7 +275,13 @@ class MemberDashboardController extends Controller
         })->where('d.user_id', $member->id)->where('d.status', 'approved')->where('l.entry_type', 'verified_deposit')->where('l.reference_type', 'member_deposit_request')->where('l.wallet_type', 'activation_balance')->where('l.status', 'completed')->whereColumn('l.amount', 'd.amount')->whereRaw("l.transaction_key = 'deposit:credit:' || d.id::text")->sum('l.amount');
         $levelIncome = DB::table('financial_ledger')->where('user_id', $member->id)->where('wallet_type', 'available_balance')->where('entry_type', 'generation_income_settlement')->where('status', 'completed')->whereBetween('level', [1, 51])->groupBy('level')->selectRaw('level,SUM(amount) as total')->pluck('total', 'level');
 
+        $activeActivation = (string) DB::table('activation_packages')->where('user_id', $member->id)->where('status', 'active')->sum('investment_amount');
+        $activeStaking = (string) DB::table('staking_positions')->where('user_id', $member->id)->where('status', 'active')->selectRaw('COALESCE(SUM(amount-withdrawn_amount),0) as total')->value('total');
+
         return view('member.dashboard', [
+            'activeActivation' => bcadd($activeActivation, '0', 8),
+            'activeStaking' => bcadd($activeStaking, '0', 8),
+            'currentInvestment' => bcadd($activeActivation, $activeStaking, 8),
             'verifiedDepositTotal' => bcadd($verifiedDepositTotal, '0', 8),
             'levelIncome' => $levelIncome,
             'member' => $member,

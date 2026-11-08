@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureMemberPin;
 use App\Models\User;
 use App\Services\LoginCaptcha;
+use App\Services\PublicSponsorService;
 use App\Services\RegistrationEmailOtpService;
 use App\Services\TeamCounterService;
 use Illuminate\Database\QueryException;
@@ -28,14 +29,15 @@ class RegisterController extends Controller
 
     public function showRegistrationForm(Request $request)
     {
-        $referralCode = $request->query('ref');
+        $referralCode = $request->query('ref', config('leobot.company_referral_enabled', false) ? 'LUMIFLOWON' : null);
         $sponsorName = null;
 
         if (is_string($referralCode) && $referralCode !== '') {
-            $sponsor = User::where('username', $referralCode)->first();
+            $sponsor = PublicSponsorService::resolve($referralCode);
 
             if ($sponsor) {
                 $sponsorName = $sponsor->name;
+                $referralCode = $sponsor->username;
             } else {
                 $referralCode = null;
             }
@@ -63,9 +65,7 @@ class RegisterController extends Controller
             'sponsor_id' => ['required', 'string', 'max:255'],
         ]);
 
-        $sponsor = User::query()
-            ->where('username', $data['sponsor_id'])
-            ->first(['username', 'name']);
+        $sponsor = PublicSponsorService::resolve($data['sponsor_id']);
 
         if (! $sponsor) {
             return response()->json([
@@ -126,10 +126,7 @@ class RegisterController extends Controller
                     $validated,
                     $candidate
                 ) {
-                    $sponsor = User::where(
-                        'username',
-                        $validated['sponsor_id']
-                    )->lockForUpdate()->first();
+                    $sponsor = PublicSponsorService::resolve($validated['sponsor_id'], true);
 
                     if (! $sponsor) {
                         throw ValidationException::withMessages([
