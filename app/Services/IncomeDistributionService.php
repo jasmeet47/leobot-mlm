@@ -91,7 +91,7 @@ final class IncomeDistributionService
 
     public static function distribute(User $admin, int $statementId): void
     {
-        if ((app()->environment('production') && (! config('leobot.production_financial_approval', false) || ! config('leobot_magic.production_financial_approval', false))) || ! config('leobot.self_income_settlement_enabled', false) || ! config('leobot.generation_income_settlement_enabled', false) || ! config('leobot_magic.magic_matrix_settlement_enabled', false)) {
+        if ((app()->environment('production') && ! config('leobot.production_financial_approval', false)) || ! config('leobot.self_income_settlement_enabled', false)) {
             throw new RuntimeException('Income payout controls are OFF. Admin verification, funded reserves and separately approved payout controls are required; no payout was made.');
         }
         if (! DB::table('income_distribution_requests')->where('statement_id', $statementId)->exists()) {
@@ -109,11 +109,17 @@ final class IncomeDistributionService
             foreach (DB::table('profit_sharing_self_reserves')->where('funding_id', $fund->id)->where('self_share_reserved', '>', 0)->get() as $r) {
                 SelfIncomeSettlementService::settle($admin, (int) $r->id);
             }
-            foreach (DB::table('generation_member_allocations')->where('funding_id', $fund->generation_funding_id)->where('classification', 'payable')->where('status', 'qualified_reserved_no_payout')->get() as $r) {
-                GenerationIncomeSettlementService::settle($admin, (int) $r->id);
+            if (config('leobot.generation_income_settlement_enabled', false) === true) {
+                foreach (DB::table('generation_member_allocations')->where('funding_id', $fund->generation_funding_id)->where('classification', 'payable')->where('status', 'qualified_reserved_no_payout')->get() as $r) {
+                    GenerationIncomeSettlementService::settle($admin, (int) $r->id);
+                }
             }
-            foreach (DB::table('staking_profit_allocations')->where('statement_id', $statementId)->get() as $r) {
-                MagicIncomeSettlementService::settleSource($admin, (int) $fund->id, (int) $r->user_id);
+            $matrix = DB::table('magic_matrix_settings')->where('id', 1)->lockForUpdate()->first();
+            $global = DB::table('magic_income_settings')->where('id', 1)->lockForUpdate()->first();
+            if (config('leobot_magic.magic_matrix_settlement_enabled', false) === true && (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true) && $matrix && $global && $matrix->settlement_enabled && $global->magic_enabled) {
+                foreach (DB::table('staking_profit_allocations')->where('statement_id', $statementId)->get() as $r) {
+                    MagicIncomeSettlementService::settleSource($admin, (int) $fund->id, (int) $r->user_id);
+                }
             }
         });
     }
