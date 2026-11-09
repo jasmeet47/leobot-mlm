@@ -88,10 +88,10 @@ final class VerifiedDepositService
             throw new RuntimeException('Pending deposit with an immutable treasury address is required.');
         }
         $verificationReference = 'chain:'.$snapshot->network.':'.$snapshot->tx_hash;
-        (new UsdtPaymentVerificationPolicy(app(UsdtChainVerifier::class)))->assertVerified(
-            $snapshot->network, $snapshot->tx_hash, $snapshot->receiving_address, $snapshot->receiving_address, (string) $snapshot->amount
+        $chainEvidence = (new UsdtPaymentVerificationPolicy(app(UsdtChainVerifier::class)))->assertIncomingVerified(
+            $snapshot->network, $snapshot->tx_hash, $snapshot->receiving_address, (string) $snapshot->amount
         );
-        DB::transaction(function () use ($adminId, $depositId, $verificationReference, $snapshot): void {
+        DB::transaction(function () use ($adminId, $depositId, $verificationReference, $snapshot, $chainEvidence): void {
             self::gate();
             $admin = DB::table('users')->where('id', $adminId)->lockForUpdate()->first();
             if (! $admin || ! in_array(strtolower((string) ($admin->role ?? '')), ['admin', 'super_admin'], true) || $admin->status !== 'active' || $admin->deleted_at !== null || self::blocked($admin)) {
@@ -120,6 +120,13 @@ final class VerifiedDepositService
                 'status' => 'approved', 'reviewed_by' => $adminId, 'reviewed_at' => now(),
                 'verification_reference' => $verificationReference, 'updated_at' => now(),
             ]);
+            if ($chainEvidence !== null) {
+                DB::table('member_security_audits')->insert([
+                    'actor_id' => $adminId, 'action' => 'verified_deposit_chain_evidence',
+                    'details' => json_encode(['deposit_id' => $depositId, 'user_id' => (int) $deposit->user_id, 'evidence' => $chainEvidence], JSON_THROW_ON_ERROR),
+                    'created_at' => now(),
+                ]);
+            }
         }, 3);
     }
 

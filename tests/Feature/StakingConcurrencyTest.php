@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\StakingProfitService;
 use App\Services\StakingService;
+use App\Services\VerifiedDepositService;
 use App\Services\WalletService;
 use App\Support\DisposableDatabase;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
@@ -187,5 +188,20 @@ final class StakingConcurrencyTest extends TestCase
         $this->assertDatabaseCount('magic_matrix_cycles', 1);
         $this->assertSame($ledger, DB::table('financial_ledger')->count());
         $this->assertSame('50.00000000', $member->fresh()->available_balance);
+    }
+
+    public function test_concurrent_surplus_deposit_approvals_credit_requested_amount_and_audit_once(): void
+    {
+        config(['leobot.deposits_enabled' => true, 'leobot_deposits.receiving_addresses.BEP20' => '0x'.str_repeat('2', 40)]);
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active']);
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $deposit = VerifiedDepositService::submit($member->id, '50', 'BEP20', '0x'.str_repeat('e', 64), 'concurrent_deposit_fixture');
+        $request = [$admin->id, (string) $deposit, 'unused_deposit_key', 'deposit-approve'];
+        $results = $this->simultaneous([$request, $request], false, 'member_deposit_requests', $deposit);
+        $this->assertCount(1, array_filter($results, fn ($result) => $result['ok']));
+        $this->assertSame('50.00000000', $member->fresh()->activation_balance);
+        $this->assertDatabaseCount('financial_ledger', 1);
+        $this->assertDatabaseCount('member_security_audits', 1);
+        $this->assertDatabaseHas('member_deposit_requests', ['id' => $deposit, 'status' => 'approved']);
     }
 }

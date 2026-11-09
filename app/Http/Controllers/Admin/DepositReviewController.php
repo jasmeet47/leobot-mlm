@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\UsdtVerificationFailed;
 use App\Http\Controllers\Controller;
 use App\Services\VerifiedDepositService;
 use Illuminate\Database\QueryException;
@@ -22,6 +23,7 @@ final class DepositReviewController extends Controller
                 $x->where('u.username', 'ilike', '%'.$q.'%')->orWhere('u.name', 'ilike', '%'.$q.'%')->orWhere('u.email', 'ilike', '%'.$q.'%')->orWhere('d.tx_hash', 'ilike', '%'.$q.'%');
             });
         }
+        $query->selectSub(DB::table('member_security_audits as a')->where('a.action', 'verified_deposit_chain_evidence')->whereRaw("a.details->>'deposit_id' = d.id::text")->orderByDesc('a.id')->limit(1)->select('a.details'), 'chain_evidence');
         $status = $data['status'] ?? 'pending';
         if ($status !== 'all') {
             $query->where('d.status', $status);
@@ -39,6 +41,8 @@ final class DepositReviewController extends Controller
     {
         try {
             VerifiedDepositService::approve((int) $request->user()->id, $id);
+        } catch (UsdtVerificationFailed $error) {
+            return back()->with('deposit_verification_error', $error->getMessage());
         } catch (QueryException $e) {
             report($e);
 
