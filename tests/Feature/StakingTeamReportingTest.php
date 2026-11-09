@@ -8,12 +8,14 @@ use App\Services\MemberAccountAdministration;
 use App\Services\StakingPrincipalService;
 use App\Services\StakingService;
 use App\Services\TeamCounterService;
+use App\Services\TeamLevelViewerService;
 use App\Services\WalletService;
 use App\Services\WithdrawalRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 final class StakingTeamReportingTest extends TestCase
@@ -100,5 +102,63 @@ final class StakingTeamReportingTest extends TestCase
         $this->assertDatabaseHas('member_teams', ['user_id' => $sponsor->id, 'level' => 1, 'total_business' => '40']);
         WithdrawalRequestService::reject($admin, $request);
         $this->assertDatabaseHas('member_teams', ['user_id' => $sponsor->id, 'level' => 1, 'total_business' => '50']);
+    }
+
+    public function test_dashboard_uses_current_statuses_even_when_reporting_cache_is_stale(): void
+    {
+        $root = User::factory()->create(['role' => 'member', 'security_pin' => Hash::make('123456')]);
+        $child = User::factory()->create(['role' => 'member', 'status' => 'inactive', 'sponsor_user_id' => $root->id]);
+        TeamCounterService::synchronize($child->id);
+        DB::table('users')->where('id', $child->id)->update(['status' => 'active']);
+        $before = DB::table('member_teams')->orderBy('id')->get()->toJson();
+        $ledger = DB::table('financial_ledger')->count();
+
+        $response = $this->actingAs($root)->get(route('member.detail', ['panel' => 'team-breakdown']))->assertOk();
+        $row = $response->viewData('levelRows')->get(1);
+        $this->assertSame(1, $row->active_count);
+        $this->assertSame(0, $row->inactive_count);
+        $this->assertSame(1, $response->viewData('teamSummary')->total_active_team);
+        $this->assertSame(0, $response->viewData('teamSummary')->total_inactive_team);
+        $this->assertSame($before, DB::table('member_teams')->orderBy('id')->get()->toJson());
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+        $this->assertSame('active', $child->fresh()->status);
+        Sanctum::actingAs($root, ['member:read']);
+        $this->getJson('/api/dashboard-counters')->assertOk()
+            ->assertJsonPath('data.overview_counters.total_active_team', 1)
+            ->assertJsonPath('data.overview_counters.total_inactive_team', 0)
+            ->assertJsonPath('data.level_wise_breakdown.0.active_count', 1)
+            ->assertJsonPath('data.level_wise_breakdown.0.inactive_count', 0);
+
+        DB::table('users')->where('id', $child->id)->update(['status' => 'inactive']);
+        $response = $this->get(route('member.detail', ['panel' => 'team-breakdown']))->assertOk();
+        $this->assertSame(0, $response->viewData('levelRows')->get(1)->active_count);
+        $this->assertSame(1, $response->viewData('levelRows')->get(1)->inactive_count);
+    }
+
+    public function test_live_status_reporting_is_scoped_to_51_levels_and_stops_sponsor_cycles(): void
+    {
+        $root = User::factory()->create(['role' => 'member']);
+        $parent = $root;
+        for ($level = 1; $level <= 52; $level++) {
+            $parent = User::factory()->create(['role' => 'member', 'status' => 'active', 'sponsor_user_id' => $parent->id]);
+        }
+        User::factory()->create(['role' => 'member', 'status' => 'active']);
+        $counts = TeamLevelViewerService::statusCounts($root->id);
+        $this->assertCount(51, $counts);
+        $this->assertSame(51, (int) $counts->sum('active_count'));
+        $this->assertFalse($counts->has(52));
+
+        $child = User::factory()->create(['role' => 'member', 'status' => 'inactive', 'sponsor_user_id' => $parent->id]);
+        DB::table('users')->where('id', $root->id)->update(['sponsor_user_id' => $child->id]);
+        $cycleCounts = TeamLevelViewerService::statusCounts($child->id);
+        $this->assertSame(51, (int) $cycleCounts->sum('active_count') + (int) $cycleCounts->sum('inactive_count'));
+        $this->assertSame(0, (int) TeamLevelViewerService::statusCounts(User::factory()->create()->id)->sum('active_count'));
+        $cycleRoot = User::factory()->create(['role' => 'member', 'status' => 'active']);
+        $cycleChild = User::factory()->create(['role' => 'member', 'status' => 'inactive', 'sponsor_user_id' => $cycleRoot->id]);
+        DB::table('users')->where('id', $cycleRoot->id)->update(['sponsor_user_id' => $cycleChild->id]);
+        $counts = TeamLevelViewerService::statusCounts($cycleRoot->id);
+        $this->assertCount(1, $counts);
+        $this->assertSame(0, (int) $counts->get(1)->active_count);
+        $this->assertSame(1, (int) $counts->get(1)->inactive_count);
     }
 }

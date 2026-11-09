@@ -27,7 +27,7 @@ final class MemberDashboardMagicSummaryContractTest extends TestCase
         foreach (['weekly_usdt', 'monthly_usdt', 'lifetime_usdt'] as $period) {
             $this->assertSame(0, bccomp('0', $summary[$period], 8));
         }
-        $response->assertSee('Magic Income (Settled)')->assertSee('No pending or held amounts.');
+        $response->assertSee('Magic Income')->assertDontSee('Magic Income (Settled)')->assertDontSee('No pending or held amounts.');
     }
 
     public function test_member_dashboard_handles_absent_or_partial_summary_without_blade_errors(): void
@@ -35,7 +35,7 @@ final class MemberDashboardMagicSummaryContractTest extends TestCase
         $data = $this->dashboard()->original->getData();
         $data['magicIncomeSummary'] = null;
         $html = view('member.dashboard', $data)->render();
-        $this->assertStringNotContainsString('Magic Income (Settled)', $html);
+        $this->assertStringNotContainsString('Magic Income Summary', $html);
         $data['magicIncomeSummary'] = ['weekly_usdt' => '12.00000001'];
         $html = view('member.dashboard', $data)->render();
         $this->assertStringContainsString('12.00000001 USDT', $html);

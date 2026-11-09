@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -22,6 +23,22 @@ WITH RECURSIVE team AS (
 )
 SQL;
 
+    /** @return Collection<int, object> */
+    public static function statusCounts(int $rootId): Collection
+    {
+        if ($rootId < 1 || DB::getDriverName() !== 'pgsql') {
+            throw new InvalidArgumentException('A valid member and PostgreSQL are required.');
+        }
+
+        // Read canonical statuses so legacy or missed cache updates cannot mislabel members.
+        return collect(DB::select(self::TEAM_SQL."
+            SELECT t.level,
+                COUNT(*) FILTER (WHERE u.status = 'active') AS active_count,
+                COUNT(*) FILTER (WHERE u.status <> 'active' OR u.status IS NULL) AS inactive_count
+            FROM team t JOIN users u ON u.id = t.id
+            GROUP BY t.level ORDER BY t.level", [$rootId, $rootId, $rootId]))->keyBy('level');
+    }
+
     /** @return array{counts: array<int,int>, members: LengthAwarePaginator} */
     public static function view(int $rootId, int $level, string $search, int $page = 1): array
     {
@@ -34,23 +51,23 @@ SQL;
         }
         $base = [$rootId, $rootId, $rootId];
         $counts = array_fill(1, self::MAX_LEVEL, 0);
-        foreach (DB::select(self::TEAM_SQL . ' SELECT level, COUNT(*) AS total FROM team GROUP BY level', $base) as $row) {
+        foreach (DB::select(self::TEAM_SQL.' SELECT level, COUNT(*) AS total FROM team GROUP BY level', $base) as $row) {
             $counts[(int) $row->level] = (int) $row->total;
         }
 
-        $pattern = '%' . addcslashes($search, '%_\\') . '%';
+        $pattern = '%'.addcslashes($search, '%_\\').'%';
         $filter = ' FROM team t JOIN users u ON u.id = t.id WHERE t.level = ?';
         $bind = array_merge($base, [$level]);
         if ($search !== '') {
             $filter .= ' AND u.username ILIKE ?';
             $bind[] = $pattern;
         }
-        $total = DB::selectOne(self::TEAM_SQL . ' SELECT COUNT(*) AS total' . $filter, $bind);
+        $total = DB::selectOne(self::TEAM_SQL.' SELECT COUNT(*) AS total'.$filter, $bind);
         $totalCount = (int) $total->total;
         $pageSize = 20;
         $offset = ($page - 1) * $pageSize;
-        $rows = DB::select(self::TEAM_SQL . ' SELECT u.id, u.username, u.name, u.status, u.is_blocked, u.created_at'
-            . $filter . ' ORDER BY u.id DESC LIMIT ? OFFSET ?',
+        $rows = DB::select(self::TEAM_SQL.' SELECT u.id, u.username, u.name, u.status, u.is_blocked, u.created_at'
+            .$filter.' ORDER BY u.id DESC LIMIT ? OFFSET ?',
             array_merge($bind, [$pageSize, $offset]));
         $members = new LengthAwarePaginator($rows, $totalCount, $pageSize, $page);
         $members->withPath(request()->url())->appends(request()->query());

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MagicIncomeReportService;
 use App\Services\MagicMatrixEnrollmentService;
 use App\Services\MagicMatrixTeamReadService;
+use App\Services\TeamLevelViewerService;
 use App\Services\TradingProfitReviewerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +41,16 @@ class MemberDashboardController extends Controller
             ->orderBy('level')
             ->get()
             ->keyBy('level');
+
+        $statusCounts = TeamLevelViewerService::statusCounts((int) $member->id);
+        for ($level = 1; $level <= 51; $level++) {
+            $entry = $levelRows->get($level) ?? (object) ['level' => $level, 'total_business' => '0.00000000'];
+            $entry->active_count = (int) ($statusCounts->get($level)->active_count ?? 0);
+            $entry->inactive_count = (int) ($statusCounts->get($level)->inactive_count ?? 0);
+            $levelRows->put($level, $entry);
+        }
+        $teamSummary->total_active_team = $levelRows->sum('active_count');
+        $teamSummary->total_inactive_team = $levelRows->sum('inactive_count');
 
         // Missing or invalid privacy settings hide details.
         $privacy = DB::table('referral_privacy_settings')

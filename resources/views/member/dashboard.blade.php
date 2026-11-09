@@ -53,14 +53,14 @@
 <header class="portal-topbar"><button id="portal-menu-toggle" class="action mobile-menu" aria-controls="portal-navigation" aria-expanded="false" type="button">☰ Menu</button><a class="portal-brand-mobile" href="{{ route('member.dashboard') }}"><img src="{{ route('lumiflowon.brand.logo') }}" alt="LumiFlowOn">LumiFlowOn</a><div class="portal-eyebrow">Member / {{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Overview' }}</div><div class="portal-user"><div class="portal-avatar">{{ mb_substr($member->name, 0, 1) }}</div><div>{{ $member->name }}<small>{{ $member->username }}</small></div></div></header>
 <div class="portal-welcome"><h1>{{ $lbPanel ? ucwords(str_replace('-', ' ', $lbPanel)) : 'Your financial overview' }}<span>.</span></h1>@include('partials.member-qualification',['qualificationMember'=>$member])<p>Welcome back, {{ $member->name }}.</p></div>
 <section id="account-summary" aria-label="Member financial summary">
-        <h2>Your Account Summary</h2><div class="card" id="verified-deposit-total"><div class="label">Total Verified Deposits</div><div class="value">{{ $verifiedDepositTotal }} USDT</div><small>Approved deposits · separate from remaining balance and staking</small></div>
+        <h2>Your Account Summary</h2><div class="card" id="verified-deposit-total"><div class="label">Total Deposits</div><div class="value">{{ $verifiedDepositTotal }} USDT</div></div>
         <div class="grid">
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
-            <div class="card"><div class="label">Activation Balance</div><small>Unspent activation wallet</small><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
-            <div class="card"><div class="label">Total Investment</div><small>Active packages + remaining staking</small><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
+            <div class="card"><div class="label">Activation Balance</div><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
+            <div class="card"><div class="label">Total Investment</div><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
         </div>
-<div class="grid" style="margin-top:14px"><div class="card"><div class="label">Active Activation Packages</div><div class="value">{{$activeActivation}} USDT</div></div><div class="card"><div class="label">Active Staking Principal</div><div class="value">{{$activeStaking}} USDT</div></div></div>
+
     </section>
 
 <!-- LUMIFLOWON_MT5_UI_FIXED -->
@@ -78,13 +78,13 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 
 @if(isset($magicIncomeSummary) && is_array($magicIncomeSummary))
 <section class="lb-magic-summary" aria-label="Magic Income Summary" style="margin:18px 0;padding:18px;border:1px solid #2b435e;border-radius:14px;background:#101d30">
-  <h2>Magic Income (Settled)</h2>
+  <h2>Magic Income</h2>
   <div class="grid">
     <div class="card"><div class="label">Weekly</div><div class="value">{{ $magicIncomeSummary['weekly_usdt'] ?? '0.00000000' }} USDT</div></div>
     <div class="card"><div class="label">Monthly</div><div class="value">{{ $magicIncomeSummary['monthly_usdt'] ?? '0.00000000' }} USDT</div></div>
     <div class="card"><div class="label">Lifetime</div><div class="value">{{ $magicIncomeSummary['lifetime_usdt'] ?? '0.00000000' }} USDT</div></div>
   </div>
-  <p class="muted">Only credited Magic entitlements. No pending or held amounts.</p>
+
 </section>
 @endif
 <!-- LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->
@@ -92,10 +92,10 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <section class="lb-quick-actions" aria-label="Member quick actions">
   <h2>Quick Actions</h2>
   <div class="lb-quick-grid">
-    <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong><small>Withdrawal requests</small></a>
-    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong><small>Add funds to your account</small></a>
-    <a class="lb-quick-link" href="{{ route('member.staking.index') }}"><strong>Staking</strong><small>View staking status</small></a>
-    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong><small>Transfer between your wallets</small></a>
+    <a class="lb-quick-link" href="{{ route('member.withdrawals.index') }}"><strong>Withdraw</strong></a>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Deposit</strong></a>
+    <a class="lb-quick-link" href="{{ route('member.staking.index') }}"><strong>Staking</strong></a>
+    <a class="lb-quick-link" href="{{ route('member.deposit-transfer.index') }}"><strong>Fund Transfer</strong></a>
   </div>
 </section>
 <!-- /LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->

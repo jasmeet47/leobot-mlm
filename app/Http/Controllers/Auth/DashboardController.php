@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\TeamLevelViewerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +18,7 @@ class DashboardController extends Controller
          */
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Authentication required.',
@@ -52,6 +53,18 @@ class DashboardController extends Controller
             ->orderBy('level', 'asc')
             ->get();
 
+        $levelWiseData = $levelWiseData->keyBy('level');
+        $statusCounts = TeamLevelViewerService::statusCounts((int) $user->id);
+        for ($level = 1; $level <= 51; $level++) {
+            $entry = $levelWiseData->get($level) ?? (object) ['level' => $level, 'total_business' => '0.00000000'];
+            $entry->active_count = (int) ($statusCounts->get($level)->active_count ?? 0);
+            $entry->inactive_count = (int) ($statusCounts->get($level)->inactive_count ?? 0);
+            $levelWiseData->put($level, $entry);
+        }
+        $teamSummary->total_active_team = $levelWiseData->sum('active_count');
+        $teamSummary->total_inactive_team = $levelWiseData->sum('inactive_count');
+        $levelWiseData = $levelWiseData->values();
+
         /*
          * Return only the logged-in member's information.
          */
@@ -71,14 +84,11 @@ class DashboardController extends Controller
                 ],
 
                 'overview_counters' => [
-                    'total_active_team' =>
-                        (int) ($teamSummary->total_active_team ?? 0),
+                    'total_active_team' => (int) ($teamSummary->total_active_team ?? 0),
 
-                    'total_inactive_team' =>
-                        (int) ($teamSummary->total_inactive_team ?? 0),
+                    'total_inactive_team' => (int) ($teamSummary->total_inactive_team ?? 0),
 
-                    'total_team_business' =>
-                        (string) ($teamSummary->total_team_business ?? '0'),
+                    'total_team_business' => (string) ($teamSummary->total_team_business ?? '0'),
                 ],
 
                 'level_wise_breakdown' => $levelWiseData,
