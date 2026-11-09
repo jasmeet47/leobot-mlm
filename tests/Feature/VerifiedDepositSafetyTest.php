@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Contracts\UsdtChainVerifier;
+use App\Exceptions\UsdtVerificationFailed;
 use App\Models\User;
 use App\Services\ReadOnlyUsdtChainVerifier;
 use App\Services\VerifiedDepositService;
@@ -10,6 +11,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -161,13 +163,13 @@ final class VerifiedDepositSafetyTest extends TestCase
         $this->assertDatabaseCount('financial_ledger', 0);
     }
 
-    private function surplusReceipt(string $hash, string $recipient): void
+    private function surplusReceipt(string $hash, string $recipient, string $receivedAmount = '50.000279279668961266'): void
     {
         config(['leobot_usdt_rpc.enabled' => true, 'leobot_usdt_rpc.bsc_rpc_url' => 'https://rpc.example.test']);
         $receipt = ['status' => '0x1', 'blockHash' => '0x'.str_repeat('c', 64), 'blockNumber' => '0x64', 'transactionHash' => $hash,
             'logs' => [['address' => '0x55d398326f99059ff775485246999027b3197955', 'removed' => false,
                 'topics' => ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', '0x'.str_repeat('0', 64), '0x'.str_repeat('0', 24).substr($recipient, 2)],
-                'data' => '0x'.str_pad('2b5e4ad178efe1ff2', 64, '0', STR_PAD_LEFT), 'logIndex' => '0x3b']]];
+                'data' => '0x'.str_pad(gmp_strval(gmp_init(bcmul($receivedAmount, '1000000000000000000', 0), 10), 16), 64, '0', STR_PAD_LEFT), 'logIndex' => '0x3b']]];
         $responses = ['eth_chainId' => '0x38', 'eth_getTransactionReceipt' => $receipt, 'eth_getTransactionByHash' => ['hash' => $hash, 'blockHash' => $receipt['blockHash'], 'blockNumber' => '0x64'], 'eth_blockNumber' => '0x100'];
         Http::preventStrayRequests();
         Http::fake(fn ($request) => Http::response(['jsonrpc' => '2.0', 'id' => 1, 'result' => $responses[$request['method']] ?? null]));
@@ -220,6 +222,57 @@ final class VerifiedDepositSafetyTest extends TestCase
             $this->assertDatabaseHas('member_deposit_requests', ['id' => $id, 'status' => 'pending']);
             $this->assertDatabaseCount('financial_ledger', 0);
             $this->assertDatabaseCount('member_security_audits', 0);
+        }
+    }
+
+    private function assertWholeDeposit(string $requested, string $credit, string $surplus): void
+    {
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active']);
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $hash = '0x'.str_repeat('f', 64);
+        $id = VerifiedDepositService::submit($member->id, $requested, 'BEP20', $hash, 'whole_deposit_fixture');
+        $this->surplusReceipt($hash, '0x'.str_repeat('2', 40), $requested);
+        VerifiedDepositService::approve($admin->id, $id);
+        $this->assertSame($credit, $member->fresh()->activation_balance);
+        $this->assertDatabaseHas('member_deposit_requests', ['id' => $id, 'amount' => $requested, 'status' => 'approved']);
+        $audit = json_decode(DB::table('member_security_audits')->where('action', 'verified_deposit_chain_evidence')->first()->details, true);
+        $this->assertSame(bcadd($requested, '0', 8), $audit['requested_amount']);
+        $this->assertSame($credit, $audit['evidence']['credited_amount']);
+        $this->assertSame($surplus, $audit['evidence']['uncredited_surplus']);
+        $this->assertDatabaseHas('financial_ledger', ['transaction_key' => 'deposit:credit:'.$id, 'amount' => $credit]);
+        $member->forceFill(['security_pin' => Hash::make('123456')])->save();
+        $this->actingAs($member)->get(route('member.deposit-transfer.index'))->assertOk()->assertSee('Credited (USDT)')->assertSee($credit);
+    }
+
+    public function test_11_235_deposit_credits_11_and_audits_fraction(): void
+    {
+        $this->assertWholeDeposit('11.235', '11.00000000', '0.235000000000000000');
+    }
+
+    public function test_101_954562_deposit_credits_101_and_audits_fraction(): void
+    {
+        $this->assertWholeDeposit('101.954562', '101.00000000', '0.954562000000000000');
+    }
+
+    public function test_51_564258_deposit_credits_51_and_audits_fraction(): void
+    {
+        $this->assertWholeDeposit('51.564258', '51.00000000', '0.564258000000000000');
+    }
+
+    public function test_receipt_below_whole_credit_is_not_approved(): void
+    {
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active']);
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $hash = '0x'.str_repeat('f', 64);
+        $id = VerifiedDepositService::submit($member->id, '11.235', 'BEP20', $hash, 'whole_deposit_underpaid');
+        $this->surplusReceipt($hash, '0x'.str_repeat('2', 40), '10.999');
+        try {
+            VerifiedDepositService::approve($admin->id, $id);
+            $this->fail('Receipt below eleven must not credit eleven.');
+        } catch (UsdtVerificationFailed) {
+            $this->assertSame('0.00000000', $member->fresh()->activation_balance);
+            $this->assertDatabaseHas('member_deposit_requests', ['id' => $id, 'status' => 'pending']);
+            $this->assertDatabaseCount('financial_ledger', 0);
         }
     }
 }

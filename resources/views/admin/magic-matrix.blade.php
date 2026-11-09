@@ -72,9 +72,11 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <button @disabled(!$canEdit)>Save policy</button></form>
 @foreach(['global_enabled'=>'Global Magic','enrollment_enabled'=>'Matrix Enrollment','topup_enabled'=>'Re-Topup','settlement_enabled'=>'Settlement'] as $toggle=>$label)
 @php($current=$toggle==='global_enabled'?(bool)($global?->magic_enabled??false):(bool)($settings?->$toggle??false))
-<form method="post" action="{{route('admin.magic.switches')}}">@csrf
-@foreach(['global_enabled','enrollment_enabled','topup_enabled','settlement_enabled'] as $field)<input type="hidden" name="{{$field}}" value="{{$field===$toggle?(int)!$current:($field==='global_enabled'?(int)($global?->magic_enabled??false):(int)($settings?->$field??false))}}">@endforeach
-<button @disabled(!$canEdit)>{{$label}}: {{$current?'ON — Turn OFF':'OFF — Turn ON'}}</button></form>@endforeach</section>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0"><strong>{{$label}}: {{$current?'ON':'OFF'}}</strong>
+@foreach([1=>'ON',0=>'OFF'] as $desired=>$buttonLabel)
+<form method="post" action="{{route('admin.magic.switches')}}" style="display:inline">@csrf<input type="hidden" name="switch_name" value="{{$toggle}}"><input type="hidden" name="enabled" value="{{$desired}}"><button @disabled(!$canEdit || (int)$current===$desired)>{{$label}} {{$buttonLabel}}</button></form>
+@endforeach
+</div>@endforeach</section>
 <section><h2>20-Level Magic Pool Rate Table</h2><p>Proposed: equal <strong>5% on each level</strong> = 100%. Not a guarantee of member earnings. Empty/ineligible positions remain held.</p>
 <form method="post" action="{{route('admin.magic.rates')}}">@csrf
 <table><thead><tr><th>Level</th><th>Percentage of source ID's Magic allocation</th></tr></thead><tbody>

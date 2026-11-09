@@ -27,6 +27,13 @@ final class VerifiedDepositService
         }
     }
 
+    public static function wholeUsdtCredit(string $requestedAmount): string
+    {
+        self::amount($requestedAmount);
+
+        return bcadd(bcdiv($requestedAmount, '1', 0), '0', 8);
+    }
+
     public static function submit(int $memberId, string $amount, string $network, string $txHash, string $requestKey, ?string $expectedReceivingAddress = null): int
     {
         self::gate();
@@ -88,10 +95,11 @@ final class VerifiedDepositService
             throw new RuntimeException('Pending deposit with an immutable treasury address is required.');
         }
         $verificationReference = 'chain:'.$snapshot->network.':'.$snapshot->tx_hash;
+        $creditAmount = self::wholeUsdtCredit((string) $snapshot->amount);
         $chainEvidence = (new UsdtPaymentVerificationPolicy(app(UsdtChainVerifier::class)))->assertIncomingVerified(
-            $snapshot->network, $snapshot->tx_hash, $snapshot->receiving_address, (string) $snapshot->amount
+            $snapshot->network, $snapshot->tx_hash, $snapshot->receiving_address, $creditAmount
         );
-        DB::transaction(function () use ($adminId, $depositId, $verificationReference, $snapshot, $chainEvidence): void {
+        DB::transaction(function () use ($adminId, $depositId, $verificationReference, $snapshot, $chainEvidence, $creditAmount): void {
             self::gate();
             $admin = DB::table('users')->where('id', $adminId)->lockForUpdate()->first();
             if (! $admin || ! in_array(strtolower((string) ($admin->role ?? '')), ['admin', 'super_admin'], true) || $admin->status !== 'active' || $admin->deleted_at !== null || self::blocked($admin)) {
@@ -112,7 +120,7 @@ final class VerifiedDepositService
             if (! $member || ! in_array($member->status, ['active', 'inactive'], true) || $member->role !== 'member' || $member->deleted_at !== null || self::blocked($member)) {
                 throw new RuntimeException('This account is not eligible for deposit credit. Please contact support.');
             }
-            WalletService::credit((int) $deposit->user_id, 'activation_balance', (string) $deposit->amount,
+            WalletService::credit((int) $deposit->user_id, 'activation_balance', $creditAmount,
                 'verified_deposit', 'deposit:credit:'.$deposit->id,
                 ['reference_type' => 'member_deposit_request', 'reference_id' => $deposit->id,
                     'description' => 'Admin-verified external USDT deposit']);
@@ -123,7 +131,7 @@ final class VerifiedDepositService
             if ($chainEvidence !== null) {
                 DB::table('member_security_audits')->insert([
                     'actor_id' => $adminId, 'action' => 'verified_deposit_chain_evidence',
-                    'details' => json_encode(['deposit_id' => $depositId, 'user_id' => (int) $deposit->user_id, 'evidence' => $chainEvidence], JSON_THROW_ON_ERROR),
+                    'details' => json_encode(['deposit_id' => $depositId, 'user_id' => (int) $deposit->user_id, 'requested_amount' => (string) $snapshot->amount, 'credit_policy' => 'whole_usdt_floor', 'evidence' => $chainEvidence], JSON_THROW_ON_ERROR),
                     'created_at' => now(),
                 ]);
             }

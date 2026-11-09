@@ -17,7 +17,7 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 @if(session('status'))<div class="notice success" role="status">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="notice errors" role="alert"><strong>Request could not be completed:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <div class="layout">
-<section class="panel" aria-labelledby="deposit-title"><h2 id="deposit-title">Submit deposit evidence</h2><p class="hint">Evidence submission is subject to the deposit safety switch and independent admin verification.</p>
+<section class="panel" aria-labelledby="deposit-title"><h2 id="deposit-title">Submit deposit evidence</h2><p>Verified deposits are credited in whole USDT, rounded down: 11.235 → 11; 101.954562 → 101. Any verified excess stays uncredited and is recorded in the audit.</p><p class="hint">Evidence submission is subject to the deposit safety switch and independent admin verification.</p>
 @php($depositsOpen = config('leobot.deposits_enabled', false) === true && config('leobot.production_financial_approval', false) === true && config('leobot_usdt_rpc.enabled', false) === true)
 @if($depositsOpen)
 <p>Choose the matching USDT network before sending.</p>
@@ -35,7 +35,7 @@ main{width:min(1100px,94%);margin:0 auto;padding:24px 0 70px}.top,.panel{backgro
 @include('partials.member-transfer-form')</section>
 </div>
 <section class="panel" aria-labelledby="history-title"><h2 id="history-title">My deposit requests</h2><p class="hint">Latest 30 requests, based on LumiFlowOn database records.</p>
-@if($deposits->isEmpty())<div class="empty">No deposit requests yet.</div>@else<div class="table-wrap"><table><thead><tr><th>ID</th><th>Amount (USDT)</th><th>Network</th><th>Status</th></tr></thead><tbody>@foreach($deposits as $d)<tr><td>{{ $d->id }}</td><td>{{ $d->amount }}</td><td>{{ $d->network }}</td><td><span class="tag">{{ ucfirst($d->status) }}</span></td></tr>@endforeach</tbody></table></div>@endif
+@if($deposits->isEmpty())<div class="empty">No deposit requests yet.</div>@else<div class="table-wrap"><table><thead><tr><th>ID</th><th>Requested (USDT)</th><th>Credited (USDT)</th><th>Network</th><th>Status</th></tr></thead><tbody>@foreach($deposits as $d)<tr><td>{{ $d->id }}</td><td>{{ $d->amount }}</td><td>{{ $d->credited_amount!==null?bcadd((string)$d->credited_amount,'0',8):'—' }}</td><td>{{ $d->network }}</td><td><span class="tag">{{ ucfirst($d->status) }}</span></td></tr>@endforeach</tbody></table></div>@endif
 </section><p class="footer">LumiFlowOn · Your deposit and transfer history.</p>
 </main>@if($depositsOpen)<script>
 const destinations=@json($destinations);const network=document.querySelector('select[name=network]');const quote=document.getElementById('deposit-address-quote');if(network&&quote){const syncQuote=()=>{quote.value=destinations[network.value].address;};syncQuote();network.addEventListener('change',syncQuote);}

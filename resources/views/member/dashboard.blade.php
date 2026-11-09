@@ -14,7 +14,7 @@
 @if($lbPanel)
 <style>.portal-main section{display:none!important}.portal-main #{{ $lbPanel }}{display:block!important}@if(in_array($lbPanel, ['account-settings', 'member-support'], true)).portal-main section.lb-bottom-grid{display:grid!important}.portal-main section.lb-bottom-grid>div:not(#{{ $lbPanel }}){display:none!important}@endif</style>
 @else
-<style>#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
+<style>#magic-team,#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
 @endif
 <style>.portal-main :is(strong,b,h1,h2,h3,h4,.value){color:var(--gold)!important}.menu-close,.menu-overlay{display:none}@media(max-width:700px){body.menu-open{overflow:hidden}.portal-sidebar{display:block;position:fixed;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;overflow-y:auto;z-index:102;visibility:hidden;pointer-events:none;transform:translateX(-110%);transition:transform .2s ease}body.menu-open .portal-sidebar{display:block;transform:translateX(0);visibility:visible;pointer-events:auto}.menu-close{display:block;margin:0 0 16px auto;background:transparent;border:1px solid #40516b;color:var(--gold);padding:8px 12px;border-radius:8px}body.menu-open .menu-overlay{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:101;background:#0009;border:0}body.menu-open #portal-menu-toggle{visibility:hidden}}</style></head><body>
 @include('partials.beta-notice')
@@ -99,7 +99,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
   </div>
 </section>
 <!-- /LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->
-@if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
+@if($lbPanel==='magic-team' && isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
   <h2>Magic Team</h2>
   @if($magicEnrollmentState??null)<p class="muted">{{$magicEnrollmentState['reason']}}</p>@endif
@@ -120,7 +120,6 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
       <small>Placed on {{ $magicTeam['placement']['placed_at'] ? \Carbon\Carbon::parse($magicTeam['placement']['placed_at'])->timezone('Asia/Kolkata')->format('d M Y H:i').' IST' : 'Not recorded' }}</small>
     </div>
     @endif
-    <p class="muted">Your position is shown separately. Team counts include only members below your position.</p>
     <h3>Members Below Your Position</h3>
     <div class="table-wrap" id="magic-placed-members"><table><thead><tr><th>Level</th><th>Member ID</th><th>Member Name</th><th>Position</th><th>Status</th></tr></thead><tbody>
       @forelse(($magicTeam['members'] ?? []) as $placedMember)

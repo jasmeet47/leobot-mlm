@@ -15,7 +15,11 @@ final class DepositTransferController extends Controller
 {
     public function index(Request $request)
     {
-        $deposits = DB::table('member_deposit_requests')->where('user_id', $request->user()->id)->orderByDesc('id')->limit(30)->get();
+        $deposits = DB::table('member_deposit_requests as d')->where('d.user_id', $request->user()->id)->select('d.*')
+            ->selectSub(DB::table('financial_ledger as l')->whereColumn('l.user_id', 'd.user_id')->whereColumn('l.reference_id', 'd.id')
+                ->where('l.reference_type', 'member_deposit_request')->where('l.entry_type', 'verified_deposit')->where('l.wallet_type', 'activation_balance')->where('l.status', 'completed')
+                ->whereRaw("l.transaction_key = 'deposit:credit:' || d.id::text")->limit(1)->select('l.amount'), 'credited_amount')
+            ->orderByDesc('d.id')->limit(30)->get();
         $destinations = collect(['BEP20', 'TRC20'])->mapWithKeys(fn ($network) => [$network => DepositDestinationService::current($network)])->all();
 
         $transferSettings = MemberTransferPolicy::settings();

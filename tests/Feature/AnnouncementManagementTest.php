@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\AnnouncementService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -215,9 +216,33 @@ final class AnnouncementManagementTest extends TestCase
     {
         $id = $this->create(['starts_at' => '2027-01-05T12:00', 'ends_at' => '2027-01-06T12:00']);
         $url = route('admin.announcements.index', ['edit' => $id]);
-        $this->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false)->assertSee('value="2027-01-06T12:00"', false);
+        $this->get($url)->assertOk()->assertSee('duration_days')->assertDontSee('datetime-local')->assertDontSee('Extra settings');
         $this->from($url)->post(route('admin.announcements.save', $id), $this->payload(['title' => ['invalid'], 'revision' => 1]))->assertSessionHasErrors('title');
-        $this->withCookie(config('session.cookie').'_admin', session()->getId())->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false);
+        $this->withCookie(config('session.cookie').'_admin', session()->getId())->get($url)->assertOk()->assertSee('duration_days');
         $this->assertDatabaseHas('announcements', ['id' => $id, 'revision' => 1]);
+    }
+
+    public function test_manual_day_duration_sets_server_expiry_and_blank_edit_preserves_it(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-09 10:00:00', 'Asia/Kolkata'));
+        $id = $this->create(['duration_days' => 5, 'simple_schedule' => 1, 'status' => 'published']);
+        $row = DB::table('announcements')->find($id);
+        $this->assertSame(now()->utc()->format('Y-m-d H:i:s'), Carbon::parse($row->starts_at)->utc()->format('Y-m-d H:i:s'));
+        $this->assertSame(now()->utc()->addDays(5)->format('Y-m-d H:i:s'), Carbon::parse($row->ends_at)->utc()->format('Y-m-d H:i:s'));
+        $this->post(route('admin.announcements.save', $id), $this->payload(['revision' => 1, 'simple_schedule' => 1, 'duration_days' => '', 'status' => 'published']))->assertSessionHasNoErrors();
+        $this->assertSame($row->ends_at, DB::table('announcements')->where('id', $id)->value('ends_at'));
+        $this->post(route('admin.announcements.save'), $this->payload(['duration_days' => 0]))->assertSessionHasErrors('duration_days');
+        $this->travelBack();
+    }
+
+    public function test_manager_has_separate_on_off_buttons_with_revision_checks(): void
+    {
+        $id = $this->create(['duration_days' => 2, 'simple_schedule' => 1]);
+        $this->get(route('admin.announcements.index'))->assertOk()->assertSee('>ON</button>', false)->assertSee('>OFF</button>', false);
+        $this->post(route('admin.announcements.action', $id), ['action' => 'resume', 'revision' => 1])->assertSessionHas('success');
+        $this->assertDatabaseHas('announcements', ['id' => $id, 'status' => 'published']);
+        $this->post(route('admin.announcements.action', $id), ['action' => 'pause', 'revision' => 1])->assertConflict();
+        $this->post(route('admin.announcements.action', $id), ['action' => 'pause', 'revision' => 2])->assertSessionHas('success');
+        $this->assertDatabaseHas('announcements', ['id' => $id, 'status' => 'paused']);
     }
 }

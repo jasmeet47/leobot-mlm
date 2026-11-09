@@ -41,6 +41,7 @@ final class AnnouncementController extends Controller
             'status' => ['required', Rule::in(['draft', 'published', 'paused', 'archived'])], 'priority' => ['required', Rule::in(['normal', 'important', 'urgent'])],
             'frequency' => ['required', Rule::in(['visit', 'session', 'daily', 'once', 'after_login'])], 'delay_seconds' => ['required', 'integer', 'between:0,120'],
             'starts_at' => ['nullable', 'date'], 'ends_at' => ['nullable', 'date', 'after:starts_at'],
+            'duration_days' => ['nullable', 'integer', 'between:1,3650'], 'simple_schedule' => ['sometimes', 'boolean'],
         ]);
         if (($d['button_url'] ?? null) && ! Announcements::safeUrl($d['button_url'])) {
             throw ValidationException::withMessages(['button_url' => 'Use a safe HTTPS/HTTP URL or local /path.']);
@@ -95,10 +96,17 @@ final class AnnouncementController extends Controller
         foreach (['starts_at', 'ends_at'] as $key) {
             $d[$key] = empty($d[$key]) ? null : Carbon::parse($d[$key], 'Asia/Kolkata')->utc();
         }
+        if (! empty($d['duration_days'])) {
+            $d['starts_at'] = now()->utc();
+            $d['ends_at'] = $d['starts_at']->copy()->addDays((int) $d['duration_days']);
+        } elseif ($request->boolean('simple_schedule')) {
+            $d['starts_at'] = $existing?->starts_at ? Carbon::parse($existing->starts_at, 'UTC') : null;
+            $d['ends_at'] = $existing?->ends_at ? Carbon::parse($existing->ends_at, 'UTC') : null;
+        }
         if ($d['status'] === 'published' && ($d['ends_at'] ?? null) && now()->gte($d['ends_at'])) {
             throw ValidationException::withMessages(['ends_at' => 'Cannot publish an already expired announcement.']);
         }
-        unset($d['image'],$d['remove_image']);
+        unset($d['image'],$d['remove_image'],$d['duration_days'],$d['simple_schedule']);
 
         return $d;
     }

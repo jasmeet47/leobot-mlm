@@ -135,13 +135,17 @@ final class MagicMatrixAdminController extends Controller
     {
         abort_unless(config('leobot_magic.magic_matrix_settings_write_enabled', false) === true &&
             (! app()->environment('production') || config('leobot_magic.production_financial_approval', false) === true), 404);
-        $data = $request->validate([
+        $singleSwitch = $request->has('switch_name');
+        $data = $request->validate($singleSwitch ? [
+            'switch_name' => ['required', 'in:global_enabled,enrollment_enabled,topup_enabled,settlement_enabled'],
+            'enabled' => ['required', 'boolean'],
+        ] : [
             'global_enabled' => ['sometimes', 'boolean'],
             'enrollment_enabled' => ['required', 'boolean'],
             'topup_enabled' => ['required', 'boolean'],
             'settlement_enabled' => ['required', 'boolean'],
         ]);
-        DB::transaction(function () use ($request, $data): void {
+        DB::transaction(function () use ($request, $data, $singleSwitch): void {
             $actor = DB::table('users')->where('id', $request->user()->id)->lockForUpdate()->first();
             if (! $actor || ! in_array($actor->role, ['admin', 'super_admin'], true) ||
                 $actor->status !== 'active' || $actor->deleted_at !== null || in_array(strtolower((string) $actor->is_blocked), ['1', 't', 'true'], true)) {
@@ -156,10 +160,13 @@ final class MagicMatrixAdminController extends Controller
             $after = [];
             foreach (['enrollment_enabled', 'topup_enabled', 'settlement_enabled'] as $key) {
                 $before[$key] = (bool) $settings->{$key};
-                $after[$key] = (bool) $data[$key];
+                $after[$key] = $singleSwitch ? $before[$key] : (bool) $data[$key];
             }
             $before['global_enabled'] = (bool) $global->magic_enabled;
             $after['global_enabled'] = (bool) ($data['global_enabled'] ?? $global->magic_enabled);
+            if ($singleSwitch) {
+                $after[$data['switch_name']] = (bool) $data['enabled'];
+            }
             DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => $after['global_enabled'], 'updated_by' => $actor->id, 'updated_at' => now()]);
             $matrixAfter = array_diff_key($after, ['global_enabled' => true]);
             DB::table('magic_matrix_settings')->where('id', 1)->update($matrixAfter + [

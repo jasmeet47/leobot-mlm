@@ -297,4 +297,27 @@ final class MagicMatrixEnrollmentTest extends TestCase
             ->assertDontSee('Placed in Magic Matrix')->assertDontSee('Your ID is placed.');
         $this->assertDatabaseCount('magic_matrix_positions', 0);
     }
+
+    public function test_single_switch_updates_only_target_and_enforces_admin_authorization(): void
+    {
+        config(['leobot_magic.magic_matrix_settings_write_enabled' => true]);
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['topup_enabled' => false, 'settlement_enabled' => false]);
+        $this->actingAs($admin)->post(route('admin.magic.switches'), ['switch_name' => 'topup_enabled', 'enabled' => 1])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('magic_matrix_settings', ['id' => 1, 'topup_enabled' => true, 'settlement_enabled' => false, 'enrollment_enabled' => true]);
+        $this->assertTrue((bool) DB::table('magic_income_settings')->where('id', 1)->value('magic_enabled'));
+        $this->post(route('admin.magic.switches'), ['switch_name' => 'topup_enabled', 'enabled' => 0])->assertSessionHasNoErrors();
+        $this->assertFalse((bool) DB::table('magic_matrix_settings')->where('id', 1)->value('topup_enabled'));
+        $member = $this->member();
+        $this->actingAs($member)->post(route('admin.magic.switches'), ['switch_name' => 'settlement_enabled', 'enabled' => 1])->assertForbidden();
+    }
+
+    public function test_magic_team_is_only_rendered_on_its_menu_page(): void
+    {
+        $member = $this->member();
+        $this->activate($member);
+        $member->forceFill(['security_pin' => Hash::make('123456')])->save();
+        $this->actingAs($member)->get(route('member.dashboard'))->assertOk()->assertDontSee('id="magic-team"', false)->assertDontSee('Your Magic Matrix Placement');
+        $this->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()->assertSee('Your Magic Matrix Placement')->assertSee('Members Below Your Position')->assertDontSee('Your position is shown separately.');
+    }
 }
