@@ -37,7 +37,7 @@ final class AdminSaveFeedbackTest extends TestCase
         $before = DB::table('magic_matrix_level_rates')->orderBy('level')->pluck('pool_percent')->all();
         $this->actingAs($this->admin())->from('/admin/magic-matrix')->post(route('admin.magic.rates'), ['rates' => array_fill_keys(range(1, 20), '6')])->assertSessionHasErrors('rates');
         $this->assertSame($before, DB::table('magic_matrix_level_rates')->orderBy('level')->pluck('pool_percent')->all());
-        $this->withCookie(config('session.cookie'), session()->getId())->get('/admin/magic-matrix')->assertSee('data-lf-toast="error"', false)->assertDontSee('data-lf-toast="success"', false);
+        $this->withCookie(config('session.cookie').'_admin', session()->getId())->get('/admin/magic-matrix')->assertSee('data-lf-toast="error"', false)->assertDontSee('data-lf-toast="success"', false);
         $this->assertDatabaseCount('magic_matrix_settings_audits', 0);
     }
 
@@ -58,7 +58,7 @@ final class AdminSaveFeedbackTest extends TestCase
         try {
             $this->from('/admin/magic-matrix')->post(route('admin.magic.rates'), ['rates' => array_fill_keys(range(1, 20), '5')])->assertSessionHasErrors();
             $this->assertSame($before, DB::table('magic_matrix_level_rates')->orderBy('level')->pluck('pool_percent')->all());
-            $this->withCookie(config('session.cookie'), session()->getId())->get('/admin/magic-matrix')->assertSee('data-lf-toast="error"', false)->assertDontSee('data-lf-toast="success"', false);
+            $this->withCookie(config('session.cookie').'_admin', session()->getId())->get('/admin/magic-matrix')->assertSee('data-lf-toast="error"', false)->assertDontSee('data-lf-toast="success"', false);
         } finally {
             DB::statement('DROP TRIGGER reject_magic_audit_test ON magic_matrix_settings_audits');
             DB::statement('DROP FUNCTION reject_magic_audit_test()');

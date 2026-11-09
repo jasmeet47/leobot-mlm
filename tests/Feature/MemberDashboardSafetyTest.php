@@ -205,6 +205,7 @@ class MemberDashboardSafetyTest extends TestCase
         $this->post('/login', [
             'username' => 'ADMIN',
             'password' => 'TestPassword123!',
+            'portal' => 'admin',
         ])->assertRedirect(route('admin.dashboard'));
     }
 

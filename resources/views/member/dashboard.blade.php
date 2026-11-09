@@ -312,6 +312,13 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     </section>
     <section id="team-breakdown" aria-label="51-level team breakdown">
         <h2>51-Level Team Breakdown</h2>
+        <form method="GET" action="{{ route('member.detail', ['panel'=>'team-breakdown']) }}"><label>Member IDs &amp; Names — Level <select name="breakdown_level">@for($i=1;$i<=51;$i++)<option value="{{$i}}" @selected($breakdownLevel===$i)>{{$i}}</option>@endfor</select></label><button class="action">View Members</button></form>
+        @if($breakdownMembers)
+        <div class="table-wrap" style="margin:14px 0"><table><thead><tr><th>Member ID</th><th>Member Name</th><th>Status</th><th>Team View</th></tr></thead><tbody>
+        @forelse($breakdownMembers as $person)<tr><td>{{$person->username}}</td><td>{{$person->name}}</td><td><span class="referral-status" data-status="{{$person->status}}">{{$person->status==='active'?'Active':'Inactive'}}</span></td><td><a href="{{route('member.team-levels',['team_member'=>$person->id])}}">View Team</a></td></tr>
+        @empty<tr><td colspan="4">No members found on this level.</td></tr>@endforelse
+        </tbody></table></div>{{$breakdownMembers->links()}}
+        @endif
         <div class="table-wrap">
             <table>
                 <thead><tr><th scope="col">Level</th><th scope="col">Active</th><th scope="col">Inactive</th><th scope="col">Team Business (USDT)</th><th scope="col">Level Income Paid (USDT)</th></tr></thead>

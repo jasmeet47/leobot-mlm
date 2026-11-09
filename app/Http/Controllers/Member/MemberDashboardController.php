@@ -52,6 +52,17 @@ class MemberDashboardController extends Controller
         $teamSummary->total_active_team = $levelRows->sum('active_count');
         $teamSummary->total_inactive_team = $levelRows->sum('inactive_count');
 
+        $breakdownInput = $request->validate([
+            'breakdown_level' => ['sometimes', 'integer', 'between:1,51'],
+            'breakdown_page' => ['sometimes', 'integer', 'between:1,100000'],
+        ]);
+        $breakdownLevel = (int) ($breakdownInput['breakdown_level'] ?? 1);
+        $breakdownMembers = null;
+        if ($request->route('panel') === 'team-breakdown') {
+            $breakdownMembers = TeamLevelViewerService::view((int) $member->id, $breakdownLevel, '', (int) ($breakdownInput['breakdown_page'] ?? 1))['members'];
+            $breakdownMembers->setPageName('breakdown_page');
+        }
+
         // Missing or invalid privacy settings hide details.
         $privacy = DB::table('referral_privacy_settings')
             ->where('id', 1)
@@ -301,6 +312,8 @@ class MemberDashboardController extends Controller
             'canReviewTradingProfit' => TradingProfitReviewerService::canReview((int) $member->id),
             'teamSummary' => $teamSummary,
             'levelRows' => $levelRows,
+            'breakdownLevel' => $breakdownLevel,
+            'breakdownMembers' => $breakdownMembers,
             'referrals' => $referrals,
             'phoneConsent' => $phoneConsent,
             'emailConsent' => $emailConsent,

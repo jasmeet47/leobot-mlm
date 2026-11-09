@@ -205,7 +205,7 @@ final class AnnouncementManagementTest extends TestCase
                 'title' => ['invalid'], 'content' => ['invalid'], 'pages' => 'home',
                 'starts_at' => ['invalid'], 'ends_at' => ['invalid'],
             ]))->assertRedirect(route('admin.announcements.index'))->assertSessionHasErrors(['title', 'content', 'pages', 'starts_at']);
-        $this->withCookie(config('session.cookie'), session()->getId())
+        $this->withCookie(config('session.cookie').'_admin', session()->getId())
             ->get(route('admin.announcements.index'))->assertOk()
             ->assertSee('data-lf-toast="error"', false)->assertDontSee('data-lf-toast="success"', false);
         $this->assertDatabaseCount('announcements', 0);
@@ -217,7 +217,7 @@ final class AnnouncementManagementTest extends TestCase
         $url = route('admin.announcements.index', ['edit' => $id]);
         $this->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false)->assertSee('value="2027-01-06T12:00"', false);
         $this->from($url)->post(route('admin.announcements.save', $id), $this->payload(['title' => ['invalid'], 'revision' => 1]))->assertSessionHasErrors('title');
-        $this->withCookie(config('session.cookie'), session()->getId())->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false);
+        $this->withCookie(config('session.cookie').'_admin', session()->getId())->get($url)->assertOk()->assertSee('value="2027-01-05T12:00"', false);
         $this->assertDatabaseHas('announcements', ['id' => $id, 'revision' => 1]);
     }
 }

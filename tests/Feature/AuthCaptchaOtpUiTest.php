@@ -16,12 +16,12 @@ final class AuthCaptchaOtpUiTest extends TestCase
     {
         config(['leobot_auth.captcha_enabled' => true]);
         $user = User::factory()->create(['role' => 'admin', 'status' => 'active', 'password' => Hash::make('Password123!')]);
-        $this->get('/login')->assertOk()->assertSee('lumi-login-captcha');
-        $this->postJson('/login', ['username' => $user->username, 'password' => 'Password123!'])->assertUnprocessable()->assertJsonValidationErrors('login_captcha');
+        $this->get('/admin/login')->assertOk()->assertSee('lumi-login-captcha');
+        $this->postJson('/login', ['portal' => 'admin', 'username' => $user->username, 'password' => 'Password123!'])->assertUnprocessable()->assertJsonValidationErrors('login_captcha');
         $this->assertGuest();
-        $this->get('/login');
+        $this->get('/admin/login');
         $challenge = session('lumiflowon.login_captcha');
-        $this->post('/login', ['username' => $user->username, 'password' => 'Password123!', 'login_captcha' => $challenge['answer']])->assertRedirect('/admin/dashboard');
+        $this->post('/login', ['portal' => 'admin', 'username' => $user->username, 'password' => 'Password123!', 'login_captcha' => $challenge['answer']])->assertRedirect('/admin/dashboard');
         $this->assertAuthenticatedAs($user);
         $this->assertNull(session('lumiflowon.login_captcha'));
     }

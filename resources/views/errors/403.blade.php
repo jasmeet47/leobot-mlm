@@ -12,8 +12,12 @@
 <p class="auth-intro">You are signed in as <strong>{{$account->username}}</strong>, a Member account. Admin pages require an active administrator account.</p>
 <a class="auth-button" href="{{\App\Http\Middleware\EnsureMemberPin::hasConfiguredPin($account)?route('member.dashboard'):route('security-pin.form')}}">Open Member Dashboard</a>
 @else
-<p class="auth-intro">This action is unavailable for your account. Administrator access requires an active, authorized administrator account.</p>
+@if(request()->is('member/*') && in_array($account->role,['admin','super_admin'],true))
+<p class="auth-intro">This tab is signed in as an administrator. Open Member Login to use your member account.</p>
+@else
+<p class="auth-intro">This action is unavailable for your account. Please sign in with the appropriate account.</p>
+@endif
 @endif
 <p class="auth-bottom"><a href="{{route('admin.login')}}">Admin Login</a> · <a href="{{route('login.form')}}">Member Login</a></p>
-@auth<form method="post" action="{{route('logout')}}">@csrf<button type="submit">Logout / Switch Account</button></form>@endauth
+@auth<form method="post" action="{{route(request()->is('admin/*')?'admin.logout':'logout')}}">@csrf<button type="submit">Logout / Switch Account</button></form>@endauth
 @endsection

@@ -273,7 +273,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
             <div class="subtitle">Secure Administration Panel</div>
         </div>
 
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ route('admin.logout') }}">
             @csrf
             <button class="logout" type="submit">
                 Logout

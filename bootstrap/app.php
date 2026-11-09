@@ -5,6 +5,7 @@ use App\Http\Middleware\AdminSaveFeedback;
 use App\Http\Middleware\CanonicalPublicDomain;
 use App\Http\Middleware\DisplayAnnouncements;
 use App\Http\Middleware\EnsureAccountNotBlocked;
+use App\Http\Middleware\IsolatePortalSession;
 use App\Http\Middleware\MeasureFullLoginLifecycle;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prepend(MeasureFullLoginLifecycle::class);
         $middleware->prepend(CanonicalPublicDomain::class);
+        $middleware->prepend(IsolatePortalSession::class);
         $middleware->redirectGuestsTo('/login');
         $middleware->appendToGroup('web', [AdminSaveFeedback::class, DisplayAnnouncements::class]);
 

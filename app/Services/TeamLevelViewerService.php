@@ -23,6 +23,15 @@ WITH RECURSIVE team AS (
 )
 SQL;
 
+    public static function containsMember(int $rootId, int $memberId): bool
+    {
+        if ($rootId < 1 || $memberId < 1 || DB::getDriverName() !== 'pgsql') {
+            return false;
+        }
+
+        return $rootId === $memberId || DB::selectOne(self::TEAM_SQL.' SELECT id FROM team WHERE id = ? LIMIT 1', [$rootId, $rootId, $rootId, $memberId]) !== null;
+    }
+
     /** @return Collection<int, object> */
     public static function statusCounts(int $rootId): Collection
     {

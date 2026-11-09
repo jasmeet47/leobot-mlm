@@ -30,21 +30,21 @@ button:disabled, .btn:disabled, [aria-disabled="true"] { opacity:.55; cursor:not
 </style>
 </head><body>@include('partials.lumiflowon-page-brand')<main>
 <a href="{{ route('member.dashboard') }}">&larr; Back to Dashboard</a>
-<h1>My 51-Level Team</h1><p class="muted">Member ID: {{ $member->username }} | Only your sponsor downline | Read-only</p>
+<h1>My 51-Level Team</h1><p class="muted">Member ID: {{ $teamOwner->username }} · {{ $teamOwner->name }} | Only your sponsor downline | Read-only</p>
 <section class="panel"><h2>Level-wise Member Counts</h2><div class="levels">
 @foreach($counts as $number => $count)
-<a class="level {{ $level === $number ? 'active' : '' }}" href="{{ route('member.team-levels', ['level'=>$number]) }}">Level {{ $number }}<strong>{{ number_format($count) }}</strong></a>
+<a class="level {{ $level === $number ? 'active' : '' }}" href="{{ route('member.team-levels', ['level'=>$number, 'team_member'=>$teamOwner->id]) }}">Level {{ $number }}<strong>{{ number_format($count) }}</strong></a>
 @endforeach
 </div></section>
 <section class="panel"><h2>Level {{ $level }} Members</h2>
 <form class="filters" method="GET" action="{{ route('member.team-levels') }}">
-<label>Level<select name="level">@for($i=1;$i<=51;$i++)<option value="{{ $i }}" @selected($i===$level)>Level {{ $i }}</option>@endfor</select></label>
+<input type="hidden" name="team_member" value="{{ $teamOwner->id }}"><label>Level<select name="level">@for($i=1;$i<=51;$i++)<option value="{{ $i }}" @selected($i===$level)>Level {{ $i }}</option>@endfor</select></label>
 <label>Member ID Search<input name="search" value="{{ $search }}" maxlength="100" placeholder="Search Member ID"></label><button type="submit">Search</button>
 </form>
-<div class="scroll"><table><thead><tr><th>Member ID</th><th>Member Name</th><th>Joining Date</th><th>Status</th></tr></thead><tbody>
+<div class="scroll"><table><thead><tr><th>Member ID</th><th>Member Name</th><th>Joining Date</th><th>Status</th><th>Team View</th></tr></thead><tbody>
 @forelse($teamMembers as $person)
-<tr><td>{{ $person->username }}</td><td>{{ $person->name }}</td><td>{{ $person->created_at ? \Illuminate\Support\Carbon::parse($person->created_at)->format('d M Y') : 'N/A' }}</td><td class="{{ $person->status === 'active' ? 'active-status' : 'inactive-status' }}">{{ $person->status === 'active' ? 'Active' : 'Inactive' }}</td></tr>
-@empty<tr><td colspan="4">No members found on this level.</td></tr>@endforelse
+<tr><td>{{ $person->username }}</td><td>{{ $person->name }}</td><td>{{ $person->created_at ? \Illuminate\Support\Carbon::parse($person->created_at)->format('d M Y') : 'N/A' }}</td><td class="{{ $person->status === 'active' ? 'active-status' : 'inactive-status' }}">{{ $person->status === 'active' ? 'Active' : 'Inactive' }}</td><td><a href="{{ route('member.team-levels', ['team_member'=>$person->id]) }}">View Team</a></td></tr>
+@empty<tr><td colspan="5">No members found on this level.</td></tr>@endforelse
 </tbody></table></div><div class="pagination">{{ $teamMembers->links() }}</div>
 </section>
 </main></body></html>

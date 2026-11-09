@@ -54,6 +54,13 @@ Route::get('/', function () {
 */
 
 Route::get('/admin/login', [RegisterController::class, 'showRegistrationForm'])->name('admin.login');
+Route::post('/admin/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('admin.login');
+})->middleware(['auth', 'account.not_blocked', 'admin'])->name('admin.logout');
 
 Route::get('/join', [
     RegisterController::class,

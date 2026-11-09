@@ -305,6 +305,14 @@ class RegisterController extends Controller
                     true
                 )
             ) {
+                if ($request->input('portal') !== 'admin') {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return redirect()->route('admin.login')->with('status', 'Use Admin Login for your administrator account. Member and Admin sessions are kept separate.');
+                }
+
                 return redirect()->route('admin.dashboard');
             }
 
