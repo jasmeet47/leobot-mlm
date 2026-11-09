@@ -56,6 +56,57 @@ final class MagicMatrixEnrollmentService
         return $result;
     }
 
+    public static function enrollmentEnabled(): bool
+    {
+        if (config('leobot_magic.magic_matrix_enrollment_enabled', false) !== true
+            || (app()->environment('production') && config('leobot_magic.production_financial_approval', false) !== true)) {
+            return false;
+        }
+        $matrix = DB::table('magic_matrix_settings')->where('id', 1)->first();
+        $global = DB::table('magic_income_settings')->where('id', 1)->first();
+
+        return $matrix && $global && $matrix->enrollment_enabled && $global->magic_enabled;
+    }
+
+    /** @return array<int, int> */
+    public static function pendingMemberIds(): array
+    {
+        if (! self::enrollmentEnabled()) {
+            return [];
+        }
+        $pending = [];
+        $members = DB::table('users as u')->where('u.role', 'member')
+            ->whereIn('u.status', ['active', 'inactive'])->where('u.is_blocked', false)->whereNull('u.deleted_at')
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')->from('magic_matrix_positions as p')->whereColumn('p.user_id', 'u.id');
+            })->select('u.id')->lazyById(200, 'u.id', 'id');
+        foreach ($members as $member) {
+            $state = self::inspect((int) $member->id);
+            if ($state['can_place']) {
+                $pending[] = ['id' => (int) $member->id, 'qualified_at' => $state['source']['created_at']];
+            }
+        }
+        usort($pending, fn ($a, $b) => [$a['qualified_at'], $a['id']] <=> [$b['qualified_at'], $b['id']]);
+
+        return array_column($pending, 'id');
+    }
+
+    /** Catch up missed funded qualifications without moving existing lifetime positions. */
+    public static function reconcilePending(): int
+    {
+        $placed = 0;
+        foreach (self::pendingMemberIds() as $memberId) {
+            if (self::synchronize($memberId) !== null) {
+                if (! DB::table('magic_matrix_positions')->where('user_id', $memberId)->exists()) {
+                    throw new RuntimeException('Magic cycle has no lifetime position; integrity review required.');
+                }
+                $placed++;
+            }
+        }
+
+        return $placed;
+    }
+
     public static function synchronize(int $memberId, ?User $admin = null): ?int
     {
         if (! $admin && (config('leobot_magic.magic_matrix_enrollment_enabled', false) !== true || (app()->environment('production') && config('leobot_magic.production_financial_approval', false) !== true))) {

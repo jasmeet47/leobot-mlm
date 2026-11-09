@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\MagicMatrixEnrollmentService;
 use App\Services\StakingPrincipalService;
 use App\Services\StakingProfitService;
 use App\Services\StakingService;
@@ -15,7 +16,10 @@ config(['leobot.staking_enabled' => true, 'leobot.production_financial_approval'
 echo "ready\n";
 flush();
 try {
-    if (($argv[4] ?? '') === 'principal') {
+    if (($argv[4] ?? '') === 'magic-enrollment') {
+        config(['leobot_magic.magic_matrix_enrollment_enabled' => true]);
+        $id = MagicMatrixEnrollmentService::synchronize((int) $argv[1]);
+    } elseif (($argv[4] ?? '') === 'principal') {
         $id = StakingPrincipalService::request(User::findOrFail((int) $argv[1]), (int) $argv[5], $argv[2], $argv[3], (int) $argv[6]);
     } elseif (($argv[4] ?? '') === 'profit') {
         StakingProfitService::approve(User::findOrFail((int) $argv[1]), (int) $argv[2]);

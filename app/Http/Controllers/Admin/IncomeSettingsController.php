@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\MagicMatrixEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -390,6 +391,7 @@ class IncomeSettingsController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            MagicMatrixEnrollmentService::reconcilePending();
         }, 3);
 
         return redirect()

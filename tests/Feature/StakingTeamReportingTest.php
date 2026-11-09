@@ -91,6 +91,9 @@ final class StakingTeamReportingTest extends TestCase
     public function test_principal_hold_and_refund_update_business_without_double_counting(): void
     {
         config(['leobot.withdrawals_enabled' => true, 'leobot.withdrawal_settings_write_enabled' => true]);
+        config(['leobot_magic.magic_matrix_enrollment_enabled' => true]);
+        DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => true]);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
         $sponsor = $this->fundedMember();
         $member = $this->fundedMember($sponsor);
         $position = app(StakingService::class)->create($member->id, '50', 'team_withdraw_stake_01', 'activation_balance');
@@ -100,7 +103,10 @@ final class StakingTeamReportingTest extends TestCase
         WithdrawalRequestService::setControls($admin, true, true, true);
         $request = StakingPrincipalService::request($member->fresh(), $position, '10', 'team_principal_request_01', $wallet);
         $this->assertDatabaseHas('member_teams', ['user_id' => $sponsor->id, 'level' => 1, 'total_business' => '40']);
+        $this->assertDatabaseMissing('magic_matrix_positions', ['user_id' => $member->id]);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
         WithdrawalRequestService::reject($admin, $request);
+        $this->assertDatabaseHas('magic_matrix_positions', ['user_id' => $member->id]);
         $this->assertDatabaseHas('member_teams', ['user_id' => $sponsor->id, 'level' => 1, 'total_business' => '50']);
     }
 

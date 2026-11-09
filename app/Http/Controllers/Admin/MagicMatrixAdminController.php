@@ -170,6 +170,7 @@ final class MagicMatrixAdminController extends Controller
                 'before_json' => json_encode($before, JSON_THROW_ON_ERROR),
                 'after_json' => json_encode($after, JSON_THROW_ON_ERROR), 'created_at' => now(),
             ]);
+            MagicMatrixEnrollmentService::reconcilePending();
         }, 3);
 
         return back()->with('status', 'Database Matrix switches updated; global and code approval gates still apply.');

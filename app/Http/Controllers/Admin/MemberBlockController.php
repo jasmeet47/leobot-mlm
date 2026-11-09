@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\MagicMatrixEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -71,6 +72,9 @@ class MemberBlockController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            if ($action === 'unblocked') {
+                MagicMatrixEnrollmentService::synchronize((int) $target->id);
+            }
         });
 
         return redirect()->route('admin.members.show', $member->id)

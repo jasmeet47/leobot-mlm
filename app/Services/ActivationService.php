@@ -169,6 +169,8 @@ class ActivationService
                  * Idempotent retry:
                  * do not debit the wallet again.
                  */
+                MagicMatrixEnrollmentService::synchronize($userId);
+
                 return (int) $existing->id;
             }
 

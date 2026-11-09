@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\ActivationService;
 use App\Services\MagicMatrixEnrollmentService;
 use App\Services\MagicMatrixTeamReadService;
+use App\Services\StakingService;
 use App\Services\WalletService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -107,5 +108,153 @@ final class MagicMatrixEnrollmentTest extends TestCase
     {
         $this->get('/login')->assertOk()->assertDontSee('href="'.route('admin.login').'"', false);
         $this->get('/admin/login')->assertOk()->assertSee('Admin Login');
+    }
+
+    public function test_enabling_switches_automatically_places_waiting_funded_members_once(): void
+    {
+        config(['leobot_magic.magic_matrix_settings_write_enabled' => true]);
+        $root = $this->member();
+        $this->activate($root);
+        $existingPositions = DB::table('magic_matrix_positions')->orderBy('id')->get()->toJson();
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $waiting = $this->member();
+        $this->activate($waiting);
+        $ledger = DB::table('financial_ledger')->count();
+        $balance = $waiting->fresh()->only('activation_balance', 'available_balance', 'total_investment', 'lifetime_income');
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $data = ['global_enabled' => 1, 'enrollment_enabled' => 1, 'topup_enabled' => 0, 'settlement_enabled' => 0];
+        $this->actingAs($admin)->post(route('admin.magic.switches'), $data)->assertSessionHasNoErrors()->assertSessionHas('status');
+        $this->assertDatabaseHas('magic_matrix_positions', ['user_id' => $waiting->id]);
+        $this->assertSame($existingPositions, DB::table('magic_matrix_positions')->where('user_id', $root->id)->orderBy('id')->get()->toJson());
+        $this->post(route('admin.magic.switches'), $data)->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('magic_matrix_positions', 2);
+        $this->assertDatabaseCount('magic_matrix_cycles', 2);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+        $this->assertSame($balance, $waiting->fresh()->only('activation_balance', 'available_balance', 'total_investment', 'lifetime_income'));
+    }
+
+    public function test_global_enable_catches_up_but_server_off_and_unfunded_sources_never_place(): void
+    {
+        $member = $this->member();
+        DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => false]);
+        $this->activate($member);
+        $this->assertSame(0, MagicMatrixEnrollmentService::reconcilePending());
+        DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => true]);
+        config(['leobot_magic.magic_matrix_enrollment_enabled' => false]);
+        $this->assertSame(0, MagicMatrixEnrollmentService::reconcilePending());
+        config(['leobot_magic.magic_matrix_enrollment_enabled' => true]);
+        $this->assertSame(1, MagicMatrixEnrollmentService::reconcilePending());
+        $this->assertSame(0, MagicMatrixEnrollmentService::reconcilePending());
+    }
+
+    public function test_idempotent_activation_retry_recovers_placement_without_a_second_debit(): void
+    {
+        $member = $this->member();
+        $key = (string) Str::uuid();
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $package = ActivationService::activateSelf($member, '50', $key);
+        $ledger = DB::table('financial_ledger')->count();
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
+        $this->assertSame($package, ActivationService::activateSelf($member, '50', $key));
+        $this->assertSame($package, ActivationService::activateSelf($member, '50', $key));
+        $this->assertDatabaseCount('magic_matrix_positions', 1);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+        $this->assertSame('50.00000000', $member->fresh()->activation_balance);
+    }
+
+    public function test_stake_retry_recovers_placement_without_a_second_debit_and_check_command_is_read_only(): void
+    {
+        config(['leobot.production_financial_approval' => true, 'leobot.staking_enabled' => true]);
+        DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $member = $this->member();
+        WalletService::credit($member->id, 'available_balance', '50', 'test_fixture', 'magic_stake_retry_funding');
+        $service = app(StakingService::class);
+        $stake = $service->create($member->id, '50', 'magic_retry_stake_001');
+        $ledger = DB::table('financial_ledger')->count();
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
+        $this->artisan('magic:reconcile-enrollment', ['--check' => true])->assertExitCode(1);
+        $this->assertDatabaseCount('magic_matrix_positions', 0);
+        $this->assertSame($stake, $service->create($member->id, '50', 'magic_retry_stake_001'));
+        $this->assertSame($stake, $service->create($member->id, '50', 'magic_retry_stake_001'));
+        $this->assertDatabaseCount('magic_matrix_positions', 1);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+        $this->artisan('magic:reconcile-enrollment')->assertExitCode(0);
+        $this->assertDatabaseCount('magic_matrix_cycles', 1);
+        $this->assertSame('0.00000000', $member->fresh()->available_balance);
+    }
+
+    public function test_reconciliation_does_not_add_small_packages_or_unfunded_or_blocked_sources(): void
+    {
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $small = $this->member();
+        $this->activate($small, '20');
+        $this->activate($small, '30');
+        $unfunded = $this->member();
+        $package = $this->activate($unfunded);
+        DB::table('financial_ledger')->where('reference_type', 'activation_package')->where('reference_id', $package)->delete();
+        $blocked = $this->member();
+        $this->activate($blocked);
+        $blocked->forceFill(['is_blocked' => true])->save();
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
+        $this->assertSame(0, MagicMatrixEnrollmentService::reconcilePending());
+        $this->assertDatabaseCount('magic_matrix_positions', 0);
+    }
+
+    public function test_catchup_preserves_qualification_order_and_command_does_not_duplicate_positions(): void
+    {
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $later = $this->member();
+        $earlier = $this->member();
+        $this->activate($earlier);
+        $this->travel(1)->minutes();
+        $this->activate($later);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
+        $this->assertSame([$earlier->id, $later->id], MagicMatrixEnrollmentService::pendingMemberIds());
+        $ledger = DB::table('financial_ledger')->count();
+        $this->artisan('magic:reconcile-enrollment')->assertExitCode(0);
+        $this->assertSame([$earlier->id, $later->id], DB::table('magic_matrix_positions')->orderBy('id')->pluck('user_id')->all());
+        $this->artisan('magic:reconcile-enrollment')->assertExitCode(0);
+        $this->assertDatabaseCount('magic_matrix_positions', 2);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+        $this->travelBack();
+    }
+
+    public function test_failed_catchup_rolls_back_switches_and_placement_together(): void
+    {
+        config(['leobot_magic.magic_matrix_settings_write_enabled' => true]);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $member = $this->member();
+        $this->activate($member);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['max_depth' => 1]);
+        $ledger = DB::table('financial_ledger')->count();
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $this->withoutExceptionHandling();
+        try {
+            $this->actingAs($admin)->post(route('admin.magic.switches'), ['global_enabled' => 1, 'enrollment_enabled' => 1, 'topup_enabled' => 0, 'settlement_enabled' => 0]);
+            $this->fail('Invalid matrix policy must prevent catchup.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('20 levels / 6 days', $error->getMessage());
+        }
+        $this->assertFalse((bool) DB::table('magic_matrix_settings')->where('id', 1)->value('enrollment_enabled'));
+        $this->assertDatabaseCount('magic_matrix_positions', 0);
+        $this->assertDatabaseCount('magic_matrix_settings_audits', 0);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+    }
+
+    public function test_unblocking_a_funded_member_recovers_placement_without_changing_money(): void
+    {
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false]);
+        $member = $this->member();
+        $this->activate($member);
+        $member->forceFill(['is_blocked' => true])->save();
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
+        $this->assertSame(0, MagicMatrixEnrollmentService::reconcilePending());
+        $ledger = DB::table('financial_ledger')->count();
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $this->actingAs($admin)->post(route('admin.members.unblock', $member->id), ['reason' => 'Member ownership reviewed'])->assertRedirect();
+        $this->assertDatabaseHas('magic_matrix_positions', ['user_id' => $member->id]);
+        $this->assertSame('50.00000000', $member->fresh()->activation_balance);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
     }
 }

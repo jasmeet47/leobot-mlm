@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\StakingProfitService;
 use App\Services\StakingService;
+use App\Services\WalletService;
 use App\Support\DisposableDatabase;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
@@ -164,5 +165,27 @@ final class StakingConcurrencyTest extends TestCase
         $this->assertDatabaseCount('profit_sharing_fundings', 1);
         $this->assertDatabaseHas('profit_sharing_fundings', ['self_amount' => '6.03000000', 'generation_amount' => '2.70000000', 'magic_amount' => '0.27000000']);
         $this->assertSame(2, DB::table('financial_ledger')->where('reference_type', 'staking_profit_statement')->where('reference_id', $id)->count());
+    }
+
+    public function test_simultaneous_magic_enrollment_recovery_creates_one_position_without_a_second_debit(): void
+    {
+        config(['leobot.production_financial_approval' => true, 'leobot.staking_enabled' => true, 'leobot_magic.magic_matrix_enrollment_enabled' => false]);
+        DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
+        DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => true]);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => false, 'minimum_tier_usdt' => '50']);
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active']);
+        WalletService::credit($member->id, 'available_balance', '100', 'test_fixture', 'magic_concurrent_funding');
+        app(StakingService::class)->create($member->id, '50', 'magic_concurrent_stake_001');
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true]);
+        $ledger = DB::table('financial_ledger')->count();
+        $request = [$member->id, '50', 'magic_recovery_00001', 'magic-enrollment'];
+        $results = $this->simultaneous([$request, $request], false, 'magic_matrix_settings');
+        $this->assertTrue($results[0]['ok']);
+        $this->assertTrue($results[1]['ok']);
+        $this->assertSame($results[0]['id'], $results[1]['id']);
+        $this->assertDatabaseCount('magic_matrix_positions', 1);
+        $this->assertDatabaseCount('magic_matrix_cycles', 1);
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+        $this->assertSame('50.00000000', $member->fresh()->available_balance);
     }
 }

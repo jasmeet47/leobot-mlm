@@ -38,6 +38,8 @@ final class StakingService
                     throw new RuntimeException('Request key conflict');
                 }
 
+                MagicMatrixEnrollmentService::synchronize($userId);
+
                 return (int) $existing->id;
             }
             if (! StakingMemberEligibility::canStake($user, $walletType, $amount)) {

@@ -50,6 +50,7 @@ final class MagicMatrixSettingsService
                 'action' => 'policy_update', 'before_json' => $before,
                 'after_json' => $after, 'created_at' => now(),
             ]);
+            MagicMatrixEnrollmentService::reconcilePending();
         }, 3);
     }
 

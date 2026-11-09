@@ -108,8 +108,9 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
       <div class="lb-quick-link"><strong>{{ $magicTeam['total'] }}</strong><small>Total unique Magic Team Members</small></div>
       <div class="lb-quick-link"><strong>{{ $magicTeam['direct'] }}</strong><small>Direct Magic Members</small></div>
       <div class="lb-quick-link"><strong>{{ $magicTeam['filled_levels'] }} / {{ $magicTeam['visible_levels'] }}</strong><small>Filled Levels</small></div>
-      <div class="lb-quick-link"><strong>{{ $magicTeam['has_position'] ? 'Placed' : 'Not placed' }}</strong><small>My Matrix Position</small></div>
+      <div class="lb-quick-link"><strong>{{ $magicTeam['has_position'] ? 'Placed' : 'Not placed' }}</strong><small>My Matrix Position · {{ $member->username }}</small></div>
     </div>
+    <p class="muted">Your position is shown separately. Team counts include only members below your position.</p>
     <details style="margin-top:14px"><summary>View {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Breakdown</summary>
       <div class="lb-quick-grid" style="margin-top:12px">
         @foreach($magicTeam['levels'] as $level => $count)

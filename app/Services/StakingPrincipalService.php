@@ -108,6 +108,7 @@ final class StakingPrincipalService
         self::journal((int) $withdrawal->user_id, (int) $position->id, (int) $withdrawal->id, (string) $withdrawal->gross_amount,
             $before, bcadd($before, (string) $withdrawal->gross_amount, 8), 'refund');
         TeamCounterService::synchronize((int) $withdrawal->user_id);
+        MagicMatrixEnrollmentService::synchronize((int) $withdrawal->user_id);
     }
 
     private static function journal(int $userId, int $positionId, int $withdrawalId, string $amount, string $before, string $after, string $action): void
