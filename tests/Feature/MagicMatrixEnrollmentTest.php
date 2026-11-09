@@ -10,6 +10,7 @@ use App\Services\StakingService;
 use App\Services\WalletService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -256,5 +257,44 @@ final class MagicMatrixEnrollmentTest extends TestCase
         $this->assertDatabaseHas('magic_matrix_positions', ['user_id' => $member->id]);
         $this->assertSame('50.00000000', $member->fresh()->activation_balance);
         $this->assertSame($ledger, DB::table('financial_ledger')->count());
+    }
+
+    public function test_leaf_placement_displays_actual_member_and_parent_ids_without_changing_records(): void
+    {
+        $root = $this->member();
+        $leaf = $this->member();
+        $outsider = $this->member();
+        $this->activate($root);
+        $this->activate($leaf);
+        $leaf->forceFill(['security_pin' => Hash::make('123456')])->save();
+        $positions = DB::table('magic_matrix_positions')->orderBy('id')->get()->toJson();
+        $cycles = DB::table('magic_matrix_cycles')->orderBy('id')->get()->toJson();
+        $ledger = DB::table('financial_ledger')->count();
+        $team = MagicMatrixTeamReadService::forMember($leaf->id);
+        $this->assertTrue($team['has_position']);
+        $this->assertSame(0, $team['total']);
+        $this->assertSame($leaf->username, $team['placement']['username']);
+        $this->assertSame($root->username, $team['placement']['parent_username']);
+        $this->assertSame([], $team['members']);
+        $rootTeam = MagicMatrixTeamReadService::forMember($root->id);
+        $this->assertSame($leaf->username, $rootTeam['members'][0]['username']);
+        $this->assertSame($leaf->name, $rootTeam['members'][0]['name']);
+        $this->actingAs($leaf)->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()
+            ->assertSee('Your Magic Matrix Placement')->assertSee($leaf->username)->assertSee($root->username)
+            ->assertSee('Placed in Magic Matrix')->assertSee('No members are placed below your position yet.')
+            ->assertDontSee($outsider->username);
+        $this->assertSame($positions, DB::table('magic_matrix_positions')->orderBy('id')->get()->toJson());
+        $this->assertSame($cycles, DB::table('magic_matrix_cycles')->orderBy('id')->get()->toJson());
+        $this->assertSame($ledger, DB::table('financial_ledger')->count());
+    }
+
+    public function test_unplaced_member_is_not_shown_a_placed_confirmation(): void
+    {
+        $member = $this->member();
+        $member->forceFill(['security_pin' => Hash::make('123456')])->save();
+        $this->actingAs($member)->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()
+            ->assertSee('No Matrix position is recorded for your ID yet.')
+            ->assertDontSee('Placed in Magic Matrix')->assertDontSee('Your ID is placed.');
+        $this->assertDatabaseCount('magic_matrix_positions', 0);
     }
 }

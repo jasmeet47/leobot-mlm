@@ -110,7 +110,25 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
       <div class="lb-quick-link"><strong>{{ $magicTeam['filled_levels'] }} / {{ $magicTeam['visible_levels'] }}</strong><small>Filled Levels</small></div>
       <div class="lb-quick-link"><strong>{{ $magicTeam['has_position'] ? 'Placed' : 'Not placed' }}</strong><small>My Matrix Position · {{ $member->username }}</small></div>
     </div>
+    @if($magicTeam['has_position'])
+    @if($magicTeam['placement'] ?? null)
+    <div class="card" id="my-magic-placement" style="margin-top:14px;border-color:#306750">
+      <h3>Your Magic Matrix Placement</h3>
+      <strong>{{ $magicTeam['placement']['username'] }}</strong> · {{ $magicTeam['placement']['name'] }}
+      <p class="success" style="margin:8px 0">Placed in Magic Matrix</p>
+      <div>Matrix Parent: {{ $magicTeam['placement']['parent_username'] ?? 'Matrix root' }}@if($magicTeam['placement']['slot']) · Position {{ $magicTeam['placement']['slot'] }}@endif</div>
+      <small>Placed on {{ $magicTeam['placement']['placed_at'] ? \Carbon\Carbon::parse($magicTeam['placement']['placed_at'])->timezone('Asia/Kolkata')->format('d M Y H:i').' IST' : 'Not recorded' }}</small>
+    </div>
+    @endif
     <p class="muted">Your position is shown separately. Team counts include only members below your position.</p>
+    <h3>Members Below Your Position</h3>
+    <div class="table-wrap" id="magic-placed-members"><table><thead><tr><th>Level</th><th>Member ID</th><th>Member Name</th><th>Position</th><th>Status</th></tr></thead><tbody>
+      @forelse(($magicTeam['members'] ?? []) as $placedMember)
+      <tr><td>{{ $placedMember['level'] }}</td><td>{{ $placedMember['username'] }}</td><td>{{ $placedMember['name'] }}</td><td>{{ $placedMember['slot'] }}</td><td class="success">Placed</td></tr>
+      @empty<tr><td colspan="5">Your ID is placed. No members are placed below your position yet.</td></tr>@endforelse
+    </tbody></table></div>
+    @if(($magicTeam['total'] ?? 0) > count($magicTeam['members'] ?? []))<p class="muted">Showing the first 100 placed members. Level counts include your full visible Magic Team.</p>@endif
+    @else<p class="muted">No Matrix position is recorded for your ID yet.</p>@endif
     <details style="margin-top:14px"><summary>View {{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Breakdown</summary>
       <div class="lb-quick-grid" style="margin-top:12px">
         @foreach($magicTeam['levels'] as $level => $count)
