@@ -23,6 +23,72 @@ final class TeamCounterService
 
     private const MAX_BUSINESS = '99999999999999999999.99999999'; // DECIMAL(28,8)
 
+    /** Move a referral subtree and its cached contributions without rewriting financial history. */
+    public static function reassignSponsor(int $actorId, int $memberId, int $sponsorId): array
+    {
+        if (DB::getDriverName() !== 'pgsql' || $memberId === $sponsorId) {
+            throw new RuntimeException('Distinct members and PostgreSQL are required.');
+        }
+
+        return DB::transaction(function () use ($actorId, $memberId, $sponsorId): array {
+            DB::statement("SET LOCAL lock_timeout = '5s'");
+            // Freeze registrations, activations and other tree edits during the audited move.
+            DB::statement('LOCK TABLE users, member_team_states, member_teams IN SHARE ROW EXCLUSIVE MODE');
+            $actor = User::findOrFail($actorId);
+            $member = User::findOrFail($memberId);
+            $sponsor = User::findOrFail($sponsorId);
+            if (! in_array($actor->role, ['admin', 'super_admin'], true) || $actor->status !== 'active' || $actor->is_blocked || $actor->deleted_at !== null) {
+                throw new RuntimeException('Active authorized administrator required.');
+            }
+            foreach ([$member, $sponsor] as $account) {
+                if ($account->role !== 'member' || $account->is_blocked || $account->deleted_at !== null || ! in_array($account->status, ['active', 'inactive'], true)) {
+                    throw new RuntimeException('Available member accounts required.');
+                }
+            }
+            $oldSponsor = $member->sponsor_user_id === null ? null : (int) $member->sponsor_user_id;
+            foreach ([$memberId, $sponsorId] as $root) {
+                $seen = [];
+                $current = $root;
+                while ($current !== null) {
+                    if (isset($seen[$current]) || ($root === $sponsorId && $current === $memberId)) {
+                        throw new RuntimeException('Sponsor move would create a cycle or tree is inconsistent.');
+                    }
+                    $seen[$current] = true;
+                    $row = DB::table('users')->where('id', $current)->first(['sponsor_user_id']);
+                    if (! $row) {
+                        throw new RuntimeException('Broken sponsor relationship.');
+                    }
+                    $current = $row->sponsor_user_id === null ? null : (int) $row->sponsor_user_id;
+                }
+            }
+            if ($oldSponsor === $sponsorId && $member->sponsor_id === $sponsor->username) {
+                return ['changed' => false, 'member' => $member->username, 'sponsor' => $sponsor->username];
+            }
+            $ids = array_map(fn ($row): int => (int) $row->id, DB::select('WITH RECURSIVE subtree AS (SELECT id FROM users WHERE id = ? UNION SELECT u.id FROM users u JOIN subtree s ON u.sponsor_user_id = s.id) SELECT id FROM subtree ORDER BY id', [$memberId]));
+            foreach ($ids as $id) {
+                self::synchronize($id);
+            }
+            $states = DB::table('member_team_states')->whereIn('user_id', $ids)->orderBy('user_id')->get();
+            foreach ($states as $state) {
+                foreach (self::uplineLevels((int) $state->user_id, $state->sponsor_user_id === null ? null : (int) $state->sponsor_user_id) as [$ancestor, $level]) {
+                    self::applyDelta($ancestor, $level, self::dbBool($state->is_active) ? -1 : 0, self::dbBool($state->is_active) ? 0 : -1, bcsub('0', (string) $state->active_business, self::SCALE));
+                }
+            }
+            DB::table('users')->where('id', $memberId)->update(['sponsor_user_id' => $sponsorId, 'sponsor_id' => $sponsor->username, 'updated_at' => now()]);
+            DB::table('member_team_states')->where('user_id', $memberId)->update(['sponsor_user_id' => $sponsorId, 'updated_at' => now()]);
+            foreach ($states as $state) {
+                $parent = (int) $state->user_id === $memberId ? $sponsorId : ($state->sponsor_user_id === null ? null : (int) $state->sponsor_user_id);
+                foreach (self::uplineLevels((int) $state->user_id, $parent) as [$ancestor, $level]) {
+                    self::applyDelta($ancestor, $level, self::dbBool($state->is_active) ? 1 : 0, self::dbBool($state->is_active) ? 0 : 1, (string) $state->active_business);
+                }
+            }
+            $result = ['changed' => true, 'member' => $member->username, 'sponsor' => $sponsor->username, 'previous_sponsor_user_id' => $oldSponsor, 'subtree_members' => count($ids)];
+            DB::table('member_security_audits')->insert(['actor_id' => $actorId, 'action' => 'referral_sponsor_reassigned', 'details' => json_encode($result + ['member_id' => $memberId, 'sponsor_user_id' => $sponsorId, 'financial_history_changed' => false, 'magic_matrix_changed' => false], JSON_THROW_ON_ERROR), 'created_at' => now()]);
+
+            return $result;
+        }, 3);
+    }
+
     public static function synchronize(int $memberId): void
     {
         if ($memberId <= 0) {

@@ -316,13 +316,9 @@ class RegisterController extends Controller
                 return redirect()->route('admin.dashboard');
             }
 
-            // Members must complete PIN setup before dashboard access.
-            // A saved intended URL cannot bypass PIN setup.
-            return EnsureMemberPin::hasConfiguredPin(
-                $user
-            )
-                ? redirect()->route('member.dashboard')
-                : redirect()->route('security-pin.form');
+            return EnsureMemberPin::requiresSetup($user)
+                ? redirect()->route('security-pin.form')
+                : redirect()->route('member.dashboard');
         }
 
         return back()->withErrors([

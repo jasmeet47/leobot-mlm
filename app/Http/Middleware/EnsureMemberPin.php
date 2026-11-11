@@ -9,6 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureMemberPin
 {
+    public static function requiresSetup(?User $user): bool
+    {
+        return config('leobot_auth.member_pin_required', true) && ! self::hasConfiguredPin($user);
+    }
+
     public static function hasConfiguredPin(?User $user): bool
     {
         if ($user === null) {
@@ -64,13 +69,12 @@ class EnsureMemberPin
          * A missing or legacy plain-text PIN
          * does not satisfy the PIN requirement.
          */
-        if (!self::hasConfiguredPin($user)) {
+        if (self::requiresSetup($user)) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'code' => 'security_pin_required',
-                    'message' =>
-                        'Please set your Security PIN before opening the dashboard.',
+                    'message' => 'Please set your Security PIN before opening the dashboard.',
                 ], 403);
             }
 

@@ -142,7 +142,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 @endif
 
 
-    @if (session('success'))
+    @if (session('success') && session('success') !== 'Security PIN saved successfully.')
         <p class="success" role="status">{{ session('success') }}</p>
     @endif
     <section id="income-summary" aria-label="Member income summary">
