@@ -17,6 +17,7 @@ final class MemberTeamNavigationTest extends TestCase
         $child = User::factory()->create(['role' => 'member', 'status' => 'active', 'sponsor_user_id' => $root->id, 'sponsor_id' => 'legacy-stale']);
         $grandchild = User::factory()->create(['role' => 'member', 'status' => 'inactive', 'sponsor_user_id' => $child->id]);
         $outsider = User::factory()->create(['role' => 'member']);
+        $this->actingAs($root)->get(route('member.detail', ['panel' => 'direct-referrals']))->assertOk()->assertSee('Team View')->assertSee($child->username)->assertSee(route('member.team-levels', ['team_member' => $child->id]), false);
         $this->actingAs($root)->get(route('member.team-levels'))->assertOk()->assertSee($child->username)->assertSee('View Team');
         $this->get(route('member.team-levels', ['team_member' => $child->id]))->assertOk()->assertSee($grandchild->username)->assertDontSee($outsider->username);
         $this->get(route('member.team-levels', ['team_member' => $grandchild->id]))->assertOk()->assertSee('No members found on this level.');

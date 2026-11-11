@@ -302,6 +302,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                         <th>Email</th>
                         <th>Investment</th>
                         <th>Package Status</th>
+                        <th>Team View</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -315,10 +316,11 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
                             <td>{{ $referral->display_email }}</td>
                             <td>{{ $referral->display_investment }}</td>
                             <td>{{ $referral->display_package_status }}</td>
+                            <td><a href="{{ route('member.team-levels', ['team_member' => $referral->id]) }}">View Team</a></td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">No direct referrals found.</td>
+                            <td colspan="9">No direct referrals found.</td>
                         </tr>
                     @endforelse
                 </tbody>
