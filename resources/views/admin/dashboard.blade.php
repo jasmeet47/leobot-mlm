@@ -452,7 +452,7 @@ $enabledDashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard
 $quickLinkUrl = trim((string) ($enabledDashboardLinks->get($platform)->url ?? ''));
 @endphp
 @if(\App\Support\QuickLinkUrl::isSafe($quickLinkUrl))
-<a data-quick-link="{{ $platform }}" href="{{ $quickLinkUrl }}" target="_blank" rel="noopener noreferrer" @if($platform === 'pdf') download @endif aria-label="{{ $platform === 'telegram' ? 'Open Telegram in a new tab' : ($platform === 'pdf' ? 'Download PDF' : 'Join '.ucfirst($platform).' in a new tab') }}" style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">@if($platform === 'telegram')Telegram ↗@else{{ $platform==='pdf'?'PDF':ucfirst($platform) }}<small style="display:block;color:#22c55e!important">{{ $platform === 'pdf' ? 'Download' : 'Join now' }}</small>@endif</a>
+<a data-quick-link="{{ $platform }}" href="{{ $quickLinkUrl }}" target="_blank" rel="noopener noreferrer" @if($platform === 'pdf') download @endif aria-label="{{ $platform === 'telegram' ? 'Open Telegram in a new tab' : ($platform === 'pdf' ? 'Download PDF' : 'Join '.ucfirst($platform).' in a new tab') }}" style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ $platform==='pdf'?'PDF':ucfirst($platform) }}<small style="display:block;color:#22c55e!important">{{ $platform === 'pdf' ? 'Download' : 'Join now' }}</small></a>
 @else
 <span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
 @endif

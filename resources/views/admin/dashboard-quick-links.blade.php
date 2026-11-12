@@ -86,7 +86,7 @@ Show on Member Dashboard</label>
 <button type="submit">Save {{ ucfirst($platform) }}</button>
 </form>
 @if(\App\Support\QuickLinkUrl::isSafe(trim((string) ($item->url ?? ''))))
-<p><a data-quick-link="{{ $platform }}" href="{{ trim($item->url) }}" target="_blank" rel="noopener noreferrer" @if($platform === 'pdf') download @endif @if($platform !== 'telegram') style="color:#22c55e!important" @endif>{{ $platform === 'telegram' ? 'Open saved Telegram link ↗' : ($platform === 'pdf' ? 'Download' : 'Join now') }}</a></p>
+<p><a data-quick-link="{{ $platform }}" href="{{ trim($item->url) }}" target="_blank" rel="noopener noreferrer" @if($platform === 'pdf') download @endif style="color:#22c55e!important">{{ $platform === 'pdf' ? 'Download' : 'Join now' }}</a></p>
 @endif
 </article>
 @endforeach
