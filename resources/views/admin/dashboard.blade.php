@@ -443,9 +443,16 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 <section class="display-control-card">
 <h2>Dashboard Quick Links</h2>
 <p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
+@php
+$telegramLink = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links') ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')->where('platform', 'telegram')->where('enabled', true)->first() : null;
+@endphp
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
 @foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+@if($platform === 'telegram' && \App\Support\QuickLinkUrl::isSafe(trim((string) ($telegramLink->url ?? ''))))
+<a data-quick-link="telegram" href="{{ trim($telegramLink->url) }}" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram in a new tab" style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">Telegram ↗</a>
+@else
 <span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
+@endif
 @endforeach
 </div>
 <p>Each link needs its own official HTTPS URL and Enabled setting. Configure them using the management page.</p>

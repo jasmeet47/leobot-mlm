@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class Mt5QuickLinksHttpTest extends TestCase
@@ -185,5 +186,72 @@ class Mt5QuickLinksHttpTest extends TestCase
                 'enabled' => 1,
             ])
             ->assertForbidden();
+    }
+
+    private function telegramAnchor(TestResponse $response): ?\DOMElement
+    {
+        $response->assertOk();
+        $dom = new \DOMDocument;
+        $dom->loadHTML($response->getContent(), LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        $nodes = (new \DOMXPath($dom))->query('//a[@data-quick-link="telegram"]');
+        $this->assertLessThanOrEqual(1, $nodes->length);
+
+        return $nodes->item(0);
+    }
+
+    public function test_saved_telegram_link_is_clickable_and_changes_are_visible_without_cache_clear(): void
+    {
+        config(['leobot_auth.member_pin_required' => false]);
+        $admin = $this->admin();
+        $member = $this->member();
+        foreach (['https://t.me/lumiflowon', 'https://t.me/lumiflowon_updates'] as $url) {
+            $this->actingAs($admin)->from(route('admin.quick-links.index'))->post(route('admin.quick-links.update'), [
+                'platform' => 'telegram', 'url' => $url, 'enabled' => 1,
+            ])->assertRedirect(route('admin.quick-links.index'))->assertSessionHas('success', 'Quick Link settings updated.');
+            $this->assertDatabaseHas('dashboard_quick_links', ['platform' => 'telegram', 'url' => $url, 'enabled' => true]);
+            $adminPage = $this->get(route('admin.quick-links.index'))->assertSee('Quick Link settings updated.');
+            $adminDashboard = $this->get(route('admin.dashboard'));
+            $memberPage = $this->actingAs($member)->get(route('member.dashboard'));
+            foreach ([$adminPage, $adminDashboard, $memberPage] as $page) {
+                $anchor = $this->telegramAnchor($page);
+                $this->assertNotNull($anchor);
+                $this->assertSame($url, $anchor->getAttribute('href'));
+                $this->assertSame('_blank', $anchor->getAttribute('target'));
+                $this->assertSame('noopener noreferrer', $anchor->getAttribute('rel'));
+            }
+        }
+        $this->get(route('member.dashboard'))->assertDontSee('href="https://t.me/lumiflowon"', false);
+    }
+
+    public function test_disabled_telegram_stays_hidden_from_member_but_admin_can_preview_saved_url(): void
+    {
+        config(['leobot_auth.member_pin_required' => false]);
+        $this->actingAs($this->admin())->post(route('admin.quick-links.update'), [
+            'platform' => 'telegram', 'url' => 'https://t.me/lumiflowon', 'enabled' => 0,
+        ])->assertSessionHasNoErrors();
+        $this->assertNotNull($this->telegramAnchor($this->get(route('admin.quick-links.index'))));
+        $this->assertNull($this->telegramAnchor($this->get(route('admin.dashboard'))));
+        $this->assertNull($this->telegramAnchor($this->actingAs($this->member())->get(route('member.dashboard'))));
+    }
+
+    public function test_unsafe_or_empty_legacy_urls_never_become_member_or_admin_anchors(): void
+    {
+        config(['leobot_auth.member_pin_required' => false]);
+        $admin = $this->admin();
+        $member = $this->member();
+        foreach (['', 'javascript:alert(1)', 'http://t.me/lumiflowon', 'https://user:pass@t.me/lumiflowon', 'https://localhost/link', 'https://127.0.0.1/link', 'https://[::1]/link', 'https://t.me/lumiflowon#fragment'] as $url) {
+            DB::table('dashboard_quick_links')->where('platform', 'telegram')->update(['url' => $url, 'enabled' => true]);
+            $this->assertNull($this->telegramAnchor($this->actingAs($member)->get(route('member.dashboard'))));
+            $this->assertNull($this->telegramAnchor($this->actingAs($admin)->get(route('admin.quick-links.index'))));
+        }
+    }
+
+    public function test_invalid_save_reports_error_and_preserves_existing_telegram_setting(): void
+    {
+        DB::table('dashboard_quick_links')->where('platform', 'telegram')->update(['url' => 'https://t.me/lumiflowon', 'enabled' => true]);
+        $this->actingAs($this->admin())->from(route('admin.quick-links.index'))->post(route('admin.quick-links.update'), [
+            'platform' => 'telegram', 'url' => 'http://example.com', 'enabled' => 1,
+        ])->assertRedirect(route('admin.quick-links.index'))->assertSessionHasErrors('url');
+        $this->assertDatabaseHas('dashboard_quick_links', ['platform' => 'telegram', 'url' => 'https://t.me/lumiflowon', 'enabled' => true]);
     }
 }

@@ -70,6 +70,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
         ->where('enabled', true)
         ->whereNotNull('url')
         ->get()
+        ->keyBy('platform')
     : collect();
 @endphp
 
@@ -390,8 +391,15 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <h2>LumiFlowOn Quick Links</h2>
 
 <div style="display:flex;gap:12px;flex-wrap:wrap">
+@php
+$telegramUrl = trim((string) ($dashboardLinks->get('telegram')->url ?? ''));
+@endphp
 @foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
+@if($platform === 'telegram' && \App\Support\QuickLinkUrl::isSafe($telegramUrl))
+<a class="lb-quick-link" data-quick-link="telegram" href="{{ $telegramUrl }}" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram in a new tab" style="min-width:150px"><span aria-hidden="true" style="font-size:28px;color:var(--gold)">@include('partials.social-icon', ['platform'=>$platform])</span><strong>Telegram</strong><small>Open Telegram ↗</small></a>
+@else
 <span class="lb-quick-link" style="min-width:150px"><span aria-hidden="true" style="font-size:28px;color:var(--gold)">@include('partials.social-icon', ['platform'=>$platform])</span><strong>{{ $platform==='pdf'?'PDF':ucfirst($platform) }}</strong><small>Coming soon</small></span>
+@endif
 @endforeach
 </div>
 </section>

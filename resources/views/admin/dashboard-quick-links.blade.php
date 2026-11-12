@@ -85,6 +85,9 @@ $item = $links->get($platform);
 Show on Member Dashboard</label>
 <button type="submit">Save {{ ucfirst($platform) }}</button>
 </form>
+@if($platform === 'telegram' && \App\Support\QuickLinkUrl::isSafe(trim((string) ($item->url ?? ''))))
+<p><a data-quick-link="telegram" href="{{ trim($item->url) }}" target="_blank" rel="noopener noreferrer">Open saved Telegram link ↗</a></p>
+@endif
 </article>
 @endforeach
 </main>
