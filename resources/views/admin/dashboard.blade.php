@@ -444,12 +444,15 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 <h2>Dashboard Quick Links</h2>
 <p>Manage Telegram, WhatsApp, YouTube, Arattai and PDF visibility.</p>
 @php
-$telegramLink = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links') ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')->where('platform', 'telegram')->where('enabled', true)->first() : null;
+$enabledDashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_links') ? \Illuminate\Support\Facades\DB::table('dashboard_quick_links')->where('enabled', true)->get()->keyBy('platform') : collect();
 @endphp
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
 @foreach(['whatsapp','youtube','arattai','telegram','pdf'] as $platform)
-@if($platform === 'telegram' && \App\Support\QuickLinkUrl::isSafe(trim((string) ($telegramLink->url ?? ''))))
-<a data-quick-link="telegram" href="{{ trim($telegramLink->url) }}" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram in a new tab" style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">Telegram ↗</a>
+@php
+$quickLinkUrl = trim((string) ($enabledDashboardLinks->get($platform)->url ?? ''));
+@endphp
+@if(\App\Support\QuickLinkUrl::isSafe($quickLinkUrl))
+<a data-quick-link="{{ $platform }}" href="{{ $quickLinkUrl }}" target="_blank" rel="noopener noreferrer" @if($platform === 'pdf') download @endif aria-label="{{ $platform === 'telegram' ? 'Open Telegram in a new tab' : ($platform === 'pdf' ? 'Download PDF' : 'Join '.ucfirst($platform).' in a new tab') }}" style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">@if($platform === 'telegram')Telegram ↗@else{{ $platform==='pdf'?'PDF':ucfirst($platform) }}<small style="display:block;color:#22c55e!important">{{ $platform === 'pdf' ? 'Download' : 'Join now' }}</small>@endif</a>
 @else
 <span style="display:inline-block;padding:8px 12px;border:1px solid #52637b;border-radius:8px;color:#e6f0ff">{{ ucfirst($platform) }}</span>
 @endif
