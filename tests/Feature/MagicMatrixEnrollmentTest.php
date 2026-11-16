@@ -259,6 +259,37 @@ final class MagicMatrixEnrollmentTest extends TestCase
         $this->assertSame($ledger, DB::table('financial_ledger')->count());
     }
 
+    public function test_magic_team_reports_qualification_independently_of_account_status_without_moving_positions(): void
+    {
+        $root = $this->member();
+        $child = $this->member();
+        $this->travelTo(now()->startOfDay());
+        $this->activate($root);
+        $this->travel(1)->seconds();
+        $this->activate($child);
+        $root->forceFill(['status' => 'inactive'])->save();
+        $child->forceFill(['security_pin' => Hash::make('123456')])->save();
+        $positions = DB::table('magic_matrix_positions')->orderBy('id')->get()->toJson();
+        $cycles = DB::table('magic_matrix_cycles')->orderBy('id')->get()->toJson();
+        $ledger = DB::table('financial_ledger')->orderBy('id')->get()->toJson();
+
+        $team = MagicMatrixTeamReadService::forMember($root->id);
+        $this->assertTrue($team['placement']['qualification']['eligible']);
+        $this->assertTrue($team['members'][0]['qualification']['eligible']);
+        $this->assertSame(now()->format('Y-m-d H:i:s'), $team['members'][0]['qualification']['qualified_at']);
+        $this->assertSame(now()->format('Y-m-d H:i:s'), $team['members'][0]['placed_at']);
+        $this->actingAs($child)->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()
+            ->assertSee('Magic Status:')->assertSee('Qualification Date (IST)');
+
+        $child->forceFill(['is_blocked' => true])->save();
+        $team = MagicMatrixTeamReadService::forMember($root->id);
+        $this->assertFalse($team['members'][0]['qualification']['eligible']);
+        $this->assertSame(1, $team['total']);
+        $this->assertSame($positions, DB::table('magic_matrix_positions')->orderBy('id')->get()->toJson());
+        $this->assertSame($cycles, DB::table('magic_matrix_cycles')->orderBy('id')->get()->toJson());
+        $this->assertSame($ledger, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
+    }
+
     public function test_leaf_placement_displays_actual_member_and_parent_ids_without_changing_records(): void
     {
         $root = $this->member();
