@@ -28,7 +28,7 @@
             <a class="action" href="{{ route('member.detail', ['panel' => 'team-breakdown']) }}">51-Level Team Breakdown</a>
             <a class="action" href="{{ route('member.team-levels') }}">View My 51-Level Team</a>
             @if(isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
-            <a class="action" href="{{ route('member.detail', ['panel' => 'magic-team']) }}">Magic Team</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'magic-team']) }}">Global Magic Team</a>
             @endif
 
             <a class="action" href="{{ route('member.detail', ['panel' => 'direct-referrals']) }}">My Direct Referrals</a>
@@ -102,7 +102,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 <!-- /LUMIFLOWON_QUICK_ACTIONS_SAFE_V1 -->
 @if($lbPanel==='magic-team' && isset($magicTeam) && is_array($magicTeam) && ($magicTeam['visible_levels'] ?? 0) > 0)
 <section id="magic-team" class="lb-quick-actions" aria-label="{{ (int) ($magicTeam['visible_levels'] ?? 20) }}-Level Magic Team Overview">
-  <h2>Magic Team</h2>
+  <h2>Global Magic Team</h2>
   @if($magicEnrollmentState??null)<p class="muted">{{$magicEnrollmentState['reason']}}</p>@endif
   @if(isset($magicTeam) && is_array($magicTeam) && $magicTeam['available'])
     <div class="lb-quick-grid">
@@ -114,7 +114,7 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
     @if($magicTeam['has_position'])
     @if($magicTeam['placement'] ?? null)
     <div class="card" id="my-magic-placement" style="margin-top:14px;border-color:#306750">
-      <h3>Your Magic Matrix Placement</h3>
+      <h3>Your Global Magic Matrix Placement</h3>
       <strong>{{ $magicTeam['placement']['username'] }}</strong> · {{ $magicTeam['placement']['name'] }}
       <p class="success" style="margin:8px 0">Placed in Magic Matrix</p>
       <p>Magic Status: <strong @if($magicTeam['placement']['qualification']['eligible']) class="success" @endif>{{ $magicTeam['placement']['qualification']['eligible'] ? 'Active' : 'Inactive' }}</strong></p>

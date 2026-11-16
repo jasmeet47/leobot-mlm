@@ -311,7 +311,7 @@ final class MagicMatrixEnrollmentTest extends TestCase
         $this->assertSame($leaf->username, $rootTeam['members'][0]['username']);
         $this->assertSame($leaf->name, $rootTeam['members'][0]['name']);
         $this->actingAs($leaf)->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()
-            ->assertSee('Your Magic Matrix Placement')->assertSee($leaf->username)->assertSee($root->username)
+            ->assertSee('Your Global Magic Matrix Placement')->assertSee($leaf->username)->assertSee($root->username)
             ->assertSee('Placed in Magic Matrix')->assertSee('No members are placed below your position yet.')
             ->assertDontSee($outsider->username);
         $this->assertSame($positions, DB::table('magic_matrix_positions')->orderBy('id')->get()->toJson());
@@ -348,7 +348,7 @@ final class MagicMatrixEnrollmentTest extends TestCase
         $member = $this->member();
         $this->activate($member);
         $member->forceFill(['security_pin' => Hash::make('123456')])->save();
-        $this->actingAs($member)->get(route('member.dashboard'))->assertOk()->assertDontSee('id="magic-team"', false)->assertDontSee('Your Magic Matrix Placement');
-        $this->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()->assertSee('Your Magic Matrix Placement')->assertSee('Members Below Your Position')->assertDontSee('Your position is shown separately.');
+        $this->actingAs($member)->get(route('member.dashboard'))->assertOk()->assertDontSee('id="magic-team"', false)->assertDontSee('Your Global Magic Matrix Placement');
+        $this->get(route('member.detail', ['panel' => 'magic-team']))->assertOk()->assertSee('Your Global Magic Matrix Placement')->assertSee('Members Below Your Position')->assertDontSee('Your position is shown separately.');
     }
 }
