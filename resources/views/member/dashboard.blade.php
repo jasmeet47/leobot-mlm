@@ -57,7 +57,7 @@
 <section id="account-summary" aria-label="Member financial summary">
         <h2>Your Account Summary</h2><div class="card" id="verified-deposit-total"><div class="label">Total Deposits</div><div class="value">{{ $verifiedDepositTotal }} USDT</div></div>
         <div class="grid">
-            <div class="card" id="withdrawal-amount"><div class="label">Withdrawal Amount</div><div class="value">{{ $paidIncomeSummary['lifetime_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · Total credited income</div><div class="muted">Available to withdraw: {{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }} USDT</div></div>
+            <div class="card" id="withdrawal-amount"><div class="label">Withdrawal Amount</div><div class="value">{{ $paidIncomeSummary['lifetime_usdt'] ?? '0.00000000' }}</div></div>
             <div class="card"><div class="label">Total Investment</div><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
             <div class="card" id="self-magic-income-total"><div class="label">Self Magic Income</div><div class="value">{{ $selfMagicIncomeSummary['lifetime_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT</div><a href="{{ route('member.detail', ['panel' => 'self-magic-income']) }}">View Self Magic Income</a></div>

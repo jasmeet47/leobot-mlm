@@ -333,7 +333,7 @@ class MemberDashboardIncomeTest extends TestCase
             ->assertDontSee('77777.00000000');
     }
 
-    public function test_withdrawal_amount_card_totals_four_income_sources_once_and_separates_spendable_balance(): void
+    public function test_withdrawal_amount_card_totals_four_income_sources_once_without_extra_labels(): void
     {
         $member = $this->user();
         $other = $this->user();
@@ -351,7 +351,7 @@ class MemberDashboardIncomeTest extends TestCase
         $response->assertViewHas('paidIncomeSummary', fn ($summary) => $summary['lifetime_usdt'] === '20.00000000');
         $response->assertViewHas('selfMagicIncomeSummary', fn ($summary) => $summary['lifetime_usdt'] === '2.00000000');
         $this->assertSame(1, preg_match('/id="withdrawal-amount".*?<div class="label">Withdrawal Amount<\/div><div class="value">20\.00000000<\/div>/s', $response->getContent()));
-        $response->assertSee('Available to withdraw: 166.00000000 USDT');
+        $response->assertDontSee('USDT · Total credited income')->assertDontSee('Available to withdraw:');
         $this->assertSame($before, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
         $this->assertSame('166.00000000', $member->fresh()->available_balance);
     }
