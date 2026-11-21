@@ -67,7 +67,7 @@ final class StakingProfitController extends Controller
             return back()->withErrors(['profit' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Verified profit reserved: 67% Self, 30% Generation, 3% Magic. Payouts require their separate controls.');
+        return back()->with('status', 'Verified profit reserved using its recorded Self / Generation / Magic policy. Payouts require their separate controls.');
     }
 
     public function reserve(Request $request, int $id): RedirectResponse
@@ -79,6 +79,6 @@ final class StakingProfitController extends Controller
             return back()->withErrors(['profit' => $error->getMessage()]);
         }
 
-        return back()->with('status', 'Independently approved profit reserved 67/30/3. No member payout has been made.');
+        return back()->with('status', 'Independently approved profit reserved using its recorded policy. No member payout has been made.');
     }
 }

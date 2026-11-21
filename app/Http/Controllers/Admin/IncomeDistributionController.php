@@ -59,7 +59,7 @@ final class IncomeDistributionController extends Controller
             return back()->withErrors(['distribution' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Approved profit reserved 67% Self / 30% 51-Level / 3% Magic. Wallet payouts remain subject to payout controls and qualifications.');
+        return back()->with('status', 'Approved profit reserved using its recorded Self / Generation / Magic policy. Wallet payouts remain subject to payout controls and qualifications.');
     }
 
     public function verifyAndDistribute(Request $r, int $id): RedirectResponse
