@@ -18,18 +18,38 @@ final class AdminFundingWalletService
         return bcadd((string) DB::table('financial_ledger')->whereNull('user_id')->where('wallet_type', self::WALLET)->where('status', 'completed')->sum('amount'), '0', 8);
     }
 
-    public static function topUp(User $admin, string $amount, string $reference, bool $fundsConfirmed): int
+    public static function topUp(User $admin, string $amount, string $reference, bool $fundsConfirmed, ?string $requestKey = null): int
     {
         self::gate();
         self::money($amount);
         $reference = strtoupper(trim($reference));
-        if (! $fundsConfirmed || ! preg_match('/\A[A-Z0-9][A-Z0-9._:\/-]{2,119}\z/D', $reference)) {
-            throw new RuntimeException('Confirm actual company USDT received and enter its receipt or transaction reference.');
+        $generatedReference = $reference === '';
+        if (! $fundsConfirmed) {
+            throw new RuntimeException('Confirm actual company USDT funds received and available.');
+        }
+        if (($requestKey !== null && ! Str::isUuid($requestKey)) || ($generatedReference && $requestKey === null)) {
+            throw new RuntimeException('Reload the funding form for a valid submission key.');
+        }
+        $requestKey = $requestKey !== null ? strtolower($requestKey) : null;
+        if ($generatedReference) {
+            $reference = 'AUTO-CAPITAL-'.strtoupper($requestKey);
+        }
+        if (! preg_match('/\A[A-Z0-9][A-Z0-9._:\/-]{2,119}\z/D', $reference)) {
+            throw new RuntimeException('Use a valid optional funding reference, or leave it blank.');
         }
         $key = 'adminfund:receipt:'.hash('sha256', $reference);
 
-        return DB::transaction(function () use ($admin, $amount, $reference, $key): int {
+        return DB::transaction(function () use ($admin, $amount, $reference, $key, $requestKey, $generatedReference): int {
             self::lock($admin);
+            if ($requestKey !== null) {
+                $priorSubmission = DB::table('member_security_audits')->where('action', 'admin_funding_received')->whereRaw("details->>'request_key' = ?", [$requestKey])->first();
+                if ($priorSubmission) {
+                    $details = json_decode($priorSubmission->details, true, 512, JSON_THROW_ON_ERROR);
+                    if ((int) $priorSubmission->actor_id !== $admin->id || ($details['source_reference'] ?? '') !== $reference || bccomp((string) ($details['amount'] ?? '-1'), $amount, 8) !== 0) {
+                        throw new RuntimeException('Funding submission already used with different details. Reload the form for a new funding entry.');
+                    }
+                }
+            }
             $old = DB::table('financial_ledger')->where('transaction_key', $key)->first();
             if ($old) {
                 $proof = self::proof($old);
@@ -48,7 +68,7 @@ final class AdminFundingWalletService
             $before = self::assertReconciled();
             $after = bcadd($before, $amount, 8);
             self::bounded($after);
-            $audit = self::audit($admin->id, 'admin_funding_received', ['amount' => bcadd($amount, '0', 8), 'source_reference' => $reference, 'company_funds_confirmed' => true, 'on_chain_verified' => false]);
+            $audit = self::audit($admin->id, 'admin_funding_received', ['amount' => bcadd($amount, '0', 8), 'source_reference' => $reference, 'request_key' => $requestKey, 'reference_generated' => $generatedReference, 'company_funds_confirmed' => true, 'on_chain_verified' => false]);
             $id = self::journal($audit, 'admin_capital_received', self::WALLET, $amount, $before, $after, $key);
             self::journal($audit, 'admin_capital_source', 'external_company_capital', '-'.$amount, $amount, '0', $key.':source');
             self::assertReconciled();

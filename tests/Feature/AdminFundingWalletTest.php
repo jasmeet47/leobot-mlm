@@ -54,6 +54,32 @@ final class AdminFundingWalletTest extends TestCase
         return [$admin, $member];
     }
 
+    public function test_reference_free_funding_is_audited_and_submission_retries_do_not_credit_twice(): void
+    {
+        [$admin] = $this->fixture();
+        $key = (string) Str::uuid();
+        $payload = ['amount' => '200', 'funding_request_key' => $key, 'funds_confirmed' => '1'];
+        $this->actingAs($admin)->post(route('admin.funding-wallet.topup'), $payload)->assertSessionHasNoErrors();
+        $this->post(route('admin.funding-wallet.topup'), $payload)->assertSessionHasNoErrors();
+        $this->assertSame('200.00000000', Funding::assertReconciled());
+        $audit = DB::table('member_security_audits')->where('action', 'admin_funding_received')->sole();
+        $details = json_decode($audit->details, true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('AUTO-CAPITAL-'.strtoupper($key), $details['source_reference']);
+        $this->assertTrue($details['reference_generated']);
+        $this->post(route('admin.funding-wallet.topup'), array_replace($payload, ['amount' => '201']))->assertSessionHasErrors('funding');
+        $this->post(route('admin.funding-wallet.topup'), array_replace($payload, ['source_reference' => 'CHANGED-SOURCE']))->assertSessionHasErrors('funding');
+        $this->assertSame('200.00000000', Funding::assertReconciled());
+    }
+
+    public function test_reference_free_funding_requires_valid_submission_key_and_actual_funds_confirmation(): void
+    {
+        [$admin] = $this->fixture();
+        $this->actingAs($admin)->post(route('admin.funding-wallet.topup'), ['amount' => '200', 'funds_confirmed' => '1'])->assertSessionHasErrors('funding_request_key');
+        $this->post(route('admin.funding-wallet.topup'), ['amount' => '200', 'funding_request_key' => 'invalid', 'funds_confirmed' => '1'])->assertSessionHasErrors('funding_request_key');
+        $this->post(route('admin.funding-wallet.topup'), ['amount' => '200', 'funding_request_key' => (string) Str::uuid()])->assertSessionHasErrors('funds_confirmed');
+        $this->assertSame('0.00000000', Funding::balance());
+    }
+
     public function test_company_capital_and_activation_are_balanced_and_idempotent_without_fake_income_or_deposits(): void
     {
         [$admin,$member] = $this->fixture();
@@ -219,6 +245,17 @@ final class AdminFundingWalletTest extends TestCase
         }
         $this->assertSame('200.00000000', Funding::assertReconciled());
         $this->assertSame(1, DB::table('financial_ledger')->where('entry_type', 'admin_capital_received')->count());
+    }
+
+    public function test_parallel_reference_free_submission_retries_record_capital_once(): void
+    {
+        [$admin] = $this->fixture();
+        $key = (string) Str::uuid();
+        foreach ($this->workers([['topup', (string) $admin->id, '200', '', $key], ['topup', (string) $admin->id, '200', '', $key]]) as $process) {
+            $this->assertSame(0, $process->getExitCode(), $process->getOutput().$process->getErrorOutput());
+        }
+        $this->assertSame('200.00000000', Funding::assertReconciled());
+        $this->assertSame(1, DB::table('member_security_audits')->where('action', 'admin_funding_received')->count());
     }
 
     private function workers(array $arguments): array

@@ -20,9 +20,9 @@ final class AdminFundingWalletController extends Controller
 
     public function topUp(Request $request): RedirectResponse
     {
-        $data = $request->validate(['amount' => ['required', 'string', 'regex:/\A(?:0|[1-9]\d*)(?:\.\d{1,8})?\z/D', 'max:25'], 'source_reference' => 'required|string|min:3|max:120', 'funds_confirmed' => 'accepted']);
+        $data = $request->validate(['amount' => ['required', 'string', 'regex:/\A(?:0|[1-9]\d*)(?:\.\d{1,8})?\z/D', 'max:25'], 'source_reference' => 'nullable|string|min:3|max:120', 'funding_request_key' => 'required_without:source_reference|nullable|uuid', 'funds_confirmed' => 'accepted']);
         try {
-            Funding::topUp($request->user(), $data['amount'], $data['source_reference'], $request->boolean('funds_confirmed'));
+            Funding::topUp($request->user(), $data['amount'], $data['source_reference'] ?? '', $request->boolean('funds_confirmed'), $data['funding_request_key'] ?? null);
         } catch (QueryException $error) {
             report($error);
 
@@ -31,7 +31,7 @@ final class AdminFundingWalletController extends Controller
             return back()->withErrors(['funding' => $error->getMessage()]);
         }
 
-        return redirect()->route('admin.funding-wallet')->with('status', 'Company funding recorded successfully. Reusing the same receipt does not add it twice.');
+        return redirect()->route('admin.funding-wallet')->with('status', 'Company funding recorded successfully. Audit reference saved automatically when no reference was entered.');
     }
 
     public function activate(Request $request): RedirectResponse
