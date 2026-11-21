@@ -60,6 +60,7 @@
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Total Investment</div><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
+            <div class="card" id="self-magic-income-total"><div class="label">Self Magic Income</div><div class="value">{{ $selfMagicIncomeSummary['lifetime_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT</div><a href="{{ route('member.detail', ['panel' => 'self-magic-income']) }}">View Self Magic Income</a></div>
             <div class="card" id="monthly-income"><div class="label">Monthly Income</div><div class="value">{{ $paidIncomeSummary['monthly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ \Carbon\Carbon::parse($paidIncomeSummary['date'] ?? now('Asia/Kolkata')->toDateString())->format('F Y') }} IST</div></div>
             <div class="card" id="weekly-income"><div class="label">Weekly Income</div><div class="value">{{ $paidIncomeSummary['weekly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ $paidIncomeSummary['week_start'] ?? '' }} – {{ $paidIncomeSummary['week_end'] ?? '' }}</div></div>
         </div>

@@ -336,6 +336,7 @@ class MemberDashboardController extends Controller
             'emailConsent' => $emailConsent,
             'incomeSummary' => $incomeSummary,
             'walletHistory' => $walletHistory,
+            'selfMagicIncomeSummary' => MemberIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null, true, 'equal'),
             'magicIncomeSummary' => MagicIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null),
             'paidIncomeSummary' => MemberIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null),
             'paidIncomeHistory' => MemberIncomeReportService::history((int) $member->id),

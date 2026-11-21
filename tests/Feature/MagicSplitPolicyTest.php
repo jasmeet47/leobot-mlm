@@ -137,6 +137,10 @@ final class MagicSplitPolicyTest extends TestCase
         $root->forceFill(['security_pin' => Hash::make('123456')])->save();
         $before = DB::table('financial_ledger')->orderBy('id')->get()->toJson();
 
+        $overview = $this->actingAs($root)->get(route('member.dashboard'))->assertOk();
+        $overview->assertSee('id="self-magic-income-total"', false)->assertSee('View Self Magic Income');
+        $this->assertSame('1.00000000', $overview->viewData('selfMagicIncomeSummary')['lifetime_usdt']);
+
         $equal = $this->actingAs($root)->get(route('member.detail', ['panel' => 'self-magic-income', 'user_id' => $child->id]))->assertOk();
 
         $this->assertSame('1.00000000', $equal->viewData('magicComponentSummary')['lifetime_usdt']);
