@@ -10,6 +10,7 @@ use App\Services\SelfIncomeSettlementService;
 use App\Services\UnifiedProfitSharingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 final class FundedIncomeSettlementTest extends TestCase
@@ -69,13 +70,17 @@ final class FundedIncomeSettlementTest extends TestCase
         }
     }
 
-    public function test_magic_payout_balances_reserve_and_keeps_missing_ancestor_shares_held(): void
+    #[TestWith(['manual'])]
+    #[TestWith(['daily'])]
+    #[TestWith(['weekly'])]
+    #[TestWith(['monthly'])]
+    public function test_magic_payout_balances_reserve_and_keeps_missing_ancestor_shares_held(string $frequency): void
     {
         [$admin, $source, $reserveId, $funding] = $this->reserve();
         $root = User::factory()->create(['role' => 'member', 'status' => 'active']);
         config(['leobot_magic.magic_matrix_enrollment_enabled' => true, 'leobot_magic.magic_matrix_settlement_enabled' => true]);
         DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => true]);
-        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true, 'settlement_enabled' => true, 'minimum_tier_usdt' => '49']);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['enrollment_enabled' => true, 'settlement_enabled' => true, 'minimum_tier_usdt' => '49', 'frequency' => $frequency]);
         DB::table('magic_matrix_level_rates')->update(['pool_percent' => '5']);
         foreach ([$root, $source] as $person) {
             $package = DB::table('activation_packages')->insertGetId(['user_id' => $person->id, 'activation_key' => 'AUDIT-MAG-'.$person->id,

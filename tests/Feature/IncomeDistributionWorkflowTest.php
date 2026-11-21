@@ -11,6 +11,7 @@ use App\Services\WalletService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\Support\FinancialSeedState;
 use Tests\TestCase;
 
@@ -47,7 +48,18 @@ final class IncomeDistributionWorkflowTest extends TestCase
         $this->runSettlementWorkflow(true, true);
     }
 
-    private function runSettlementWorkflow(bool $sameAdmin, bool $networkOff = false): void
+    #[TestWith(['daily'])]
+    #[TestWith(['weekly'])]
+    #[TestWith(['monthly'])]
+    public function test_manual_distribution_works_for_saved_scheduled_frequency_and_has_no_reserve_button(string $frequency): void
+    {
+        $this->runSettlementWorkflow(true, false, $frequency, true);
+        $admin = User::where('role', 'admin')->orderBy('id')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.income-distribution'))->assertOk()
+            ->assertDontSee('Reserve approved 67 / 30 / 3')->assertSee('Distribute approved income to wallets');
+    }
+
+    private function runSettlementWorkflow(bool $sameAdmin, bool $networkOff = false, string $frequency = 'manual', bool $throughButton = false): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:00', 'Asia/Kolkata'));
         config(['leobot.production_financial_approval' => true, 'leobot.staking_enabled' => true, 'leobot.staking_profit_enabled' => true, 'leobot.self_income_settlement_enabled' => true, 'leobot.generation_income_settlement_enabled' => true, 'leobot_magic.magic_matrix_settlement_enabled' => true]);
@@ -61,7 +73,7 @@ final class IncomeDistributionWorkflowTest extends TestCase
         $id = IncomeDistributionService::submit($admin, '100', 'DISTRIBUTION-WORKFLOW-001', 'monthly', '2026-11-07');
         $this->assertSame('0.00000000', $member->fresh()->available_balance);
         config(['leobot.admin_profit_verification_enabled' => true, 'leobot_magic.production_financial_approval' => true]);
-        if ($sameAdmin) {
+        if ($sameAdmin && ! $throughButton) {
             $this->app->detectEnvironment(fn () => 'production');
         }
         if ($sameAdmin) {
@@ -70,14 +82,19 @@ final class IncomeDistributionWorkflowTest extends TestCase
             StakingProfitService::approve($reviewer, $id);
         }
         DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => true]);
-        DB::table('magic_matrix_settings')->where('id', 1)->update(['settlement_enabled' => true]);
+        DB::table('magic_matrix_settings')->where('id', 1)->update(['settlement_enabled' => true, 'frequency' => $frequency]);
         DB::table('magic_matrix_level_rates')->update(['pool_percent' => '5']);
         if ($networkOff) {
             config(['leobot.generation_income_settlement_enabled' => false]);
             DB::table('magic_income_settings')->where('id', 1)->update(['magic_enabled' => false]);
         }
-        IncomeDistributionService::distribute($admin, $id);
-        IncomeDistributionService::distribute($admin, $id);
+        if ($throughButton) {
+            $this->actingAs($admin)->post(route('admin.income-distribution.pay', $id), ['verified_funds_received' => '1'])->assertSessionHasNoErrors()->assertSessionHas('status');
+            $this->post(route('admin.income-distribution.pay', $id), ['verified_funds_received' => '1'])->assertSessionHasNoErrors();
+        } else {
+            IncomeDistributionService::distribute($admin, $id);
+            IncomeDistributionService::distribute($admin, $id);
+        }
         $this->assertSame('67.00000000', $member->fresh()->available_balance);
         $this->assertTrue(StakingReconciliationService::inspect()['accounting_passed']);
         $this->assertDatabaseCount('self_income_settlements', 1);

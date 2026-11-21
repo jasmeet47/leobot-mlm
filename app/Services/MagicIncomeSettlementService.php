@@ -41,8 +41,9 @@ final class MagicIncomeSettlementService
                 ! self::enabled($global->magic_enabled)) {
                 throw new RuntimeException('Magic settlement approval switches are OFF.');
             }
-            if ((string) $matrix->frequency !== 'manual') {
-                throw new RuntimeException('Only manual settlement is implemented; schedule review required.');
+            // Frequency is a scheduling preference; this authorized call is always an explicit manual settlement.
+            if (! in_array((string) $matrix->frequency, ['manual', 'daily', 'weekly', 'monthly'], true)) {
+                throw new RuntimeException('Invalid Magic settlement frequency configuration.');
             }
             if ((int) $matrix->max_depth !== 20) {
                 throw new RuntimeException('Magic matrix must have exactly 20 levels.');
