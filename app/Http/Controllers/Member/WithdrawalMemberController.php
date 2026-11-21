@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Services\MemberPaymentSecurity;
+use App\Services\MemberWithdrawalControl;
 use App\Services\WithdrawalEmailOtpService;
 use App\Services\WithdrawalRequestService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -22,7 +23,7 @@ final class WithdrawalMemberController extends Controller
             'history' => DB::table('withdrawal_requests')->where('user_id', $request->user()->id)
                 ->orderByDesc('id')->paginate(20),
             'verifiedWallets' => MemberPaymentSecurity::wallets($request->user()->id),
-            'enabled' => config('leobot.withdrawals_enabled', false) === true &&
+            'enabled' => MemberWithdrawalControl::enabled((int) $request->user()->id) && config('leobot.withdrawals_enabled', false) === true &&
                 (! app()->environment('production') || config('leobot.production_financial_approval', false) === true),
         ]);
     }

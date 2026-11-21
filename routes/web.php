@@ -422,6 +422,8 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): 
     Route::post('/admin/member-deletion', [MemberOperationsController::class, 'delete'])->middleware('throttle:5,1')->name('admin.members.delete-selected');
     Route::get('/admin/member-access', [MemberAccountController::class, 'index'])->name('admin.member-access');
     Route::post('/admin/member-access', [MemberAccountController::class, 'status'])->middleware('throttle:10,1,member-access')->name('admin.member-access.save');
+    Route::post('/admin/member-access/activate-account', [MemberAccountController::class, 'activateAccount'])->middleware('throttle:20,1,member-account-activate')->name('admin.member-access.activate-account');
+    Route::post('/admin/member-access/withdrawals', [MemberAccountController::class, 'withdrawals'])->middleware('throttle:30,1,member-withdrawals')->name('admin.member-access.withdrawals');
     Route::get('/admin/member-email', [MemberAccountController::class, 'index'])->name('admin.member-email');
     Route::post('/admin/member-email', [MemberAccountController::class, 'email'])->middleware('throttle:5,1,member-email')->name('admin.member-email.save');
     Route::get('/admin/transfer-controls', [MemberOperationsController::class, 'transfers'])->name('admin.transfer-controls');

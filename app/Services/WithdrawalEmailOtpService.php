@@ -32,6 +32,8 @@ final class WithdrawalEmailOtpService
             throw new RuntimeException('Active member with a valid account email required.');
         }
 
+        MemberWithdrawalControl::assertAllowed((int) $member->id);
+
         return $row;
     }
 

@@ -75,6 +75,9 @@ final class WithdrawalPaymentConfirmationService
             if (! $withdrawal || (int) $withdrawal->user_id === $admin->id) {
                 throw new AuthorizationException('Independent administrator required.');
             }
+            if ($event === 'payment_processing') {
+                MemberWithdrawalControl::assertAllowed((int) $withdrawal->user_id);
+            }
             $operation($withdrawal);
             DB::table('withdrawal_events')->insert(['withdrawal_request_id' => $withdrawalId,
                 'actor_user_id' => $admin->id, 'event_type' => $event, 'created_at' => now()]);

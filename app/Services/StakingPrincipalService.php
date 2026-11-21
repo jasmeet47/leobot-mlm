@@ -29,6 +29,7 @@ final class StakingPrincipalService
                 throw new AuthorizationException('Unblocked registered member required.');
             }
             $key = strtoupper($requestKey);
+            MemberWithdrawalControl::assertAllowed((int) $user->id);
             $old = DB::table('withdrawal_requests')->where('request_key', $key)->first();
             if ($old) {
                 $link = DB::table('staking_principal_withdrawals')->where('withdrawal_request_id', $old->id)->first();

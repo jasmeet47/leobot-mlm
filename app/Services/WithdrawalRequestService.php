@@ -45,6 +45,7 @@ final class WithdrawalRequestService
             if (! $user || ! StakingMemberEligibility::canReceiveIncome($user)) {
                 throw new AuthorizationException('Active unblocked member required.');
             }
+            MemberWithdrawalControl::assertAllowed((int) $user->id);
             $key = strtoupper($requestKey);
             $old = DB::table('withdrawal_requests')->where('request_key', $key)->first();
             if ($old) {
@@ -88,6 +89,7 @@ final class WithdrawalRequestService
             if (! $w || $w->status !== 'requested') {
                 throw new RuntimeException('Withdrawal not pending.');
             }
+            MemberWithdrawalControl::assertAllowed((int) $w->user_id);
             // Protected hold has already debited the member wallet. No second debit.
             if ((int) $w->user_id === (int) $actor->id) {
                 throw new AuthorizationException('Self-approval denied.');

@@ -70,9 +70,6 @@ final class MemberAccountAdministration
         }
         DB::transaction(function () use ($admin, $id, $status, $expectedStatus): void {
             self::actor($admin);
-            if ($status === 'active') {
-                throw new RuntimeException('Use the verified-balance activation form for Active.');
-            }
             $u = self::member($id);
             if ($u->status !== $expectedStatus) {
                 throw new RuntimeException('Member status changed. Find the member again before saving.');
@@ -88,6 +85,23 @@ final class MemberAccountAdministration
             TeamCounterService::synchronize($id);
             self::audit($admin->id, 'admin_member_status', ['user_id' => $id, 'username' => $u->username, 'before' => $u->status, 'after' => $status, 'wallet_amount_changed' => false]);
         });
+    }
+
+    public static function activateAccount(User $admin, int $memberId, string $expectedStatus): void
+    {
+        DB::transaction(function () use ($admin, $memberId, $expectedStatus): void {
+            self::actor($admin);
+            $member = self::member($memberId);
+            if ($member->is_blocked || ! in_array($member->status, ['active', 'inactive'], true)) {
+                throw new RuntimeException('Unblocked available member required.');
+            }
+            if ($member->status !== 'active') {
+                self::status($admin, $memberId, 'active', $expectedStatus);
+            }
+            if (! DB::table('member_security_audits')->where('action', 'admin_member_account_activation')->whereRaw("details->>'user_id' = ?", [(string) $memberId])->exists()) {
+                self::audit($admin->id, 'admin_member_account_activation', ['user_id' => $memberId, 'username' => $member->username, 'wallet_amount_changed' => false, 'package_created' => false]);
+            }
+        }, 3);
     }
 
     public static function email(User $admin, int $id, string $oldEmail, string $newEmail): void
