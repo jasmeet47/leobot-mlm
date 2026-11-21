@@ -63,6 +63,9 @@ final class StakingReconciliationService
         }
         DB::table('staking_profit_statements')->orderBy('id')->chunkById(200, function ($rows) use (&$issues): void {
             foreach ($rows as $statement) {
+                if ($statement->status === 'reversed' && ! self::correctedStatementReconciles($statement)) {
+                    $issues[] = 'Profit statement '.$statement->id.': correction audit or reversal journals do not reconcile.';
+                }
                 $allocations = DB::table('staking_profit_allocations')->where('statement_id', $statement->id)->get();
                 $sum = '0';
                 foreach ($allocations as $allocation) {
@@ -137,6 +140,55 @@ final class StakingReconciliationService
 
         return ['positions_checked' => $positions, 'issue_count' => count($issues), 'issues' => array_slice($issues, 0, 50),
             'accounting_passed' => $issues === [], 'on_chain_reserve_solvency' => 'NOT VERIFIED'];
+    }
+
+    private static function correctedStatementReconciles(object $statement): bool
+    {
+        $audit = DB::table('member_security_audits')->where('action', 'legacy_income_corrected')->whereRaw("details->>'statement_id' = ?", [(string) $statement->id])->first();
+        $funding = DB::table('profit_sharing_fundings')->where('id', $statement->profit_sharing_funding_id)->first();
+        if (! $audit || ! $funding || $funding->status !== 'reversed') {
+            return false;
+        }
+        $details = json_decode($audit->details, true);
+        $replacement = DB::table('staking_profit_statements')->where('id', $details['replacement_statement_id'] ?? 0)->first();
+        if (! $replacement || $replacement->status !== 'reserved' || $replacement->distribution_version !== MagicSplitPolicy::VERSION || bccomp((string) $replacement->amount, (string) $statement->amount, 8) !== 0) {
+            return false;
+        }
+        $selfIds = DB::table('profit_sharing_self_reserves')->where('funding_id', $funding->id)->pluck('id');
+        $credits = DB::table('financial_ledger')->where('wallet_type', 'available_balance')->where('status', 'completed')->where('amount', '>', 0)->where(function ($q) use ($selfIds, $funding): void {
+            $q->where(function ($q) use ($selfIds): void {
+                $q->where('reference_type', 'profit_sharing_self_reserve')->whereIn('reference_id', $selfIds)->where('entry_type', 'self_income_settlement');
+            })
+                ->orWhere(function ($q) use ($funding): void {
+                    $q->where('reference_type', 'profit_sharing_funding')->where('reference_id', $funding->id)->where('entry_type', 'magic_income_settlement');
+                });
+        })->get();
+        $self = '0';
+        $magic = '0';
+        foreach ($credits as $credit) {
+            $reverse = DB::table('financial_ledger')->where('transaction_key', 'income:reverse:'.$credit->id)->first();
+            if (! self::entry($reverse, (int) $credit->user_id, 'available_balance', '-'.$credit->amount) || $reverse->entry_type !== 'income_correction_reversal' || $reverse->reference_type !== 'financial_ledger' || (int) $reverse->reference_id !== (int) $credit->id) {
+                return false;
+            }
+            if ($credit->entry_type === 'self_income_settlement') {
+                $self = bcadd($self, (string) $credit->amount, 8);
+            } else {
+                $magic = bcadd($magic, (string) $credit->amount, 8);
+            }
+        }
+        if (bccomp(bcadd($self, $magic, 8), (string) ($details['reversed_paid'] ?? '-1'), 8) !== 0 || $credits->count() !== ($details['credit_rows'] ?? -1)) {
+            return false;
+        }
+        foreach ([['self_reserve', $self, 'payout-return'], ['magic_pool', $magic, 'payout-return'], ['self_reserve', '-'.$funding->self_amount, 'unfund'], ['magic_pool', '-'.$funding->magic_amount, 'unfund'], ['generation_pool', '-'.$funding->generation_amount, 'unfund'], ['company_wallet', (string) $funding->funded_total, 'unfund'], ['company_wallet', '-'.$statement->amount, 'receipt-reversal'], ['external_trading_profit', (string) $statement->amount, 'source-reversal']] as [$wallet, $amount, $suffix]) {
+            if (bccomp($amount, '0', 8) === 0) {
+                continue;
+            }
+            if (! self::entry(DB::table('financial_ledger')->where('transaction_key', 'income:correction:'.$statement->id.':'.$wallet.':'.$suffix)->first(), null, $wallet, $amount)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static function assertOpeningJournals(object $position): void

@@ -14,7 +14,10 @@ final class MemberIncomeReportService
     {
         return DB::table('financial_ledger as l')->where('l.user_id', $memberId)
             ->where('l.wallet_type', 'available_balance')->where('l.status', 'completed')->where('l.amount', '>', 0)
-            ->whereIn('l.entry_type', ['self_income_settlement', 'generation_income_settlement', 'magic_income_settlement']);
+            ->whereIn('l.entry_type', ['self_income_settlement', 'generation_income_settlement', 'magic_income_settlement'])
+            ->whereNotExists(function (Builder $query): void {
+                $query->selectRaw('1')->from('financial_ledger as reversal')->where('reversal.entry_type', 'income_correction_reversal')->where('reversal.status', 'completed')->where('reversal.reference_type', 'financial_ledger')->whereColumn('reversal.reference_id', 'l.id');
+            });
     }
 
     public static function summary(int $memberId, ?string $date = null, bool $magicOnly = false, ?string $component = null): array

@@ -34,6 +34,9 @@ final class SelfIncomeSettlementService
             if (! $reserve) {
                 throw new RuntimeException('Self reserve missing.');
             }
+            if ($reserve->status === 'reversed') {
+                throw new RuntimeException('Reversed reserve cannot be paid again.');
+            }
             $prior = DB::table('self_income_settlements')->where('self_reserve_id', $reserveId)->first();
             if ($prior) {
                 return (int) $prior->id;

@@ -50,6 +50,9 @@ final class MagicIncomeSettlementService
             }
             self::checkReserve($reserve);
             $funding = DB::table('profit_sharing_fundings')->where('id', $fundingId)->first();
+            if ($funding && $funding->status === 'reversed') {
+                throw new RuntimeException('Reversed funding cannot be paid again.');
+            }
             $source = DB::table('profit_sharing_self_reserves')
                 ->where('funding_id', $fundingId)->where('user_id', $sourceUserId)->first();
             if (! $funding || ! $source || bccomp((string) $funding->magic_percent_snapshot, ($funding->magic_distribution_version ?? '') === 'matrix_equal_v2' ? '5' : '3', 9) !== 0) {

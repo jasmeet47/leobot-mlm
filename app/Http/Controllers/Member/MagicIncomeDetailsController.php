@@ -20,8 +20,9 @@ final class MagicIncomeDetailsController extends Controller
 
         $summary = MagicIncomeReportService::summary((int) $member->id);
         $history = DB::table('magic_income_entitlements')
-            ->where('beneficiary_user_id', (int) $member->id)
+            ->where('beneficiary_user_id', (int) $member->id)->where('status', '!=', 'reversed')
             ->orderByDesc('id')->paginate(20);
+
         return view('member.magic-income-details', compact('summary', 'history'));
     }
 }
