@@ -56,10 +56,9 @@
         <h2>Your Account Summary</h2><div class="card" id="verified-deposit-total"><div class="label">Total Deposits</div><div class="value">{{ $verifiedDepositTotal }} USDT</div></div>
         <div class="grid">
             <div class="card"><div class="label">Available Balance</div><div class="value">{{ bcadd((string) ($member->available_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
-            <div class="card"><div class="label">Activation Balance</div><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Total Investment</div><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
-            <div class="card" id="daily-income"><div class="label">Daily Income</div><div class="value">{{ $paidIncomeSummary['daily_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ $paidIncomeSummary['date'] ?? '' }} IST</div></div>
+            <div class="card" id="monthly-income"><div class="label">Monthly Income</div><div class="value">{{ $paidIncomeSummary['monthly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ \Carbon\Carbon::parse($paidIncomeSummary['date'] ?? now('Asia/Kolkata')->toDateString())->format('F Y') }} IST</div></div>
             <div class="card" id="weekly-income"><div class="label">Weekly Income</div><div class="value">{{ $paidIncomeSummary['weekly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ $paidIncomeSummary['week_start'] ?? '' }} – {{ $paidIncomeSummary['week_end'] ?? '' }}</div></div>
         </div>
 
@@ -163,27 +162,27 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
 
         <div class="grid">
             <div class="card">
-                <div class="label">Self Income Reserved</div>
-                <div class="value">{{ bcadd($incomeSummary['self_reserved'], '0', 8) }}</div>
-                <div class="unit">USDT - Reserved, not paid</div>
+                <div class="label">Self Income</div>
+                <div class="value">{{ bcadd($incomeSummary['self_paid'] ?? '0', '0', 8) }}</div>
+                <div class="unit">USDT · Paid · Pending: {{ bcadd($incomeSummary['self_reserved'], '0', 8) }}</div>
             </div>
 
             <div class="card">
-                <div class="label">Generation Qualified Reserve</div>
-                <div class="value">{{ bcadd($incomeSummary['generation_qualified'], '0', 8) }}</div>
-                <div class="unit">USDT - Qualified, not paid</div>
+                <div class="label">Generation Qualified</div>
+                <div class="value">{{ bcadd(bcadd($incomeSummary['generation_qualified'], $incomeSummary['generation_paid'] ?? '0', 8), '0', 8) }}</div>
+                <div class="unit">USDT · Paid: {{ bcadd($incomeSummary['generation_paid'] ?? '0', '0', 8) }} · Pending: {{ bcadd($incomeSummary['generation_qualified'], '0', 8) }}</div>
             </div>
 
             <div class="card">
-                <div class="label">Generation Held</div>
-                <div class="value">{{ bcadd($incomeSummary['generation_held'], '0', 8) }}</div>
-                <div class="unit">USDT - Unqualified, not payable</div>
+                <div class="label">Generation Income</div>
+                <div class="value">{{ bcadd($incomeSummary['generation_paid'] ?? '0', '0', 8) }}</div>
+                <div class="unit">USDT · Paid · Not payable: {{ bcadd($incomeSummary['generation_held'], '0', 8) }}</div>
             </div>
 
             <div class="card">
                 <div class="label">Magic Income</div>
-                <div class="value">Not allocated</div>
-                <div class="unit">Company pool is not member income</div>
+                <div class="value">{{ bcadd($magicIncomeSummary['lifetime_usdt'] ?? '0', '0', 8) }}</div>
+                <div class="unit">USDT · Paid</div>
             </div>
         </div>
     </section>

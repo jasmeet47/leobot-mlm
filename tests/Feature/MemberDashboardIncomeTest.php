@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\WalletService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -210,8 +211,30 @@ class MemberDashboardIncomeTest extends TestCase
                     && bccomp($summary['generation_held'], '0', 8) === 0;
             })
             ->assertSee('Magic Income')
-            ->assertSee('Not allocated')
+            ->assertDontSee('Not allocated')
             ->assertDontSee('No completed wallet transactions recorded.');
+    }
+
+    public function test_paid_income_and_legacy_level_metadata_are_visible_without_counting_held_as_paid(): void
+    {
+        $member = $this->user();
+        $admin = $this->user('admin');
+        $funding = $this->funding($admin);
+        $this->allocation($funding, $member, 2, '5', 'payable', 'paid_to_wallet');
+        $allocation = DB::table('generation_member_allocations')->where('user_id', $member->id)->first();
+        WalletService::credit($member->id, 'available_balance', '5', 'generation_income_settlement', 'report:legacy-level', ['reference_type' => 'generation_member_allocation', 'reference_id' => $allocation->id]);
+        WalletService::credit($member->id, 'available_balance', '13.4', 'self_income_settlement', 'report:self-paid');
+        WalletService::credit($member->id, 'available_balance', '0.5', 'magic_income_settlement', 'report:magic-paid');
+        $before = DB::table('financial_ledger')->orderBy('id')->get()->toJson();
+
+        $response = $this->actingAs($member)->get(route('member.detail', ['panel' => 'income-summary']))->assertOk();
+
+        $response->assertViewHas('incomeSummary', fn ($summary) => bccomp($summary['generation_paid'], '5', 8) === 0 && bccomp($summary['self_paid'], '13.4', 8) === 0)
+            ->assertViewHas('levelIncome', fn ($levels) => bccomp($levels->get(2), '5', 8) === 0)
+            ->assertSee('Self Income')->assertSee('Generation Qualified')->assertSee('Generation Income')->assertSee('0.50000000')
+            ->assertDontSee('Self Income Reserved')->assertDontSee('Generation Qualified Reserve')->assertDontSee('Generation Held')->assertDontSee('Not allocated');
+        $this->assertSame($before, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
+        $this->get(route('member.dashboard'))->assertOk()->assertSee('Monthly Income')->assertDontSee('Daily Income')->assertDontSee('Activation Balance');
     }
 
     public function test_income_reserves_and_wallet_history_are_member_isolated(): void
@@ -301,7 +324,7 @@ class MemberDashboardIncomeTest extends TestCase
             ->assertSee('13.40000000')
             ->assertSee('8.00000000')
             ->assertSee('5.00000000')
-            ->assertSee('Not allocated')
+            ->assertDontSee('Not allocated')
             ->assertDontSee('other_member_secret')
             ->assertDontSee('pending_secret')
             ->assertDontSee('company_reserve_secret')

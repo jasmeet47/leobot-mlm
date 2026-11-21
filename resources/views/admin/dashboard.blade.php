@@ -252,7 +252,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 <a href="{{ route('admin.withdrawals.index') }}">Withdrawals</a>
   <a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a>
   <a href="{{ route('admin.income.index') }}">Income Settings</a>
-  <a href="{{ route('admin.unified-funding.index') }}">Funding Audit</a>
+  <a href="{{ route('admin.unified-funding.index') }}">Company Wallet</a>
   <div class="lf-nav-title">Settings</div>
   <a href="{{ route('admin.registration-otp.index') }}" class="lf-sub ">Registration Email OTP</a>
   <a href="{{ route('admin.lumiflowon.logo.index') }}" class="lf-sub ">Logo Management</a>
@@ -282,7 +282,18 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
     </div>
 </header>
 
-<main class="container"><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a></section>
+<main class="container"><section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
+  <div class="lb-terminal-head">
+    <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>
+    <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Protected admin session</div>
+  </div>
+  <div class="lb-terminal-grid">
+    <div class="lb-terminal-tile"><small>Platform</small><strong>LumiFlowOn Control</strong></div>
+    <div class="lb-terminal-tile"><small>Financial operations</small><strong class="accent">Approval gated</strong></div>
+    <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
+  </div>
+  <p class="lb-terminal-foot lb-terminal-note">UI theme only · No MT5 feed · No simulated trading values · Existing financial permissions remain unchanged.</p>
+</section><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a></section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
   <h2>Staking Control</h2><p><a href="{{ route('admin.income-distribution') }}">Trading Profit Sharing</a></p>
@@ -312,18 +323,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
   @endif
 </section>
 
-<section class="lb-terminal" aria-label="LeoBot premium financial dashboard">
-  <div class="lb-terminal-head">
-    <div><div class="lb-terminal-eyebrow">LumiFlowOn / ADMIN CONSOLE</div><h2>Financial Operations Overview</h2><p>Institutional-style command center for verified LumiFlowOn records.</p></div>
-    <div class="lb-terminal-status"><span class="lb-terminal-dot"></span> Protected admin session</div>
-  </div>
-  <div class="lb-terminal-grid">
-    <div class="lb-terminal-tile"><small>Platform</small><strong>LumiFlowOn Control</strong></div>
-    <div class="lb-terminal-tile"><small>Financial operations</small><strong class="accent">Approval gated</strong></div>
-    <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
-  </div>
-  <p class="lb-terminal-foot lb-terminal-note">UI theme only · No MT5 feed · No simulated trading values · Existing financial permissions remain unchanged.</p>
-</section>
+
 <section class="welcome">
         <h1>Admin Dashboard</h1>
 
@@ -362,9 +362,9 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 
     <section class="grid">
     <div class="card">
-        <h2>Unified Funding Audit</h2>
+        <h2>Company Wallet</h2>
         <p>Review 67/30/3 internal reserves. Funding entry remains disabled without separate approval. No payouts.</p>
-        <a href="{{ route('admin.unified-funding.index') }}">Funding Audit</a>
+        <a href="{{ route('admin.unified-funding.index') }}">Company Wallet</a>
     </div>
 
         <div class="card">

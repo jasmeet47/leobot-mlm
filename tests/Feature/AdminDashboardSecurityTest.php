@@ -112,4 +112,14 @@ class AdminDashboardSecurityTest extends TestCase
             ->assertOk()
             ->assertSee('Referral Privacy');
     }
+
+    public function test_financial_overview_is_first_and_funding_card_is_named_company_wallet(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+        $html = $response->getContent();
+        $main = substr($html, strpos($html, '<main'));
+        $this->assertLessThan(strpos($main, '<h2>Deposit Control</h2>'), strpos($main, 'Financial Operations Overview'));
+        $response->assertSee('Company Wallet')->assertDontSee('Unified Funding Audit');
+    }
 }

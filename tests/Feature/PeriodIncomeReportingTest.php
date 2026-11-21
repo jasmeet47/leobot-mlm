@@ -95,7 +95,7 @@ final class PeriodIncomeReportingTest extends TestCase
         $this->assertSame('3.00000000', $response->viewData('magicIncomeSummary')['daily_usdt']);
         $this->assertSame('8.00000000', MagicIncomeReportService::summary($member->id)['lifetime_usdt']);
         $this->assertSame('3.00000000', MemberIncomeReportService::summary($member->id, '2026-11-20', true)['daily_usdt']);
-        $response->assertSee('Daily Income')->assertSee('Weekly Income')->assertSee('Income Credit History')->assertDontSee('1000.00000000');
+        $response->assertSee('Monthly Income')->assertSee('Weekly Income')->assertSee('Income Credit History')->assertDontSee('1000.00000000');
         $this->assertSame($before, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
         $this->get(route('member.dashboard', ['income_date' => 'wrong']))->assertSessionHasErrors('income_date');
     }

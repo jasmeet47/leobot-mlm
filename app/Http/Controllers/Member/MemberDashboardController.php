@@ -270,7 +270,10 @@ class MemberDashboardController extends Controller
             )
             ->first();
 
+        $paidByType = MemberIncomeReportService::entries((int) $member->id)->groupBy('l.entry_type')->selectRaw('l.entry_type,SUM(l.amount) as total')->pluck('total', 'entry_type');
         $incomeSummary = [
+            'self_paid' => (string) ($paidByType['self_income_settlement'] ?? '0'),
+            'generation_paid' => (string) ($paidByType['generation_income_settlement'] ?? '0'),
             'self_reserved' => (string) ($selfReserved->total ?? '0'),
             'generation_qualified' => (string) ($generationTotals->qualified_total ?? '0'),
             'generation_held' => (string) ($generationTotals->held_total ?? '0'),
@@ -298,7 +301,11 @@ class MemberDashboardController extends Controller
         $verifiedDepositTotal = (string) DB::table('member_deposit_requests as d')->join('financial_ledger as l', function ($join): void {
             $join->on('l.reference_id', '=', 'd.id')->on('l.user_id', '=', 'd.user_id');
         })->where('d.user_id', $member->id)->where('d.status', 'approved')->where('l.entry_type', 'verified_deposit')->where('l.reference_type', 'member_deposit_request')->where('l.wallet_type', 'activation_balance')->where('l.status', 'completed')->whereColumn('l.amount', 'd.amount')->whereRaw("l.transaction_key = 'deposit:credit:' || d.id::text")->sum('l.amount');
-        $levelIncome = DB::table('financial_ledger')->where('user_id', $member->id)->where('wallet_type', 'available_balance')->where('entry_type', 'generation_income_settlement')->where('status', 'completed')->whereBetween('level', [1, 51])->groupBy('level')->selectRaw('level,SUM(amount) as total')->pluck('total', 'level');
+        $levelIncome = MemberIncomeReportService::entries((int) $member->id)->where('l.entry_type', 'generation_income_settlement')
+            ->leftJoin('generation_member_allocations as allocation', function ($join): void {
+                $join->on('allocation.id', '=', 'l.reference_id')->where('l.reference_type', 'generation_member_allocation')->whereColumn('allocation.user_id', 'l.user_id');
+            })->whereRaw('COALESCE(l.level,allocation.level_number) BETWEEN 1 AND 51')
+            ->groupByRaw('COALESCE(l.level,allocation.level_number)')->selectRaw('COALESCE(l.level,allocation.level_number) as income_level,SUM(l.amount) as total')->pluck('total', 'income_level');
 
         $activeActivation = (string) DB::table('activation_packages')->where('user_id', $member->id)->where('status', 'active')->sum('investment_amount');
         $activeStaking = (string) DB::table('staking_positions')->where('user_id', $member->id)->where('status', 'active')->selectRaw('COALESCE(SUM(amount-withdrawn_amount),0) as total')->value('total');
