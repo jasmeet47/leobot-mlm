@@ -332,4 +332,27 @@ class MemberDashboardIncomeTest extends TestCase
             ->assertDontSee('88888.00000000')
             ->assertDontSee('77777.00000000');
     }
+
+    public function test_withdrawal_amount_card_totals_four_income_sources_once_and_separates_spendable_balance(): void
+    {
+        $member = $this->user();
+        $other = $this->user();
+        foreach ([['10', 'self_income_settlement', 'card:self'], ['5', 'generation_income_settlement', 'card:generation'], ['3', 'magic_income_settlement', 'card:matrix'], ['2', 'magic_income_settlement', 'magic:equal:card:'.$member->id], ['100', 'verified_deposit', 'card:deposit'], ['50', 'internal_transfer', 'card:transfer'], ['7', 'self_income_settlement', 'card:old-self']] as [$amount, $type, $key]) {
+            WalletService::credit($member->id, 'available_balance', $amount, $type, $key);
+        }
+        $oldId = DB::table('financial_ledger')->where('transaction_key', 'card:old-self')->value('id');
+        WalletService::debit($member->id, 'available_balance', '7', 'income_correction_reversal', 'income:reverse:'.$oldId, ['reference_type' => 'financial_ledger', 'reference_id' => $oldId]);
+        WalletService::debit($member->id, 'available_balance', '4', 'withdrawal_fixture', 'card:spent');
+        WalletService::credit($other->id, 'available_balance', '99', 'self_income_settlement', 'card:other');
+        $before = DB::table('financial_ledger')->orderBy('id')->get()->toJson();
+
+        $response = $this->actingAs($member->fresh())->get(route('member.dashboard'))->assertOk();
+
+        $response->assertViewHas('paidIncomeSummary', fn ($summary) => $summary['lifetime_usdt'] === '20.00000000');
+        $response->assertViewHas('selfMagicIncomeSummary', fn ($summary) => $summary['lifetime_usdt'] === '2.00000000');
+        $this->assertSame(1, preg_match('/id="withdrawal-amount".*?<div class="label">Withdrawal Amount<\/div><div class="value">20\.00000000<\/div>/s', $response->getContent()));
+        $response->assertSee('Available to withdraw: 166.00000000 USDT');
+        $this->assertSame($before, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
+        $this->assertSame('166.00000000', $member->fresh()->available_balance);
+    }
 }
