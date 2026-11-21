@@ -43,6 +43,55 @@ final class PeriodIncomeReportingTest extends TestCase
         return $member;
     }
 
+    public function test_self_trading_profit_is_private_filters_month_and_rolls_over_the_current_ist_week(): void
+    {
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active', 'security_pin' => Hash::make('123456')]);
+        $other = User::factory()->create();
+        foreach ([['2026-11-15 18:29:59', '2', 'self_income_settlement'], ['2026-11-15 18:30:00', '3', 'self_income_settlement'], ['2026-11-22 18:29:59', '4', 'self_income_settlement'], ['2026-11-22 18:30:00', '5', 'self_income_settlement'], ['2026-11-30 18:29:59', '6', 'self_income_settlement'], ['2026-11-30 18:30:00', '7', 'self_income_settlement'], ['2026-11-20 12:00:00', '100', 'generation_income_settlement'], ['2026-11-20 12:00:00', '200', 'magic_income_settlement'], ['2026-11-20 12:00:00', '300', 'verified_deposit']] as $i => [$date, $amount, $type]) {
+            $this->travelTo(CarbonImmutable::parse($date, 'UTC'));
+            WalletService::credit($member->id, 'available_balance', $amount, $type, 'self-period:'.$i);
+        }
+        WalletService::credit($other->id, 'available_balance', '1000', 'self_income_settlement', 'self-period:other');
+        $before = DB::table('financial_ledger')->orderBy('id')->get()->toJson();
+        $this->travelTo(CarbonImmutable::parse('2026-11-22 23:59:59', 'Asia/Kolkata'));
+        $url = route('member.detail', ['panel' => 'self-trading-profit']);
+        $response = $this->actingAs($member)->get($url.'?profit_month=11&profit_year=2026&user_id='.$other->id)->assertOk();
+        $report = $response->viewData('selfTradingProfit');
+        $this->assertSame('7.00000000', $report['weekly_usdt']);
+        $this->assertSame('20.00000000', $report['monthly_usdt']);
+        $this->assertSame(5, $report['history']->total());
+        $this->assertSame('November 2026', $report['month_label']);
+        $response->assertSee('Current Week Self Trading Profit')->assertSee('View Month');
+        $this->travelTo(CarbonImmutable::parse('2026-11-23 00:00:00', 'Asia/Kolkata'));
+        $this->assertSame('5.00000000', MemberIncomeReportService::selfTradingProfit($member->id)['weekly_usdt']);
+        $this->get($url.'?profit_month=12&profit_year=2026')->assertOk()->assertViewHas('selfTradingProfit', fn ($report) => $report['monthly_usdt'] === '7.00000000' && $report['weekly_usdt'] === '5.00000000');
+        $this->get($url.'?profit_month=11&profit_year=2025')->assertOk()->assertSee('No credited Self Trading Profit for this month.');
+        $this->get($url.'?profit_month=13')->assertSessionHasErrors('profit_month');
+        $this->get($url.'?profit_year=wrong')->assertSessionHasErrors('profit_year');
+        $this->assertSame($before, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
+    }
+
+    public function test_self_trading_history_is_paginated_and_excludes_reversed_and_pending_credits(): void
+    {
+        $member = User::factory()->create(['role' => 'member', 'status' => 'active', 'security_pin' => Hash::make('123456')]);
+        $this->travelTo(CarbonImmutable::parse('2026-11-21 12:00:00', 'Asia/Kolkata'));
+        for ($i = 0; $i < 25; $i++) {
+            WalletService::credit($member->id, 'available_balance', '1', 'self_income_settlement', 'self-history:'.$i);
+        }
+        $reversed = DB::table('financial_ledger')->where('transaction_key', 'self-history:0')->value('id');
+        DB::table('financial_ledger')->insert(['user_id' => $member->id, 'entry_type' => 'income_correction_reversal', 'wallet_type' => 'available_balance', 'amount' => '-1', 'balance_before' => '25', 'balance_after' => '24', 'reference_type' => 'financial_ledger', 'reference_id' => $reversed, 'status' => 'completed', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('financial_ledger')->where('transaction_key', 'self-history:1')->update(['status' => 'pending']);
+        $url = route('member.detail', ['panel' => 'self-trading-profit', 'profit_month' => 11, 'profit_year' => 2026, 'self_profit_page' => 2]);
+        $response = $this->actingAs($member)->get($url)->assertOk();
+        $report = $response->viewData('selfTradingProfit');
+        $this->assertSame('23.00000000', $report['monthly_usdt']);
+        $this->assertSame(23, $report['history']->total());
+        $this->assertCount(3, $report['history']->items());
+        $this->assertStringContainsString('profit_month=11', $report['history']->url(1));
+        auth()->logout();
+        $this->get($url)->assertRedirect();
+    }
+
     public function test_new_weekly_profit_counts_only_funded_days_and_does_not_rewrite_on_retry(): void
     {
         $early = $this->stakeAt('2026-11-16 12:00:00', 'period_early_stake_001');

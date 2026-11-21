@@ -55,6 +55,9 @@ class MemberDashboardController extends Controller
 
         $breakdownInput = $request->validate([
             'income_date' => ['sometimes', 'date_format:Y-m-d'],
+            'profit_month' => ['sometimes', 'integer', 'between:1,12'],
+            'profit_year' => ['sometimes', 'integer', 'between:2000,9999'],
+            'self_profit_page' => ['sometimes', 'integer', 'between:1,100000'],
             'breakdown_level' => ['sometimes', 'integer', 'between:1,51'],
             'breakdown_page' => ['sometimes', 'integer', 'between:1,100000'],
         ]);
@@ -317,6 +320,7 @@ class MemberDashboardController extends Controller
         };
 
         return view('member.dashboard', [
+            'selfTradingProfit' => MemberIncomeReportService::selfTradingProfit((int) $member->id, isset($breakdownInput['profit_month']) ? (int) $breakdownInput['profit_month'] : null, isset($breakdownInput['profit_year']) ? (int) $breakdownInput['profit_year'] : null),
             'magicComponentSummary' => $magicComponent ? MemberIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null, true, $magicComponent) : null,
             'magicComponentHistory' => $magicComponent ? MemberIncomeReportService::history((int) $member->id, $magicComponent) : collect(),
             'magicEnrollmentState' => $request->route('panel') === 'magic-team' ? MagicMatrixEnrollmentService::inspect((int) $member->id) : null,

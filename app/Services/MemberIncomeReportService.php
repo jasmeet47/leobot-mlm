@@ -62,6 +62,28 @@ final class MemberIncomeReportService
             ->orderByDesc('l.id')->limit(30)->get(['l.id', 'l.entry_type', 'l.amount', 'l.created_at', 'r.period_date', 'r.period_end_date', 'r.period']);
     }
 
+    public static function selfTradingProfit(int $memberId, ?int $month = null, ?int $year = null): array
+    {
+        $today = CarbonImmutable::now('Asia/Kolkata');
+        $weekStart = $today->startOfWeek();
+        $monthStart = $today->setDate($year ?? $today->year, $month ?? $today->month, 1)->startOfDay();
+        $query = self::entries($memberId)->where('l.entry_type', 'self_income_settlement');
+        $weekly = (clone $query)->where('l.created_at', '>=', $weekStart->utc())->where('l.created_at', '<', $weekStart->addWeek()->utc())->sum('l.amount');
+        $monthly = (clone $query)->where('l.created_at', '>=', $monthStart->utc())->where('l.created_at', '<', $monthStart->addMonth()->utc());
+        $total = (clone $monthly)->sum('l.amount');
+        $history = $monthly->leftJoin('profit_sharing_self_reserves as sr', function ($join): void {
+            $join->on('sr.id', '=', 'l.reference_id')->where('l.reference_type', 'profit_sharing_self_reserve');
+        })->leftJoin('staking_profit_statements as s', 's.profit_sharing_funding_id', '=', 'sr.funding_id')
+            ->leftJoin('income_distribution_requests as r', 'r.statement_id', '=', 's.id')
+            ->orderByDesc('l.created_at')->orderByDesc('l.id')
+            ->paginate(20, ['l.id', 'l.amount', 'l.created_at', 'r.period_date', 'r.period_end_date'], 'self_profit_page')
+            ->appends(['profit_month' => $monthStart->month, 'profit_year' => $monthStart->year]);
+
+        return ['weekly_usdt' => bcadd((string) $weekly, '0', 8), 'monthly_usdt' => bcadd((string) $total, '0', 8),
+            'week_start' => $weekStart->format('d/m/Y'), 'week_end' => $weekStart->addDays(6)->format('d/m/Y'),
+            'month' => $monthStart->month, 'year' => $monthStart->year, 'month_label' => $monthStart->format('F Y'), 'history' => $history];
+    }
+
     private static function magicComponent(Builder $query, ?string $component): void
     {
         if ($component === null) {

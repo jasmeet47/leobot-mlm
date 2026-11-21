@@ -14,7 +14,7 @@
 @if($lbPanel)
 <style>.portal-main section{display:none!important}.portal-main #{{ $lbPanel }}{display:block!important}@if(in_array($lbPanel, ['account-settings', 'member-support'], true)).portal-main section.lb-bottom-grid{display:grid!important}.portal-main section.lb-bottom-grid>div:not(#{{ $lbPanel }}){display:none!important}@endif</style>
 @else
-<style>#magic-team,#magic-income,#self-magic-income,#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
+<style>#self-trading-profit,#magic-team,#magic-income,#self-magic-income,#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
 @endif
 <style>.portal-main :is(strong,b,h1,h2,h3,h4,.value){color:var(--gold)!important}.menu-close,.menu-overlay{display:none}@media(max-width:700px){body.menu-open{overflow:hidden}.portal-sidebar{display:block;position:fixed;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;overflow-y:auto;z-index:102;visibility:hidden;pointer-events:none;transform:translateX(-110%);transition:transform .2s ease}body.menu-open .portal-sidebar{display:block;transform:translateX(0);visibility:visible;pointer-events:auto}.menu-close{display:block;margin:0 0 16px auto;background:transparent;border:1px solid #40516b;color:var(--gold);padding:8px 12px;border-radius:8px}body.menu-open .menu-overlay{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:101;background:#0009;border:0}body.menu-open #portal-menu-toggle{visibility:hidden}}</style></head><body>
 @include('partials.beta-notice')
@@ -38,6 +38,7 @@
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Finance</div>
             @if(($canReviewTradingProfit ?? false) && !config('leobot.admin_profit_verification_enabled',false))<a class="action" href="{{ route('reviewer.trading-profit.index') }}">Independent Profit Review</a>@endif
             <a class="action" href="{{ route('member.detail', ['panel' => 'income-summary']) }}">Income Details</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'self-trading-profit']) }}">Self Trading Profit</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'magic-income']) }}">Magic Income</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'self-magic-income']) }}">Self Magic Income</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'wallet-history']) }}">My Wallet Transaction History</a>
@@ -62,6 +63,7 @@
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
             <div class="card" id="self-magic-income-total"><div class="label">Self Magic Income</div><div class="value">{{ $selfMagicIncomeSummary['lifetime_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT</div><a href="{{ route('member.detail', ['panel' => 'self-magic-income']) }}">View Self Magic Income</a></div>
             <div class="card" id="monthly-income"><div class="label">Monthly Income</div><div class="value">{{ $paidIncomeSummary['monthly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ \Carbon\Carbon::parse($paidIncomeSummary['date'] ?? now('Asia/Kolkata')->toDateString())->format('F Y') }} IST</div></div>
+            <div class="card" id="weekly-self-trading-profit"><div class="label">Weekly Self Trading Profit</div><div class="value">{{ $selfTradingProfit['weekly_usdt'] }} USDT</div><div class="unit">{{ $selfTradingProfit['week_start'] }} – {{ $selfTradingProfit['week_end'] }} IST</div><a href="{{ route('member.detail', ['panel' => 'self-trading-profit']) }}">View Weekly / Monthly History</a></div>
             <div class="card" id="weekly-income"><div class="label">Weekly Income</div><div class="value">{{ $paidIncomeSummary['weekly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ $paidIncomeSummary['week_start'] ?? '' }} – {{ $paidIncomeSummary['week_end'] ?? '' }}</div></div>
         </div>
 
@@ -72,6 +74,28 @@
         @empty<tr><td colspan="4">No credited income yet.</td></tr>@endforelse
         </tbody></table></div></details>
     </section>
+
+@if($lbPanel === 'self-trading-profit')
+<section id="self-trading-profit" aria-label="Self Trading Profit">
+    <h2>Self Trading Profit</h2>
+    <p class="muted">Only credited Self Trading Profit (65% share). Weekly and monthly totals follow the wallet credit date in IST.</p>
+    <div class="grid">
+        <div class="card"><div class="label">Current Week Self Trading Profit</div><div class="value">{{ $selfTradingProfit['weekly_usdt'] }} USDT</div><div class="unit">{{ $selfTradingProfit['week_start'] }} – {{ $selfTradingProfit['week_end'] }}</div></div>
+        <div class="card"><div class="label">{{ $selfTradingProfit['month_label'] }}</div><div class="value">{{ $selfTradingProfit['monthly_usdt'] }} USDT</div></div>
+    </div>
+    <form method="get" action="{{ route('member.detail', ['panel' => 'self-trading-profit']) }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:20px 0">
+        <label>Month <select name="profit_month" class="action">@for($monthNumber=1;$monthNumber<=12;$monthNumber++)<option value="{{ $monthNumber }}" @selected($selfTradingProfit['month']===$monthNumber)>{{ \Carbon\Carbon::createFromDate(2000,$monthNumber,1)->format('F') }}</option>@endfor</select></label>
+        <label>Year <input class="action" type="number" name="profit_year" min="2000" max="9999" value="{{ $selfTradingProfit['year'] }}" required style="width:110px"></label>
+        <button class="action" type="submit">View Month</button>
+    </form>
+    <div class="table-wrap"><table><thead><tr><th>Paid On (IST)</th><th>Earning Period</th><th>Self Trading Profit (USDT)</th></tr></thead><tbody>
+    @forelse($selfTradingProfit['history'] as $selfCredit)
+        <tr><td>{{ \Carbon\Carbon::parse($selfCredit->created_at,'UTC')->timezone('Asia/Kolkata')->format('d/m/Y H:i') }}</td><td>@if($selfCredit->period_date){{ \Carbon\Carbon::parse($selfCredit->period_date)->format('d/m/Y') }} – {{ \Carbon\Carbon::parse($selfCredit->period_end_date ?? $selfCredit->period_date)->format('d/m/Y') }}@else—@endif</td><td>{{ bcadd((string)$selfCredit->amount,'0',8) }}</td></tr>
+    @empty<tr><td colspan="3">No credited Self Trading Profit for this month.</td></tr>@endforelse
+    </tbody></table></div>
+    {{ $selfTradingProfit['history']->links() }}
+</section>
+@endif
 
 <!-- LUMIFLOWON_MT5_UI_FIXED -->
 @php

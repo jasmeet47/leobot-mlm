@@ -28,7 +28,7 @@ Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): 
 Route::middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->group(function (): void {
     Route::get('/member/deposit-qr/{revision}', [DepositControlController::class, 'qr'])->whereNumber('revision')->name('member.deposit-qr');
     Route::get('/member/page/{panel}', [MemberDashboardController::class, 'index'])
-        ->where('panel', 'team-breakdown|magic-team|magic-income|self-magic-income|direct-referrals|referral-privacy|income-summary|wallet-history|financial-records|member-profile|account-settings|member-support')->name('member.detail');
+        ->where('panel', 'team-breakdown|magic-team|magic-income|self-magic-income|self-trading-profit|direct-referrals|referral-privacy|income-summary|wallet-history|financial-records|member-profile|account-settings|member-support')->name('member.detail');
     Route::get('/member/profile', [MemberProfileController::class, 'index'])->name('member.profile');
     Route::post('/member/profile/details', [MemberProfileController::class, 'correctDetails'])->middleware('throttle:5,1,profile-details')->name('member.profile.details');
     Route::post('/member/profile/password', [MemberProfileController::class, 'updatePassword'])->middleware('throttle:5,1')->name('member.profile.password');
