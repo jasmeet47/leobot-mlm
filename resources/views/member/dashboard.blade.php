@@ -14,7 +14,7 @@
 @if($lbPanel)
 <style>.portal-main section{display:none!important}.portal-main #{{ $lbPanel }}{display:block!important}@if(in_array($lbPanel, ['account-settings', 'member-support'], true)).portal-main section.lb-bottom-grid{display:grid!important}.portal-main section.lb-bottom-grid>div:not(#{{ $lbPanel }}){display:none!important}@endif</style>
 @else
-<style>#magic-team,#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
+<style>#magic-team,#magic-income,#self-magic-income,#team-breakdown,#direct-referrals,#referral-privacy,#income-summary,#financial-records,#wallet-history,.lb-bottom-grid{display:none}</style>
 @endif
 <style>.portal-main :is(strong,b,h1,h2,h3,h4,.value){color:var(--gold)!important}.menu-close,.menu-overlay{display:none}@media(max-width:700px){body.menu-open{overflow:hidden}.portal-sidebar{display:block;position:fixed;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;overflow-y:auto;z-index:102;visibility:hidden;pointer-events:none;transform:translateX(-110%);transition:transform .2s ease}body.menu-open .portal-sidebar{display:block;transform:translateX(0);visibility:visible;pointer-events:auto}.menu-close{display:block;margin:0 0 16px auto;background:transparent;border:1px solid #40516b;color:var(--gold);padding:8px 12px;border-radius:8px}body.menu-open .menu-overlay{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:101;background:#0009;border:0}body.menu-open #portal-menu-toggle{visibility:hidden}}</style></head><body>
 @include('partials.beta-notice')
@@ -38,6 +38,8 @@
             <div class="lb-menu-group-title" role="heading" aria-level="3">My Finance</div>
             @if(($canReviewTradingProfit ?? false) && !config('leobot.admin_profit_verification_enabled',false))<a class="action" href="{{ route('reviewer.trading-profit.index') }}">Independent Profit Review</a>@endif
             <a class="action" href="{{ route('member.detail', ['panel' => 'income-summary']) }}">Income Details</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'magic-income']) }}">Magic Income</a>
+            <a class="action" href="{{ route('member.detail', ['panel' => 'self-magic-income']) }}">Self Magic Income</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'wallet-history']) }}">My Wallet Transaction History</a>
             <a class="action" href="{{ route('member.detail', ['panel' => 'financial-records']) }}">Financial Records</a>
             <a class="action" href="{{ route('member.withdrawals.index') }}">Withdrawals</a>
@@ -63,7 +65,6 @@
         </div>
 
         <form method="get"><label>Income date (IST) <input type="date" name="income_date" value="{{ $paidIncomeSummary['date'] ?? '' }}" required></label><button type="submit">View Income</button></form>
-        <p class="muted">Income totals use the wallet credit date (IST). Pending reserves are shown separately in Income Details.</p>
         <details><summary>Income Credit History</summary><div class="table-wrap"><table><thead><tr><th>Paid On (IST)</th><th>Income</th><th>Distribution Period</th><th>Credited USDT</th></tr></thead><tbody>
         @forelse(($paidIncomeHistory ?? []) as $incomeEntry)
           <tr><td>{{ \Carbon\Carbon::parse($incomeEntry->created_at, 'UTC')->timezone('Asia/Kolkata')->format('d/m/Y H:i:s') }}</td><td>{{ ucwords(str_replace('_', ' ', str_replace('_settlement', '', $incomeEntry->entry_type))) }}</td><td>@if($incomeEntry->period_date){{ \Carbon\Carbon::parse($incomeEntry->period_date)->format('d/m/Y') }} – {{ \Carbon\Carbon::parse($incomeEntry->period_end_date ?? $incomeEntry->period_date)->format('d/m/Y') }}@else—@endif</td><td>{{ bcadd((string) $incomeEntry->amount, '0', 8) }}</td></tr>
@@ -186,6 +187,25 @@ $dashboardLinks = \Illuminate\Support\Facades\Schema::hasTable('dashboard_quick_
             </div>
         </div>
     </section>
+
+    @if(in_array($lbPanel, ['magic-income', 'self-magic-income'], true) && isset($magicComponentSummary))
+    <section id="{{ $lbPanel }}" aria-label="{{ $lbPanel === 'self-magic-income' ? 'Self Magic Income' : 'Magic Income' }}">
+        <h2>{{ $lbPanel === 'self-magic-income' ? 'Self Magic Income — 2% Equal' : 'Magic Income — Matrix' }}</h2>
+        <p>{{ $lbPanel === 'self-magic-income' ? 'Your recorded equal-share Magic wallet credits.' : 'Your recorded Magic Matrix wallet credits.' }}</p>
+        <div class="grid">
+            <div class="card"><div class="label">Weekly Income</div><div class="value">{{ $magicComponentSummary['weekly_usdt'] }} USDT</div></div>
+            <div class="card"><div class="label">Monthly Income</div><div class="value">{{ $magicComponentSummary['monthly_usdt'] }} USDT</div></div>
+            <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ $magicComponentSummary['lifetime_usdt'] }} USDT</div></div>
+        </div>
+        <form method="get"><label>Income date (IST) <input type="date" name="income_date" value="{{ $magicComponentSummary['date'] }}" required></label><button type="submit">View Income</button></form>
+        <p class="muted">Totals use the credit date (IST). History also shows the earning period. Only wallet credits are included.</p>
+        <div class="table-wrap"><table><thead><tr><th>Earning Period</th><th>Credited On (IST)</th><th>Paid USDT</th></tr></thead><tbody>
+        @forelse($magicComponentHistory as $credit)
+            <tr><td>@if($credit->period_date){{ \Carbon\Carbon::parse($credit->period_date)->format('d/m/Y') }} TO {{ \Carbon\Carbon::parse($credit->period_end_date ?? $credit->period_date)->format('d/m/Y') }}@else—@endif</td><td>{{ \Carbon\Carbon::parse($credit->created_at, 'UTC')->timezone('Asia/Kolkata')->format('d/m/Y H:i:s') }}</td><td>{{ bcadd((string) $credit->amount, '0', 8) }}</td></tr>
+        @empty<tr><td colspan="3">No wallet credits recorded for this income type yet.</td></tr>@endforelse
+        </tbody></table></div>
+    </section>
+    @endif
 
     <section id="financial-records" class="lb-records-overview" aria-label="Financial records">
         <div class="lb-section-topline"><span class="lb-eyebrow">LEDGER / VERIFIED RECORDS</span><span class="lb-small-tag">Recorded values only</span></div>

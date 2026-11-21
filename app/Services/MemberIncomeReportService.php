@@ -17,7 +17,7 @@ final class MemberIncomeReportService
             ->whereIn('l.entry_type', ['self_income_settlement', 'generation_income_settlement', 'magic_income_settlement']);
     }
 
-    public static function summary(int $memberId, ?string $date = null, bool $magicOnly = false): array
+    public static function summary(int $memberId, ?string $date = null, bool $magicOnly = false, ?string $component = null): array
     {
         $day = $date === null ? CarbonImmutable::now('Asia/Kolkata')->startOfDay() : CarbonImmutable::createFromFormat('!Y-m-d', $date, 'Asia/Kolkata');
         $week = $day->startOfWeek();
@@ -26,6 +26,7 @@ final class MemberIncomeReportService
         if ($magicOnly) {
             $query->where('l.entry_type', 'magic_income_settlement');
         }
+        self::magicComponent($query, $component);
         $bounds = [];
         foreach ([[$day, $day->addDay()], [$week, $week->addWeek()], [$month, $month->addMonth()]] as [$start, $end]) {
             $bounds[] = $start->utc()->format('Y-m-d H:i:s');
@@ -41,9 +42,12 @@ final class MemberIncomeReportService
             'date' => $day->format('Y-m-d'), 'week_start' => $week->format('d/m/Y'), 'week_end' => $week->addDays(6)->format('d/m/Y')];
     }
 
-    public static function history(int $memberId): Collection
+    public static function history(int $memberId, ?string $component = null): Collection
     {
-        return self::entries($memberId)
+        $query = self::entries($memberId);
+        self::magicComponent($query, $component);
+
+        return $query
             ->leftJoin('profit_sharing_self_reserves as sr', function ($join): void {
                 $join->on('sr.id', '=', 'l.reference_id')->where('l.reference_type', 'profit_sharing_self_reserve');
             })->leftJoin('generation_member_allocations as ga', function ($join): void {
@@ -53,5 +57,23 @@ final class MemberIncomeReportService
                 $join->whereRaw("s.profit_sharing_funding_id = COALESCE(sr.funding_id, pf.id, CASE WHEN l.reference_type='profit_sharing_funding' THEN l.reference_id END)");
             })->leftJoin('income_distribution_requests as r', 'r.statement_id', '=', 's.id')
             ->orderByDesc('l.id')->limit(30)->get(['l.id', 'l.entry_type', 'l.amount', 'l.created_at', 'r.period_date', 'r.period_end_date', 'r.period']);
+    }
+
+    private static function magicComponent(Builder $query, ?string $component): void
+    {
+        if ($component === null) {
+            return;
+        }
+        if (! in_array($component, ['matrix', 'equal'], true)) {
+            throw new \InvalidArgumentException('Unknown Magic income component.');
+        }
+        $query->where('l.entry_type', 'magic_income_settlement');
+        if ($component === 'equal') {
+            $query->where('l.transaction_key', 'like', 'magic:equal:%');
+        } else {
+            $query->where(function (Builder $keys): void {
+                $keys->whereNull('l.transaction_key')->orWhere('l.transaction_key', 'not like', 'magic:equal:%');
+            });
+        }
     }
 }

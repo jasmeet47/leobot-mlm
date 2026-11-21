@@ -310,7 +310,15 @@ class MemberDashboardController extends Controller
         $activeActivation = (string) DB::table('activation_packages')->where('user_id', $member->id)->where('status', 'active')->sum('investment_amount');
         $activeStaking = (string) DB::table('staking_positions')->where('user_id', $member->id)->where('status', 'active')->selectRaw('COALESCE(SUM(amount-withdrawn_amount),0) as total')->value('total');
 
+        $magicComponent = match ($request->route('panel')) {
+            'self-magic-income' => 'equal',
+            'magic-income' => 'matrix',
+            default => null,
+        };
+
         return view('member.dashboard', [
+            'magicComponentSummary' => $magicComponent ? MemberIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null, true, $magicComponent) : null,
+            'magicComponentHistory' => $magicComponent ? MemberIncomeReportService::history((int) $member->id, $magicComponent) : collect(),
             'magicEnrollmentState' => $request->route('panel') === 'magic-team' ? MagicMatrixEnrollmentService::inspect((int) $member->id) : null,
             'activeActivation' => bcadd($activeActivation, '0', 8),
             'activeStaking' => bcadd($activeStaking, '0', 8),

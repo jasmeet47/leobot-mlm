@@ -14,6 +14,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 use Tests\Support\FinancialSeedState;
@@ -126,6 +127,26 @@ final class MagicSplitPolicyTest extends TestCase
         $this->assertSame('1.00000000', $root->fresh()->available_balance);
         $this->assertSame('1.00000000', $child->fresh()->available_balance);
         $this->assertDatabaseHas('profit_sharing_reserve_accounts', ['id' => 1, 'magic_balance' => '3', 'total_magic_settled' => '2']);
+    }
+
+    public function test_member_magic_menus_separate_equal_from_matrix_and_show_earning_period(): void
+    {
+        [$admin, $root, $child, $id] = $this->setupFunding();
+        IncomeDistributionService::distribute($admin, $id);
+        DB::table('income_distribution_requests')->where('statement_id', $id)->update(['period_date' => '2026-11-16', 'period_end_date' => '2026-11-20']);
+        $root->forceFill(['security_pin' => Hash::make('123456')])->save();
+        $before = DB::table('financial_ledger')->orderBy('id')->get()->toJson();
+
+        $equal = $this->actingAs($root)->get(route('member.detail', ['panel' => 'self-magic-income', 'user_id' => $child->id]))->assertOk();
+
+        $this->assertSame('1.00000000', $equal->viewData('magicComponentSummary')['lifetime_usdt']);
+        $this->assertCount(1, $equal->viewData('magicComponentHistory'));
+        $equal->assertSee('Self Magic Income — 2% Equal')->assertSee('16/11/2026 TO 20/11/2026')->assertDontSee('Income totals use the wallet credit date (IST).');
+        $matrix = $this->get(route('member.detail', ['panel' => 'magic-income', 'user_id' => $child->id]))->assertOk();
+        $this->assertSame('0.04500000', $matrix->viewData('magicComponentSummary')['lifetime_usdt']);
+        $this->assertCount(1, $matrix->viewData('magicComponentHistory'));
+        $matrix->assertSee('Magic Income — Matrix')->assertSee('16/11/2026 TO 20/11/2026');
+        $this->assertSame($before, DB::table('financial_ledger')->orderBy('id')->get()->toJson());
     }
 
     public function test_equal_share_and_matrix_share_use_one_cap_and_keep_capped_excess_held(): void
