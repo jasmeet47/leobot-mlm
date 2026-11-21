@@ -52,7 +52,8 @@ final class MemberProfileAndBalanceTest extends TestCase
         ActivationService::activateSelf($member, '10', (string) Str::uuid());
         app(StakingService::class)->create($member->id, '60', 'dashboard_staking_fixture', 'activation_balance');
         $ledger = DB::table('financial_ledger')->count();
-        $this->actingAs($member->fresh())->get(route('member.dashboard'))->assertOk()->assertViewHas('currentInvestment', '70.00000000')->assertViewHas('activeActivation', '10.00000000')->assertViewHas('activeStaking', '60.00000000')->assertSee('30.00000000');
+        $this->actingAs($member->fresh())->get(route('member.dashboard'))->assertOk()->assertViewHas('currentInvestment', '70.00000000')->assertViewHas('activeActivation', '10.00000000')->assertViewHas('activeStaking', '60.00000000')->assertSee('70.00000000');
+        $this->assertSame('30.00000000', $member->fresh()->activation_balance);
         $this->assertSame($ledger, DB::table('financial_ledger')->count());
         $this->assertSame('10.00000000', $member->fresh()->total_investment);
     }

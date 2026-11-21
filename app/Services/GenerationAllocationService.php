@@ -141,6 +141,17 @@ final class GenerationAllocationService
                 throw new RuntimeException('Active packages exceed safe snapshot size.');
             }
 
+            $stakes = DB::table('staking_positions as p')->where('p.status', 'active')->whereRaw('p.amount>p.withdrawn_amount')
+                ->whereExists(function ($query): void {
+                    $query->selectRaw('1')->from('financial_ledger as opening')->whereColumn('opening.user_id', 'p.user_id')->whereColumn('opening.reference_id', 'p.id')
+                        ->where('opening.reference_type', 'staking_position')->where('opening.wallet_type', 'staking_principal')->where('opening.status', 'completed')
+                        ->whereColumn('opening.amount', 'p.amount')->whereRaw("opening.transaction_key = 'staking:principal:' || p.request_key");
+                })->orderBy('p.id')->limit(self::MAX_ACTIVE_PACKAGES + 1)->get(['p.user_id', DB::raw('p.amount-p.withdrawn_amount as investment_amount')]);
+            if ($packages->count() + $stakes->count() > self::MAX_ACTIVE_PACKAGES) {
+                throw new RuntimeException('Active funded principal exceeds safe snapshot size.');
+            }
+            $packages = $packages->concat($stakes);
+
             $activeOwner = [];
             $weights = []; // [level][recipientId] => cumulative active package business
             $business = []; // [recipientId][level] => identical weights for qualification
@@ -199,7 +210,7 @@ final class GenerationAllocationService
             $runId = DB::table('generation_allocation_runs')->insertGetId([
                 'funding_id' => $fundingId,
                 'approved_by' => $actualAdmin->id,
-                'policy_version' => 'network_business_v1',
+                'policy_version' => 'network_business_funded_principal_v2',
                 'status' => 'classified_no_payout',
                 'snapshot_at' => now(),
                 'created_at' => now(), 'updated_at' => now(),

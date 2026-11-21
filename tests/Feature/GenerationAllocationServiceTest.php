@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\GenerationAllocationService;
+use App\Services\StakingService;
 use App\Services\UnifiedProfitSharingService;
+use App\Services\WalletService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
@@ -144,6 +146,29 @@ class GenerationAllocationServiceTest extends TestCase
             0,
             bccomp($expected, (string) $actual, 8)
         );
+    }
+
+    public function test_verified_active_stakes_count_as_business_without_packages_or_unfunded_stakes(): void
+    {
+        config(['leobot.staking_enabled' => true, 'leobot.production_financial_approval' => true]);
+        DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
+        $admin = $this->admin();
+        $parent = $this->user('STAKEPARENT');
+        $child = $this->user('STAKECHILD', $parent->id);
+        $unfunded = $this->user('STAKEBAD', $parent->id);
+        foreach ([[$parent, '50'], [$child, '600'], [$unfunded, '1000']] as [$user, $amount]) {
+            WalletService::credit($user->id, 'available_balance', $amount, 'test_fixture', 'generation:stake:'.$user->id);
+            app(StakingService::class)->create($user->id, $amount, 'generation_stake_key_'.$user->id);
+        }
+        DB::table('financial_ledger')->where('user_id', $unfunded->id)->where('wallet_type', 'staking_principal')->delete();
+        $fund = $this->funded($admin);
+
+        $run = GenerationAllocationService::allocate($admin, $fund);
+
+        $this->assertDatabaseHas('generation_member_allocations', ['allocation_run_id' => $run, 'user_id' => $parent->id, 'level_number' => 1, 'network_business_snapshot' => '600', 'classification' => 'payable', 'share_amount' => '90']);
+        $this->assertDatabaseCount('activation_packages', 0);
+        $this->money('0', $parent->fresh()->available_balance);
+        $this->assertSame($run, GenerationAllocationService::allocate($admin, $fund));
     }
 
     public function test_no_candidates_remain_unallocated_and_do_not_pay(): void
