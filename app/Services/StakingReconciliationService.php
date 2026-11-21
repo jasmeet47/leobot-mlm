@@ -69,27 +69,29 @@ final class StakingReconciliationService
                     $sum = bcadd($sum, (string) $allocation->amount, 8);
                     $entry = DB::table('financial_ledger')->where('transaction_key', 'staking-profit:'.$statement->id.':'.$allocation->user_id)->first();
                     if ((in_array($statement->status, ['credited', 'reserved'], true) && $statement->distribution_version === 'legacy_direct_100' && ! self::entry($entry, (int) $allocation->user_id, 'available_balance', (string) $allocation->amount))
-                        || (($statement->distribution_version === 'unified_67_30_3' || ! in_array($statement->status, ['credited', 'reserved'], true)) && $entry)) {
+                        || ((in_array($statement->distribution_version, ['unified_67_30_3', MagicSplitPolicy::VERSION], true) || ! in_array($statement->status, ['credited', 'reserved'], true)) && $entry)) {
                         $issues[] = 'Profit statement '.$statement->id.': wallet credits do not match verification status.';
                     }
                 }
-                if ($statement->distribution_version === 'unified_67_30_3' && in_array($statement->status, ['credited', 'reserved'], true)) {
+                if (in_array($statement->distribution_version, ['unified_67_30_3', MagicSplitPolicy::VERSION], true) && in_array($statement->status, ['credited', 'reserved'], true)) {
+                    $selfRate = $statement->distribution_version === MagicSplitPolicy::VERSION ? '65' : '67';
+                    $magicRate = $statement->distribution_version === MagicSplitPolicy::VERSION ? '5' : '3';
                     $funding = DB::table('profit_sharing_fundings')->where('id', $statement->profit_sharing_funding_id)->first();
                     $receipt = DB::table('financial_ledger')->where('transaction_key', 'staking-profit:receipt:'.$statement->id)->first();
                     if (! $funding || $funding->profit_reference !== $statement->evidence_reference
                         || bccomp((string) $funding->verified_profit_amount, (string) $statement->amount, 8) !== 0
-                        || bccomp((string) $funding->self_percent_snapshot, '67', 9) !== 0
+                        || bccomp((string) $funding->self_percent_snapshot, $selfRate, 9) !== 0
                         || bccomp((string) $funding->generation_percent_snapshot, '30', 9) !== 0
-                        || bccomp((string) $funding->magic_percent_snapshot, '3', 9) !== 0
+                        || bccomp((string) $funding->magic_percent_snapshot, $magicRate, 9) !== 0
                         || ! self::entry($receipt, null, 'company_wallet', (string) $statement->amount)) {
                         $issues[] = 'Profit statement '.$statement->id.': unified reserve funding does not reconcile.';
                     } else {
                         $selfTotal = '0';
                         foreach ($allocations as $allocation) {
-                            $selfTotal = bcadd($selfTotal, bcdiv(bcmul((string) $allocation->amount, '67', 17), '100', 8), 8);
+                            $selfTotal = bcadd($selfTotal, bcdiv(bcmul((string) $allocation->amount, $selfRate, 17), '100', 8), 8);
                         }
                         $genTotal = bcdiv(bcmul((string) $statement->amount, '30', 17), '100', 8);
-                        $magicTotal = bcdiv(bcmul((string) $statement->amount, '3', 17), '100', 8);
+                        $magicTotal = bcdiv(bcmul((string) $statement->amount, $magicRate, 17), '100', 8);
                         $fundedTotal = bcadd(bcadd($selfTotal, $genTotal, 8), $magicTotal, 8);
                         foreach (['self_amount' => $selfTotal, 'generation_amount' => $genTotal, 'magic_amount' => $magicTotal,
                             'funded_total' => $fundedTotal, 'company_rounding_remainder' => bcsub((string) $statement->amount, $fundedTotal, 8)] as $field => $expected) {
@@ -112,7 +114,7 @@ final class StakingReconciliationService
                         foreach ($allocations as $allocation) {
                             $reserve = DB::table('profit_sharing_self_reserves')->where('funding_id', $funding->id)->where('user_id', $allocation->user_id)->first();
                             if (! $reserve || bccomp((string) $reserve->member_profit_amount, (string) $allocation->amount, 8) !== 0
-                                || bccomp((string) $reserve->self_share_reserved, bcdiv(bcmul((string) $allocation->amount, '67', 17), '100', 8), 8) !== 0) {
+                                || bccomp((string) $reserve->self_share_reserved, bcdiv(bcmul((string) $allocation->amount, $selfRate, 17), '100', 8), 8) !== 0) {
                                 $issues[] = 'Profit statement '.$statement->id.': member Self reserve mismatch.';
                             }
                         }

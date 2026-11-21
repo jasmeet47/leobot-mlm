@@ -54,7 +54,7 @@ final class MagicMatrixSettingsService
         }, 3);
     }
 
-    /** All 20 levels explicitly supplied; zero until rates are approved. Must sum to 100%. */
+    /** All 20 levels explicitly supplied; zero until rates are approved. Legacy rates total 100%; v2 rates may total less, leaving unused reserve. */
     public static function updateLevelRates(User $admin, array $rates): void
     {
         self::requireRatesApproval();
@@ -69,8 +69,8 @@ final class MagicMatrixSettingsService
             }
             $total = bcadd($total, $rate, 9);
         }
-        if (bccomp($total, '100', 9) !== 0) {
-            throw new InvalidArgumentException('All 20 levels must allocate exactly 100% of Magic level pool.');
+        if (MagicSplitPolicy::version() === MagicSplitPolicy::VERSION ? bccomp($total, '100', 9) > 0 : bccomp($total, '100', 9) !== 0) {
+            throw new InvalidArgumentException('Matrix rates must fit within 100%; unused v2 Matrix budget remains reserved.');
         }
 
         DB::transaction(function () use ($admin, $rates): void {

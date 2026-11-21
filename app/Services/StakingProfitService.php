@@ -48,7 +48,7 @@ final class StakingProfitService
                 return (int) $old->id;
             }
             $id = DB::table('staking_profit_statements')->insertGetId(['amount' => $amount,
-                'distribution_version' => 'unified_67_30_3', 'evidence_reference' => $reference, 'submitted_by' => $admin->id, 'status' => 'pending_verification', 'created_at' => now(), 'updated_at' => now()]);
+                'distribution_version' => MagicSplitPolicy::version(), 'evidence_reference' => $reference, 'submitted_by' => $admin->id, 'status' => 'pending_verification', 'created_at' => now(), 'updated_at' => now()]);
             foreach ($allocations as $userId => $share) {
                 if (! DB::table('staking_positions')->where('user_id', $userId)->exists()) {
                     throw new RuntimeException('Profit recipient has no staking history.');
@@ -104,7 +104,7 @@ final class StakingProfitService
             if (bccomp($sum, (string) $statement->amount, 8) !== 0) {
                 throw new RuntimeException('Trading profit does not reconcile.');
             }
-            if ($statement->distribution_version !== 'unified_67_30_3') {
+            if (! in_array($statement->distribution_version, ['unified_67_30_3', MagicSplitPolicy::VERSION], true)) {
                 throw new RuntimeException('Legacy pending profit requires independent reconciliation before distribution.');
             }
             $usesAttestation = $fromReview;
@@ -118,10 +118,10 @@ final class StakingProfitService
                     throw new RuntimeException('Trading profit evidence already funded; reconcile the existing source.');
                 }
             }
-            foreach ([['profit_sharing_settings', 'self_profit_percent', '67'], ['generation_pool_settings', 'trading_profit_pool_percent', '30'], ['magic_income_settings', 'trading_profit_pool_percent', '3']] as [$table, $column, $rate]) {
+            foreach ([['profit_sharing_settings', 'self_profit_percent', $statement->distribution_version === MagicSplitPolicy::VERSION ? '65' : '67'], ['generation_pool_settings', 'trading_profit_pool_percent', '30'], ['magic_income_settings', 'trading_profit_pool_percent', $statement->distribution_version === MagicSplitPolicy::VERSION ? '5' : '3']] as [$table, $column, $rate]) {
                 $settings = DB::table($table)->where('id', 1)->lockForUpdate()->first();
                 if (! $settings || bccomp((string) $settings->{$column}, $rate, 9) !== 0) {
-                    throw new RuntimeException('Verified trading profit requires the approved 67/30/3 split.');
+                    throw new RuntimeException('The saved profit policy does not match current rates. Use its original approved policy; historical statements are not converted automatically.');
                 }
             }
             $memberProfits = [];
@@ -170,7 +170,7 @@ final class StakingProfitService
 
     public static function manualApprovalMatches(object $statement, iterable $allocations): bool
     {
-        if (($statement->verification_method ?? null) !== 'admin_manual_confirmation' || ! $statement->verified_by || $statement->distribution_version !== 'unified_67_30_3') {
+        if (($statement->verification_method ?? null) !== 'admin_manual_confirmation' || ! $statement->verified_by || ! in_array($statement->distribution_version, ['unified_67_30_3', MagicSplitPolicy::VERSION], true)) {
             return false;
         }
         $digest = TradingProfitReviewerService::evidenceDigest($statement, $allocations);

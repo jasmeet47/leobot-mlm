@@ -236,7 +236,9 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 .lf-shell{display:flex;min-height:100vh}.lf-sidebar{width:256px;flex:0 0 256px;background:linear-gradient(180deg,#061327,#071c39);border-right:1px solid #34425c;padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20}.lf-side-brand{display:flex;align-items:center;gap:10px;color:#f7d887;font-weight:800;font-size:20px;text-decoration:none;margin:3px 6px 28px}.lf-side-brand img{width:40px;height:40px;object-fit:contain;border-radius:6px}.lf-nav-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9baec8;margin:20px 13px 8px}.lf-nav a{display:block;color:#e6edfa!important;text-decoration:none;padding:12px 13px;border-radius:9px;margin:3px 0;font-size:14px}.lf-nav a:hover,.lf-nav a:focus-visible{background:#173252;outline:1px solid #bd9652}.lf-nav a.lf-current{background:linear-gradient(95deg,#ffdf91,#d7a64d);color:#091427!important;font-weight:800}.lf-nav .lf-sub{padding-left:29px;font-size:13px}.lf-main{min-width:0;flex:1}.lf-main .header{background:#07172d!important;border-bottom:1px solid #3d455a!important}.lf-main .header-inner{max-width:100%!important}.lf-main .container{max-width:1400px!important;margin:24px auto!important}.lf-sidebar-toggle{display:none;border:1px solid #c49c54;background:#0a1c35;color:#ffe2a0;padding:9px 12px;border-radius:8px;cursor:pointer}.lf-overlay{display:none}.lf-main .card a{background:linear-gradient(95deg,#ffe2a0,#cfa053)!important;color:#111d2d!important;font-weight:700}.lf-main .footer{color:#bac7d9!important}.lf-main .notice{color:#f3e5c2!important}
 @media(max-width:850px){.lf-sidebar{position:fixed;transform:translateX(-105%);transition:transform .2s;width:256px;box-shadow:0 0 40px #0007}.lf-sidebar.lf-open{transform:translateX(0)}.lf-sidebar-toggle{display:inline-block}.lf-overlay.lf-open{display:block;position:fixed;inset:0;background:#0009;z-index:19}.lf-main .header-inner{justify-content:flex-start!important}.lf-main .container{padding:14px!important}}
 </style>
-</head>
+<style id="lf-equal-dashboard-layout">
+.lf-main .container{width:100%;box-sizing:border-box}.lf-operations-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:20px 0}.lf-operations-grid>.card{margin:0!important;padding:22px!important;min-width:0;height:100%;box-sizing:border-box}.lf-main .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}.lf-main .grid>.card{display:flex;flex-direction:column;min-width:0;margin:0;padding:22px;box-sizing:border-box}.lf-main .grid>.card>p{flex:1}.lf-main .grid>.card>a{margin-top:auto;display:block;text-align:center}.lf-main .card form{max-width:100%}.lf-main .card button{max-width:100%;box-sizing:border-box}.lf-main .lb-terminal-grid{align-items:stretch}.lf-main .lb-terminal-tile{height:100%;box-sizing:border-box}@media(max-width:1100px){.lf-main .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.lf-operations-grid,.lf-main .grid{grid-template-columns:minmax(0,1fr)}.lf-main .container{padding:12px!important}.lf-main .grid>.card,.lf-operations-grid>.card{padding:18px!important}}
+</style></head>
 
 <body>
 <div class="lf-shell">
@@ -293,7 +295,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
     <div class="lb-terminal-tile"><small>Dashboard mode</small><strong>Read-only overview</strong></div>
   </div>
   <p class="lb-terminal-foot lb-terminal-note">UI theme only · No MT5 feed · No simulated trading values · Existing financial permissions remain unchanged.</p>
-</section><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a></section>
+</section><div class="lf-operations-grid"><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a></section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
   <h2>Staking Control</h2><p><a href="{{ route('admin.income-distribution') }}">Trading Profit Sharing</a></p>
@@ -324,7 +326,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 </section>
 
 
-<section class="welcome">
+</div><section class="welcome">
         <h1>Admin Dashboard</h1>
 
         <p>
@@ -363,7 +365,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
     <section class="grid">
     <div class="card">
         <h2>Company Wallet</h2>
-        <p>Review 67/30/3 internal reserves. Funding entry remains disabled without separate approval. No payouts.</p>
+        <p>Review recorded Self, Generation and Magic reserves. Funding entry remains disabled without separate approval. No payouts.</p>
         <a href="{{ route('admin.unified-funding.index') }}">Company Wallet</a>
     </div>
 

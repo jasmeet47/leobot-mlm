@@ -50,7 +50,7 @@ final class TradingProfitReviewerService
 
         return DB::transaction(function () use ($reviewer, $statementId, $expectedDigest): int {
             $statement = DB::table('staking_profit_statements')->where('id', $statementId)->lockForUpdate()->first();
-            if (! $statement || ! in_array($statement->status, ['pending_verification', 'independently_verified'], true) || $statement->distribution_version !== 'unified_67_30_3') {
+            if (! $statement || ! in_array($statement->status, ['pending_verification', 'independently_verified'], true) || ! in_array($statement->distribution_version, ['unified_67_30_3', MagicSplitPolicy::VERSION], true)) {
                 throw new RuntimeException('Only a pending unified profit statement can be reviewed.');
             }
             self::requireMember($reviewer->id, true);

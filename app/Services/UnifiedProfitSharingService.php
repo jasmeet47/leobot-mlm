@@ -161,6 +161,8 @@ final class UnifiedProfitSharingService
                 throw new RuntimeException('Unified trading profit percentages must total exactly 100%.');
             }
 
+            $magicSnapshot = MagicSplitPolicy::fundingSnapshot($settings, $selfRate, $generationRate, $magicRate);
+
             $directRows = [];
             $directTotal = '0.00000000';
             foreach ($normalized as $userId => $memberProfit) {
@@ -286,7 +288,7 @@ final class UnifiedProfitSharingService
                     'created_at' => now(), 'updated_at' => now(),
                 ]));
             }
-            $fundingId = DB::table('profit_sharing_fundings')->insertGetId([
+            $fundingId = DB::table('profit_sharing_fundings')->insertGetId(array_merge([
                 'profit_reference' => $profitReference,
                 'approved_by' => $actualAdmin->id,
                 'generation_funding_id' => $genFundingId,
@@ -301,7 +303,7 @@ final class UnifiedProfitSharingService
                 'company_rounding_remainder' => $remainder,
                 'status' => 'reserved_no_payout',
                 'created_at' => now(), 'updated_at' => now(),
-            ]);
+            ], $magicSnapshot));
             foreach ($directRows as $row) {
                 DB::table('profit_sharing_self_reserves')->insert(array_merge($row, [
                     'funding_id' => $fundingId, 'status' => 'reserved_no_payout',

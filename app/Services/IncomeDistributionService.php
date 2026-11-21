@@ -164,6 +164,9 @@ final class IncomeDistributionService
                 foreach (DB::table('staking_profit_allocations')->where('statement_id', $statementId)->get() as $r) {
                     MagicIncomeSettlementService::settleSource($admin, (int) $fund->id, (int) $r->user_id);
                 }
+                if (($fund->magic_distribution_version ?? '') === 'matrix_equal_v2') {
+                    MagicEqualIncomeSettlementService::settle($admin, (int) $fund->id);
+                }
             }
         });
     }

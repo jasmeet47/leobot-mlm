@@ -52,11 +52,11 @@ final class MagicIncomeSettlementService
             $funding = DB::table('profit_sharing_fundings')->where('id', $fundingId)->first();
             $source = DB::table('profit_sharing_self_reserves')
                 ->where('funding_id', $fundingId)->where('user_id', $sourceUserId)->first();
-            if (! $funding || ! $source || bccomp((string) $funding->magic_percent_snapshot, '3', 9) !== 0) {
+            if (! $funding || ! $source || bccomp((string) $funding->magic_percent_snapshot, ($funding->magic_distribution_version ?? '') === 'matrix_equal_v2' ? '5' : '3', 9) !== 0) {
                 throw new RuntimeException('Verified unified 3% Magic funding source not found.');
             }
             if (app()->environment('production')) {
-                $statement = DB::table('staking_profit_statements')->where('profit_sharing_funding_id', $fundingId)->where('status', 'reserved')->where('distribution_version', 'unified_67_30_3')->whereNotNull('verified_by')->first();
+                $statement = DB::table('staking_profit_statements')->where('profit_sharing_funding_id', $fundingId)->where('status', 'reserved')->whereIn('distribution_version', ['unified_67_30_3', MagicSplitPolicy::VERSION])->whereNotNull('verified_by')->first();
                 $independent = $statement && $statement->verification_method !== 'admin_manual_confirmation' && (int) $statement->verified_by !== (int) $statement->submitted_by;
                 $manual = $statement && config('leobot.admin_profit_verification_enabled', false) === true && StakingProfitService::manualApprovalMatches($statement, DB::table('staking_profit_allocations')->where('statement_id', $statement->id)->get());
                 if (! $independent && ! $manual) {
@@ -77,7 +77,9 @@ final class MagicIncomeSettlementService
                 return ['already_settled' => true, 'credited_usdt' => $already->reduce(fn (string $carry, $r): string => bcadd($carry, (string) $r->paid_amount, 8), '0.00000000'),
                     'rows' => 20];
             }
-            $rates = DB::table('magic_matrix_level_rates')->orderBy('level')->get();
+            $versionTwo = ($funding->magic_distribution_version ?? '') === 'matrix_equal_v2';
+            $snapshotRates = $versionTwo ? json_decode($funding->matrix_rates_snapshot, true, 512, JSON_THROW_ON_ERROR) : null;
+            $rates = $versionTwo ? collect($snapshotRates)->map(fn ($rate, $level) => (object) ['level' => (int) $level, 'pool_percent' => (string) $rate])->values() : DB::table('magic_matrix_level_rates')->orderBy('level')->get();
             if ($rates->count() !== 20) {
                 throw new RuntimeException('Exactly 20 rate rows required.');
             }
@@ -88,12 +90,12 @@ final class MagicIncomeSettlementService
                 }
                 $sum = bcadd($sum, (string) $rate->pool_percent, 9);
             }
-            if (bccomp($sum, '100', 9) !== 0) {
+            if ($versionTwo ? bccomp($sum, '100', 9) > 0 : bccomp($sum, '100', 9) !== 0) {
                 throw new RuntimeException('20 Magic rates must total exactly 100%.');
             }
             $sourceProfit = (string) $source->member_profit_amount;
             self::validMoney($sourceProfit);
-            $sourceMagic = bcdiv(bcmul($sourceProfit, '3', 10), '100', 8);
+            $sourceMagic = bcdiv(bcmul($sourceProfit, $versionTwo ? (string) $funding->matrix_percent_snapshot : '3', 17), '100', 8);
             // Expected every individual source budget to fit within the funding snapshot.
             if (bccomp($sourceMagic, (string) $funding->magic_amount, 8) > 0) {
                 throw new RuntimeException('Source Magic entitlement exceeds funding reserve.');

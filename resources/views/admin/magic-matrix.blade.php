@@ -46,6 +46,8 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <a href="{{ route('admin.dashboard') }}">Dashboard</a></aside><main class="lf2-content"><button class="lf2-toggle" type="button" onclick="lf2Toggle(true)">☰ Admin Menu</button>
 
 <h1>Magic Matrix  -  20 Levels</h1>
+@if(\App\Services\MagicSplitPolicy::version() === \App\Services\MagicSplitPolicy::VERSION)<section><h2>Magic: 3% Matrix + 2% Equal</h2><p>New trading profit uses 65% Self / 30% Generation / 3% Matrix / 2% Equal. Saved level rates apply only to the 3% Matrix budget. Rates may total up to 100%; unused Matrix funds remain reserved. Equal shares use the eligible placed members captured at funding; both shares respect the existing earning cap. Existing funding snapshots remain unchanged.</p></section>@endif
+
 <p><a href="{{ route('admin.dashboard') }}">Dashboard</a></p>
 <p><strong>Default financial switches remain OFF.</strong> 20-level percentage preset is only a proposal and requires explicit administrator review.</p>
 
@@ -77,14 +79,14 @@ html,body{min-height:100%;}body{margin:0!important;background:#061327!important;
 <form method="post" action="{{route('admin.magic.switches')}}" style="display:inline">@csrf<input type="hidden" name="switch_name" value="{{$toggle}}"><input type="hidden" name="enabled" value="{{$desired}}"><button @disabled(!$canEdit || (int)$current===$desired)>{{$label}} {{$buttonLabel}}</button></form>
 @endforeach
 </div>@endforeach</section>
-<section><h2>20-Level Magic Pool Rate Table</h2><p>Proposed: equal <strong>5% on each level</strong> = 100%. Not a guarantee of member earnings. Empty/ineligible positions remain held.</p>
+<section><h2>Magic Matrix Level Rates</h2><p>Saved rates apply to the Matrix budget only. Empty/ineligible positions and unused budget remain reserved.</p>
 <form method="post" action="{{route('admin.magic.rates')}}">@csrf
-<table><thead><tr><th>Level</th><th>Percentage of source ID's Magic allocation</th></tr></thead><tbody>
+<table><thead><tr><th>Level</th><th>Percentage of Matrix allocation</th></tr></thead><tbody>
 @foreach($rates as $rate)<tr><td>{{(int)$rate->level}}</td><td><input type="text" inputmode="decimal" maxlength="14" data-magic-rate name="rates[{{(int)$rate->level}}]" value="{{old('rates.'.(int)$rate->level,(string)$rate->pool_percent)}}" required></td></tr>@endforeach</tbody></table>
-<p id="magic-rate-total" role="status">Total must be exactly 100%.</p><button type="button" id="magic-fill-rates" @disabled(!$canEditRates)>Fill proposed 5% × 20</button><script>document.getElementById('magic-fill-rates').addEventListener('click',()=>{document.querySelectorAll('[data-magic-rate]').forEach(input=>{input.value='5.000000000';input.dispatchEvent(new Event('input'));});});const updateMagicTotal=()=>{let total=0n,valid=true;document.querySelectorAll('[data-magic-rate]').forEach(input=>{if(!/^\d{1,3}(?:\.\d{1,9})?$/.test(input.value)){valid=false;return;}const [whole,fraction='']=input.value.split('.');total+=BigInt(whole)*1000000000n+BigInt(fraction.padEnd(9,'0'));});document.getElementById('magic-rate-total').textContent=valid?'Total: '+(total/1000000000n)+'.'+(total%1000000000n).toString().padStart(9,'0')+'% — required 100%':'Enter valid non-negative percentages, up to 9 decimal places.';};document.querySelectorAll('[data-magic-rate]').forEach(input=>input.addEventListener('input',updateMagicTotal));updateMagicTotal();</script>
+<p id="magic-rate-total" role="status">{{ \App\Services\MagicSplitPolicy::version() === \App\Services\MagicSplitPolicy::VERSION ? 'Total may be up to 100%; unused Matrix budget stays reserved.' : 'Total must be exactly 100%.' }}</p><button type="button" id="magic-fill-rates" @disabled(!$canEditRates)>Fill proposed 5% × 20</button><script>document.getElementById('magic-fill-rates').addEventListener('click',()=>{document.querySelectorAll('[data-magic-rate]').forEach(input=>{input.value='5.000000000';input.dispatchEvent(new Event('input'));});});const updateMagicTotal=()=>{let total=0n,valid=true;document.querySelectorAll('[data-magic-rate]').forEach(input=>{if(!/^\d{1,3}(?:\.\d{1,9})?$/.test(input.value)){valid=false;return;}const [whole,fraction='']=input.value.split('.');total+=BigInt(whole)*1000000000n+BigInt(fraction.padEnd(9,'0'));});document.getElementById('magic-rate-total').textContent=valid?'Total: '+(total/1000000000n)+'.'+(total%1000000000n).toString().padStart(9,'0')+'% — '+@json(\App\Services\MagicSplitPolicy::version() === \App\Services\MagicSplitPolicy::VERSION ? 'maximum 100%; unused reserve retained' : 'required 100%'):'Enter valid non-negative percentages, up to 9 decimal places.';};document.querySelectorAll('[data-magic-rate]').forEach(input=>input.addEventListener('input',updateMagicTotal));updateMagicTotal();</script>
 <button @disabled(!$canEditRates)>Save audited rate table</button></form></section>
 <section><h2>Manual verified settlement (one source ID)</h2>
-<p>No automatic payout is triggered by funding. Requires verified existing funding, live eligibility, caps, 100% rate table and separate settlement approval.</p>
+<p>No automatic payout is triggered by funding. Requires verified existing funding, live eligibility, caps, a valid saved Matrix rate table and separate settlement approval.</p>
 <form method="post" action="{{route('admin.magic.settle')}}">@csrf
 <label>Unified funding ID <input type="number" min="1" name="funding_id" required></label>
 <label>Profit source member ID <input type="number" min="1" name="source_user_id" required></label>
