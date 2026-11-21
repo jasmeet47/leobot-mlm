@@ -22,18 +22,27 @@ final class IncomeDistributionController extends Controller
 
     public function submit(Request $r): RedirectResponse
     {
-        $d = $r->validate(['amount' => ['required', 'string', 'max:25'], 'submission_token' => 'required|uuid', 'period' => 'required|in:daily,weekly,monthly', 'period_date' => 'required|date_format:d/m/Y', 'period_end_date' => 'required|date_format:d/m/Y|after_or_equal:period_date', 'realized_profit_confirmed' => 'accepted']);
+        $d = $r->validate(['amount' => ['required', 'string', 'max:25'], 'submission_token' => 'required|uuid', 'period' => 'required|in:daily,weekly,monthly', 'period_date' => 'required|date_format:d/m/Y', 'period_end_date' => 'required|date_format:d/m/Y|after_or_equal:period_date', 'realized_profit_confirmed' => 'accepted', 'action' => ['sometimes', 'in:save,share']]);
         try {
-            Distribution::submit($r->user(), $d['amount'], 'AUTO-'.$d['submission_token'], $d['period'], CarbonImmutable::createFromFormat('!d/m/Y', $d['period_date'])->format('Y-m-d'), CarbonImmutable::createFromFormat('!d/m/Y', $d['period_end_date'])->format('Y-m-d'), $d['submission_token']);
+            DB::transaction(function () use ($r, $d): void {
+                if (($d['action'] ?? 'save') === 'share' && DB::getDriverName() === 'pgsql') {
+                    DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+                }
+                $id = Distribution::submit($r->user(), $d['amount'], 'AUTO-'.$d['submission_token'], $d['period'], CarbonImmutable::createFromFormat('!d/m/Y', $d['period_date'])->format('Y-m-d'), CarbonImmutable::createFromFormat('!d/m/Y', $d['period_end_date'])->format('Y-m-d'), $d['submission_token']);
+                if (($d['action'] ?? 'save') === 'share') {
+                    StakingProfitService::verifyByAdmin($r->user(), $id);
+                    Distribution::distribute($r->user(), $id);
+                }
+            }, 3);
         } catch (QueryException $e) {
             report($e);
 
-            return back()->withErrors(['distribution' => 'Unable to save this income request.']);
-        } catch (\RuntimeException $e) {
+            return back()->withErrors(['distribution' => 'Unable to complete this income request. No partial changes were kept; retry with the same form.']);
+        } catch (\RuntimeException|AuthorizationException $e) {
             return back()->withInput()->withErrors(['distribution' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Profit saved successfully. Verify it before distribution.');
+        return back()->with('status', ($d['action'] ?? 'save') === 'share' ? 'Trading profit shared successfully. Qualified income credited once; ineligible network shares remain held.' : 'Profit saved successfully. Verify it before distribution.');
     }
 
     public function reserve(Request $r, int $id): RedirectResponse

@@ -59,8 +59,17 @@
             <div class="card"><div class="label">Activation Balance</div><div class="value">{{ bcadd((string) ($member->activation_balance ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Total Investment</div><div class="value">{{ $currentInvestment }}</div><div class="unit">USDT</div></div>
             <div class="card"><div class="label">Lifetime Income</div><div class="value">{{ bcadd((string) ($member->lifetime_income ?? '0'), '0', 8) }}</div><div class="unit">USDT</div></div>
+            <div class="card" id="daily-income"><div class="label">Daily Income</div><div class="value">{{ $paidIncomeSummary['daily_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ $paidIncomeSummary['date'] ?? '' }} IST</div></div>
+            <div class="card" id="weekly-income"><div class="label">Weekly Income</div><div class="value">{{ $paidIncomeSummary['weekly_usdt'] ?? '0.00000000' }}</div><div class="unit">USDT · {{ $paidIncomeSummary['week_start'] ?? '' }} – {{ $paidIncomeSummary['week_end'] ?? '' }}</div></div>
         </div>
 
+        <form method="get"><label>Income date (IST) <input type="date" name="income_date" value="{{ $paidIncomeSummary['date'] ?? '' }}" required></label><button type="submit">View Income</button></form>
+        <p class="muted">Income totals use the wallet credit date (IST). Pending reserves are shown separately in Income Details.</p>
+        <details><summary>Income Credit History</summary><div class="table-wrap"><table><thead><tr><th>Paid On (IST)</th><th>Income</th><th>Distribution Period</th><th>Credited USDT</th></tr></thead><tbody>
+        @forelse(($paidIncomeHistory ?? []) as $incomeEntry)
+          <tr><td>{{ \Carbon\Carbon::parse($incomeEntry->created_at, 'UTC')->timezone('Asia/Kolkata')->format('d/m/Y H:i:s') }}</td><td>{{ ucwords(str_replace('_', ' ', str_replace('_settlement', '', $incomeEntry->entry_type))) }}</td><td>@if($incomeEntry->period_date){{ \Carbon\Carbon::parse($incomeEntry->period_date)->format('d/m/Y') }} – {{ \Carbon\Carbon::parse($incomeEntry->period_end_date ?? $incomeEntry->period_date)->format('d/m/Y') }}@else—@endif</td><td>{{ bcadd((string) $incomeEntry->amount, '0', 8) }}</td></tr>
+        @empty<tr><td colspan="4">No credited income yet.</td></tr>@endforelse
+        </tbody></table></div></details>
     </section>
 
 <!-- LUMIFLOWON_MT5_UI_FIXED -->

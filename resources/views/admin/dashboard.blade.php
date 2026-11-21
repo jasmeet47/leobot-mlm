@@ -285,7 +285,7 @@ body{background:#06142a!important;color:var(--lf-text)!important;font-family:Int
 <main class="container"><section class="card" style="padding:18px;margin:16px 0"><h2>Deposit Control</h2><p>Manage BEP20/TRC20 receiving addresses and QR images.</p><a href="{{ route('admin.deposit-review.index') }}">Deposit Review</a></section>
 <!-- LUMIFLOWON_STAKING_ADMIN_UI_V1 -->
 <section class="card" aria-label="Staking administration" style="margin:16px 0;padding:18px">
-  <h2>Staking Control</h2><p><a href="{{ route('admin.staking.profit.index') }}">Trading Profit</a></p>
+  <h2>Staking Control</h2><p><a href="{{ route('admin.income-distribution') }}">Trading Profit Sharing</a></p>
   @php
     $stakingControlReady = \Illuminate\Support\Facades\Schema::hasTable('staking_controls');
     $stakingEnabled = $stakingControlReady && (bool) \Illuminate\Support\Facades\DB::table('staking_controls')->orderBy('id')->value('enabled');

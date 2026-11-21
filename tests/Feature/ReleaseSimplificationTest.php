@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\StakingService;
 use App\Services\WalletService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,6 +25,7 @@ final class ReleaseSimplificationTest extends TestCase
 
     public function test_auto_reference_weighted_distribution_date_range_and_double_submit(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-02-01 12:00:00', 'Asia/Kolkata'));
         config(['leobot.production_financial_approval' => true, 'leobot.staking_enabled' => true, 'leobot.staking_profit_enabled' => true]);
         DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
         $a = User::factory()->create(['role' => 'admin', 'status' => 'active']);
@@ -34,6 +36,7 @@ final class ReleaseSimplificationTest extends TestCase
             WalletService::credit($u->id, 'available_balance', $amount, 'test_fixture', 'auto_fixture_'.$i);
             app(StakingService::class)->create($u->id, $amount, 'auto_weight_stake_'.$i);
         }
+        $this->travelTo(CarbonImmutable::parse('2026-02-06 12:00:00', 'Asia/Kolkata'));
         $d = ['amount' => '1660', 'period' => 'weekly', 'period_date' => '01/02/2026', 'period_end_date' => '05/02/2026', 'submission_token' => (string) Str::uuid(), 'realized_profit_confirmed' => '1'];
         $this->actingAs($a)->post(route('admin.income-distribution.submit'), $d)->assertSessionHasNoErrors()->assertSessionHas('status');
         $this->post(route('admin.income-distribution.submit'), $d)->assertSessionHasNoErrors();

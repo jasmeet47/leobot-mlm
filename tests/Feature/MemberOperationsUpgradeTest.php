@@ -10,6 +10,7 @@ use App\Services\MemberFundTransferService;
 use App\Services\MemberTransferPolicy;
 use App\Services\StakingService;
 use App\Services\WalletService;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -184,6 +185,7 @@ final class MemberOperationsUpgradeTest extends TestCase
 
     public function test_distribution_submission_snapshots_remaining_principal_and_retries_without_creating_money(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:00', 'Asia/Kolkata'));
         config(['leobot.staking_profit_enabled' => true]);
         DB::table('users')->where('id', $this->recipient->id)->update(['status' => 'active']);
         foreach ([[$this->member, '10'], [$this->recipient, '30']] as [$u,$amount]) {

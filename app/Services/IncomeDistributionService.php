@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -13,6 +14,49 @@ final class IncomeDistributionService
         return DB::table('staking_positions as p')->join('users as u', 'u.id', '=', 'p.user_id')->where('p.status', 'active')->where('u.role', 'member')->whereIn('u.status', ['active', 'inactive'])->where('u.is_blocked', false)->whereNull('u.deleted_at')->whereRaw('p.amount>p.withdrawn_amount')->whereExists(function ($q): void {
             $q->selectRaw('1')->from('financial_ledger as l')->whereColumn('l.user_id', 'p.user_id')->whereColumn('l.reference_id', 'p.id')->where('l.reference_type', 'staking_position')->where('l.wallet_type', 'staking_principal')->where('l.status', 'completed')->whereColumn('l.amount', 'p.amount')->whereRaw("l.transaction_key = 'staking:principal:' || p.request_key");
         })->groupBy('p.user_id')->orderBy('p.user_id')->selectRaw('p.user_id,SUM(p.amount-p.withdrawn_amount) as principal')->pluck('principal', 'p.user_id')->all();
+    }
+
+    /** Principal-days, including the funded activation day, from immutable principal journals. */
+    public static function periodWeights(string $date, string $endDate): array
+    {
+        if (! preg_match('/\A\d{4}-\d{2}-\d{2}\z/D', $date) || ! preg_match('/\A\d{4}-\d{2}-\d{2}\z/D', $endDate)) {
+            throw new RuntimeException('Use valid distribution dates.');
+        }
+        $start = CarbonImmutable::createFromFormat('!Y-m-d', $date, 'Asia/Kolkata');
+        $end = CarbonImmutable::createFromFormat('!Y-m-d', $endDate, 'Asia/Kolkata');
+        if ($start->format('Y-m-d') !== $date || $end->format('Y-m-d') !== $endDate || $end->lessThan($start) || $end->greaterThan(CarbonImmutable::now('Asia/Kolkata')->startOfDay()) || $start->diffInDays($end) > 365) {
+            throw new RuntimeException('Use a completed or current IST period of at most 366 days; future periods are not allowed.');
+        }
+        $weights = [];
+        $events = DB::table('financial_ledger as l')->join('staking_positions as p', 'p.id', '=', 'l.reference_id')
+            ->join('users as u', 'u.id', '=', 'p.user_id')->whereColumn('l.user_id', 'p.user_id')
+            ->where('u.role', 'member')->whereIn('u.status', ['active', 'inactive'])->where('u.is_blocked', false)->whereNull('u.deleted_at')
+            ->where('l.reference_type', 'staking_position')->where('l.wallet_type', 'staking_principal')->where('l.status', 'completed')
+            ->whereIn('l.entry_type', ['staking_principal_reserved', 'staking_principal_hold', 'staking_principal_refund'])
+            ->where('l.created_at', '<', $end->addDay()->utc()->format('Y-m-d H:i:s'))
+            ->whereExists(function ($query): void {
+                $query->selectRaw('1')->from('financial_ledger as opening')->whereColumn('opening.user_id', 'p.user_id')->whereColumn('opening.reference_id', 'p.id')
+                    ->where('opening.reference_type', 'staking_position')->where('opening.wallet_type', 'staking_principal')->where('opening.status', 'completed')
+                    ->whereColumn('opening.amount', 'p.amount')->whereRaw("opening.transaction_key = 'staking:principal:' || p.request_key");
+            })->orderBy('l.id')->select('l.id', 'l.user_id', 'l.amount', 'l.created_at')->lazyById(500, 'l.id', 'id');
+        foreach ($events as $event) {
+            $day = CarbonImmutable::parse($event->created_at, 'UTC')->setTimezone('Asia/Kolkata')->startOfDay();
+            $first = $day->greaterThan($start) ? $day : $start;
+            $days = (int) $first->diffInDays($end) + 1;
+            $id = (int) $event->user_id;
+            $weights[$id] = bcadd($weights[$id] ?? '0', bcmul((string) $event->amount, (string) $days, 8), 8);
+        }
+        foreach ($weights as $id => $weight) {
+            if (bccomp($weight, '0', 8) < 0) {
+                throw new RuntimeException('Historical staking principal does not reconcile.');
+            }
+            if (bccomp($weight, '0', 8) === 0) {
+                unset($weights[$id]);
+            }
+        }
+        ksort($weights, SORT_NUMERIC);
+
+        return $weights;
     }
 
     public static function allocate(string $amount, array $weights): array
@@ -78,7 +122,7 @@ final class IncomeDistributionService
             if (DB::table('staking_profit_statements')->where('evidence_reference', strtoupper(trim($reference)))->exists()) {
                 throw new RuntimeException('This receipt reference already belongs to a statement. Use its existing workflow.');
             }
-            $shares = self::allocate($amount, self::weights());
+            $shares = self::allocate($amount, self::periodWeights($date, $endDate ?? $date));
             $id = StakingProfitService::submit($admin, $amount, $reference, $shares);
             if (DB::table('income_distribution_requests')->where('statement_id', $id)->exists()) {
                 throw new RuntimeException('Statement already belongs to another distribution.');

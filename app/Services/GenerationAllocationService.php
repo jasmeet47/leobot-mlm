@@ -51,9 +51,9 @@ final class GenerationAllocationService
                 // allocation's snapshot guarantee.
                 if (DB::transactionLevel() === 1) {
                     DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-                } else {
+                } elseif (! in_array(DB::selectOne('SHOW transaction_isolation')->transaction_isolation, ['repeatable read', 'serializable'], true)) {
                     throw new RuntimeException(
-                        'Allocation requires an outermost transaction for snapshot isolation.'
+                        'Allocation requires repeatable-read or serializable snapshot isolation.'
                     );
                 }
             }

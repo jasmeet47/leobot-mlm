@@ -8,6 +8,7 @@ use App\Services\StakingProfitService;
 use App\Services\StakingReconciliationService;
 use App\Services\StakingService;
 use App\Services\WalletService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\FinancialSeedState;
@@ -48,6 +49,7 @@ final class IncomeDistributionWorkflowTest extends TestCase
 
     private function runSettlementWorkflow(bool $sameAdmin, bool $networkOff = false): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:00', 'Asia/Kolkata'));
         config(['leobot.production_financial_approval' => true, 'leobot.staking_enabled' => true, 'leobot.staking_profit_enabled' => true, 'leobot.self_income_settlement_enabled' => true, 'leobot.generation_income_settlement_enabled' => true, 'leobot_magic.magic_matrix_settlement_enabled' => true]);
         DB::table('staking_controls')->where('id', 1)->update(['enabled' => true]);
         DB::table('profit_sharing_settings')->where('id', 1)->update(['combined_funding_enabled' => true]);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MagicIncomeReportService;
 use App\Services\MagicMatrixEnrollmentService;
 use App\Services\MagicMatrixTeamReadService;
+use App\Services\MemberIncomeReportService;
 use App\Services\TeamLevelViewerService;
 use App\Services\TradingProfitReviewerService;
 use Illuminate\Http\Request;
@@ -53,6 +54,7 @@ class MemberDashboardController extends Controller
         $teamSummary->total_inactive_team = $levelRows->sum('inactive_count');
 
         $breakdownInput = $request->validate([
+            'income_date' => ['sometimes', 'date_format:Y-m-d'],
             'breakdown_level' => ['sometimes', 'integer', 'between:1,51'],
             'breakdown_page' => ['sometimes', 'integer', 'between:1,100000'],
         ]);
@@ -319,7 +321,9 @@ class MemberDashboardController extends Controller
             'emailConsent' => $emailConsent,
             'incomeSummary' => $incomeSummary,
             'walletHistory' => $walletHistory,
-            'magicIncomeSummary' => MagicIncomeReportService::summary((int) $member->id),
+            'magicIncomeSummary' => MagicIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null),
+            'paidIncomeSummary' => MemberIncomeReportService::summary((int) $member->id, $breakdownInput['income_date'] ?? null),
+            'paidIncomeHistory' => MemberIncomeReportService::history((int) $member->id),
             'magicTeam' => MagicMatrixTeamReadService::forMember((int) $member->id),
         ]);
     }
