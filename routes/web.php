@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminFundingWalletController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\DepositReviewController;
 use App\Http\Controllers\Admin\IncomeDistributionController;
@@ -420,6 +421,9 @@ Route::middleware(['auth', 'account.not_blocked', EnsureMemberPin::class])->grou
 
 Route::middleware(['auth', 'account.not_blocked', 'admin'])->group(function (): void {
     Route::post('/admin/member-deletion', [MemberOperationsController::class, 'delete'])->middleware('throttle:5,1')->name('admin.members.delete-selected');
+    Route::get('/admin/funding-wallet', [AdminFundingWalletController::class, 'index'])->name('admin.funding-wallet');
+    Route::post('/admin/funding-wallet', [AdminFundingWalletController::class, 'topUp'])->middleware('throttle:10,1,admin-funding')->name('admin.funding-wallet.topup');
+    Route::post('/admin/member-access/fund-activate', [AdminFundingWalletController::class, 'activate'])->middleware('throttle:20,1,admin-fund-activate')->name('admin.funding-wallet.activate');
     Route::get('/admin/member-access', [MemberAccountController::class, 'index'])->name('admin.member-access');
     Route::post('/admin/member-access', [MemberAccountController::class, 'status'])->middleware('throttle:10,1,member-access')->name('admin.member-access.save');
     Route::post('/admin/member-access/activate-account', [MemberAccountController::class, 'activateAccount'])->middleware('throttle:20,1,member-account-activate')->name('admin.member-access.activate-account');

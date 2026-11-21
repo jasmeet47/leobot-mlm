@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\ActivationService;
+use App\Services\AdminFundingWalletService;
 use App\Services\MemberAccountAdministration as Accounts;
 use App\Services\MemberWithdrawalControl;
 use Illuminate\Contracts\View\View;
@@ -40,7 +41,7 @@ final class MemberAccountController extends Controller
         })->select('users.id', 'users.username', 'users.name', 'users.status')
             ->selectSub(DB::table('member_security_audits as control')->where('control.action', 'admin_member_withdrawals')->whereRaw("control.details->>'user_id' = users.id::text")->orderByDesc('control.id')->limit(1)->selectRaw("control.details->>'enabled'"), 'withdrawals_enabled')->orderBy('users.username')->paginate(20)->withQueryString();
 
-        return view('admin.member-account', ['adminActivatedMembers' => $adminActivatedMembers, 'member' => $member, 'lookupError' => $lookupError, 'mode' => $request->routeIs('admin.member-email') ? 'email' : 'status']);
+        return view('admin.member-account', ['adminFundingBalance' => AdminFundingWalletService::balance(), 'adminActivatedMembers' => $adminActivatedMembers, 'member' => $member, 'lookupError' => $lookupError, 'mode' => $request->routeIs('admin.member-email') ? 'email' : 'status']);
     }
 
     public function status(Request $r): RedirectResponse

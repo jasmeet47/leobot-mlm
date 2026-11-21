@@ -138,6 +138,12 @@ final class StakingReconciliationService
             }
         });
 
+        try {
+            AdminFundingWalletService::assertReconciled();
+        } catch (\Throwable) {
+            $issues[] = 'Admin Funding Wallet: capital source, journal sequence or funded principal does not reconcile.';
+        }
+
         return ['positions_checked' => $positions, 'issue_count' => count($issues), 'issues' => array_slice($issues, 0, 50),
             'accounting_passed' => $issues === [], 'on_chain_reserve_solvency' => 'NOT VERIFIED'];
     }

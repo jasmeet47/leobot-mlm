@@ -113,6 +113,7 @@ final class StakingProfitService
             if (! $company) {
                 throw new RuntimeException('Company reserve account missing.');
             }
+            AdminFundingWalletService::assertSourceNotCapital($statement->evidence_reference);
             foreach ([['profit_sharing_fundings', 'profit_reference'], ['generation_profit_fundings', 'profit_reference'], ['magic_pool_fundings', 'source_reference']] as [$table, $column]) {
                 if (DB::table($table)->where($column, $statement->evidence_reference)->exists()) {
                     throw new RuntimeException('Trading profit evidence already funded; reconcile the existing source.');

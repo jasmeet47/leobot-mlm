@@ -105,6 +105,9 @@ final class VerifiedDepositService
             if (! $admin || ! in_array(strtolower((string) ($admin->role ?? '')), ['admin', 'super_admin'], true) || $admin->status !== 'active' || $admin->deleted_at !== null || self::blocked($admin)) {
                 throw new RuntimeException('Administrator authorization required.');
             }
+            DB::table('company_wallet')->where('id', 1)->lockForUpdate()->first();
+            DB::table('company_wallet')->where('id', 1)->update(['updated_at' => now()]);
+            AdminFundingWalletService::assertSourceNotCapital($snapshot->tx_hash);
             $deposit = DB::table('member_deposit_requests')->where('id', $depositId)->lockForUpdate()->first();
             if (! $deposit || $deposit->status !== 'pending') {
                 throw new RuntimeException('Deposit is not pending.');
